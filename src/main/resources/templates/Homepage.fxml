@@ -12,12 +12,11 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-
-<VBox alignment="TOP_CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" styleClass="white-text" stylesheets="@styles/homeStyles.css" xmlns="http://javafx.com/javafx/22" xmlns:fx="http://javafx.com/fxml/1">
+<VBox alignment="TOP_CENTER" minHeight="-Infinity" minWidth="-Infinity" styleClass="white-text" stylesheets="@styles/homeStyles.css" xmlns="http://javafx.com/javafx/23" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.flintcore.excel_expenses.controllers.HomePageController">
    <children>
       <HBox>
          <children>
-            <Label alignment="CENTER" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="62.0" prefWidth="600.0" styleClass="dark-text" text="What would you want to do?" HBox.hgrow="ALWAYS">
+            <Label alignment="CENTER" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" styleClass="dark-text" text="What would you want to do?" HBox.hgrow="ALWAYS">
                <font>
                   <Font name="Segoe UI Bold Italic" size="26.0" />
                </font>
@@ -67,7 +66,7 @@
             <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
          </padding>
       </GridPane>
-      <VBox VBox.vgrow="ALWAYS">
+      <VBox>
          <children>
             <HBox>
                <children>
@@ -84,9 +83,9 @@
                   <Insets />
                </VBox.margin>
             </HBox>
-            <ScrollPane fitToHeight="true" fitToWidth="true" styleClass="no-insets" VBox.vgrow="ALWAYS">
+            <ScrollPane fitToHeight="true" fitToWidth="true" styleClass="no-insets">
                <content>
-                  <VBox prefHeight="200.0" prefWidth="100.0" />
+                  <VBox fx:id="expenseHolder" />
                </content>
             </ScrollPane>
          </children>
