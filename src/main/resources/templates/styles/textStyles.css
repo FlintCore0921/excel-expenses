@@ -1,0 +1,7 @@
+.white-text, .white-text * {
+    -fx-text-fill: #fff;
+}
+
+.dark-text, .dark-text * {
+    -fx-text-fill: #000;
+}
