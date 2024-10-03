@@ -6,10 +6,7 @@ import javafx.stage.Stage;
 import lombok.Getter;
 
 @Getter
-public class WindowActionsHolder {
-    private final Circle btnClose;
-    private final Circle btnMinimize;
-
+public record WindowActionsHolder(Circle btnClose, Circle btnMinimize) {
     public WindowActionsHolder(Circle btnClose, Circle btnMinimize) {
         this.btnClose = btnClose;
         this.btnMinimize = btnMinimize;

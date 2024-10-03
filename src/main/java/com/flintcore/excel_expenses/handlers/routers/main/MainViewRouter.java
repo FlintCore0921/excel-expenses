@@ -1,7 +1,7 @@
 package com.flintcore.excel_expenses.handlers.routers.main;
 
 import com.flintcore.excel_expenses.handlers.exceptions.ErrorConsumerHandler;
-import com.flintcore.excel_expenses.handlers.routers.IRouter;
+import com.flintcore.excel_expenses.handlers.routers.routers.IRouter;
 import com.flintcore.excel_expenses.handlers.routers.RouteManager;
 import data.utils.NullableUtils;
 import javafx.animation.Transition;
@@ -47,7 +47,7 @@ public class MainViewRouter implements IRouter<EMainRoute> {
         routerManager.navigateTo(route);
 
         URL resource = Objects.requireNonNull(
-                getClass().getResource(route.resourceRoute)
+                getClass().getResource(route.route)
         );
 
         FXMLLoader loader = new FXMLLoader(resource);
@@ -70,7 +70,6 @@ public class MainViewRouter implements IRouter<EMainRoute> {
         this.navigateTo(route, paneConsume, null);
     }
 
-    @Override
     public void navigateBack(Consumer<Node> paneConsumer, Function<Node, Transition> transition) {
         this.routerManager.navigateBack();
         this.navigateTo(this.routerManager.currentRoute(), paneConsumer, transition);

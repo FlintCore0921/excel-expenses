@@ -49,5 +49,4 @@ public class ExpenseCreateFormController {
     @FXML
     private TextField receiptNFCTxt;
 
-
 }
