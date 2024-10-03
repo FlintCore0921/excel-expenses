@@ -9,5 +9,5 @@ public enum EMainRoute {
     LOCALS(""),
     REGISTER("");
 
-    String resourceRoute;
+    public String resourceRoute;
 }

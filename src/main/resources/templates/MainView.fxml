@@ -105,7 +105,10 @@
               </rowConstraints>
                <children>
                   <fx:include source="navbar.fxml" />
-                  <ScrollPane fx:id="bodyPane" fitToWidth="true" hbarPolicy="NEVER" styleClass="no-insets" GridPane.columnIndex="1" />
+                  <ScrollPane fx:id="bodyPane" fitToWidth="true" hbarPolicy="NEVER" styleClass="no-insets" GridPane.columnIndex="1">
+                     <content>
+                        <StackPane />
+                     </content></ScrollPane>
                </children>
             </GridPane>
          </children>

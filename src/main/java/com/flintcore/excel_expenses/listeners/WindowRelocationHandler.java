@@ -2,10 +2,9 @@ package com.flintcore.excel_expenses.listeners;
 
 import com.flintcore.excel_expenses.models.RelocationParam;
 import javafx.event.EventHandler;
+import javafx.event.EventType;
 import javafx.scene.input.MouseEvent;
 import lombok.RequiredArgsConstructor;
-
-import java.awt.*;
 
 @RequiredArgsConstructor
 public class WindowRelocationHandler implements EventHandler<MouseEvent> {
@@ -15,29 +14,33 @@ public class WindowRelocationHandler implements EventHandler<MouseEvent> {
 
     @Override
     public void handle(MouseEvent event) {
-
-        if (event.getEventType() == MouseEvent.MOUSE_PRESSED) {
-            if(params.range().getHeight() <= event.getY()) return;
-
-            // Capture the initial position of the mouse relative to the scene
-            xScreen = event.getSceneX();
-            yScreen = event.getSceneY();
+        EventType<? extends MouseEvent> eventType = event.getEventType();
+        if (eventType.equals(MouseEvent.MOUSE_PRESSED)) {
+            handleOnPressed(event);
+        } else if (eventType.equals(MouseEvent.MOUSE_DRAGGED)) {
+            handleOnDragMouse(event);
+        } else if (eventType.equals(MouseEvent.MOUSE_RELEASED)) {
+            handleOnRelease();
         }
+    }
 
-        if (event.getEventType() == MouseEvent.MOUSE_DRAGGED) {
-            if (xScreen == -1 && yScreen == -1) return;
+    private void handleOnRelease() {
+        xScreen = -1;
+        yScreen = -1;
+    }
 
-            // Move the stage based on the difference between the mouse's screen position and the offset
-            params.window().setX(event.getScreenX() - xScreen);
-            params.window().setY(event.getScreenY() - yScreen);
+    private void handleOnDragMouse(MouseEvent event) {
+        if (xScreen == -1 && yScreen == -1) return;
 
-            System.out.println(params.window().getX());
-            System.out.println(params.window().getY());
-        }
+        // Move the stage based on the difference between the mouse's screen position and the offset
+        params.window().setX(event.getScreenX() - xScreen);
+        params.window().setY(event.getScreenY() - yScreen);
+    }
 
-        if (event.getEventType() == MouseEvent.MOUSE_RELEASED) {
-            xScreen = -1;
-            yScreen = -1;
-        }
+    private void handleOnPressed(MouseEvent event) {
+        if(params.range().getHeight() <= event.getY()) return;
+
+        xScreen = event.getSceneX();
+        yScreen = event.getSceneY();
     }
 }
