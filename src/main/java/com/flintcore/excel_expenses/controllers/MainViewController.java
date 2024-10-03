@@ -5,6 +5,8 @@ import com.flintcore.excel_expenses.handlers.WindowActionsHolder;
 import com.flintcore.excel_expenses.handlers.routers.EMainRoute;
 import com.flintcore.excel_expenses.handlers.routers.MainViewRouter;
 import com.flintcore.excel_expenses.models.NodeWrapper;
+import javafx.animation.FadeTransition;
+import javafx.animation.PauseTransition;
 import javafx.animation.Transition;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
@@ -15,6 +17,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.shape.Circle;
+import javafx.util.Duration;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -23,7 +26,7 @@ import java.net.URL;
 import java.util.List;
 import java.util.Map;
 import java.util.ResourceBundle;
-import java.util.function.Supplier;
+import java.util.function.Function;
 
 @Component
 @RequiredArgsConstructor
@@ -34,13 +37,14 @@ public class MainViewController implements Initializable {
 
     @FXML
     private ScrollPane bodyPane;
-    private StackPane bodyPaneContent;
 
     @FXML
     private Circle btnClose;
 
     @FXML
     private Circle btnMinimize;
+
+    private StackPane bodyPaneContent;
 
     private final MainViewRouter router;
     private final MainNavbarConfiguratorFactory navbarItemFactory;
@@ -54,7 +58,21 @@ public class MainViewController implements Initializable {
         buildNavbarItems();
 
         bodyPaneContent = (StackPane) this.bodyPane.getContent();
-        navigateToRoute(EMainRoute.Home);
+// Just testing
+        Platform.runLater(() -> {
+            PauseTransition pauseTransition = new PauseTransition(Duration.seconds(1D));
+
+            pauseTransition.setOnFinished(ev -> navigateToRoute(EMainRoute.Home, node -> {
+                node.opacityProperty().set(0);
+
+                FadeTransition transition = new FadeTransition(Duration.seconds(1D), node);
+                transition.setFromValue(0D);
+                transition.setToValue(1D);
+                return transition;
+            }));
+
+            pauseTransition.play();
+        });
     }
 
     private void setErrorHandlers() {
@@ -82,10 +100,12 @@ public class MainViewController implements Initializable {
     }
 
     private void navigateToRoute(EMainRoute route) {
+        if(this.sidebarController.getControllerOf(route).isSelected()) return;
+
         this.router.navigateTo(route, bodyPaneContent.getChildren()::add);
     }
 
-    private void navigateToRoute(EMainRoute route, Supplier<Transition> transitionSupplier) {
+    private void navigateToRoute(EMainRoute route, Function<Node, Transition> transitionSupplier) {
         this.router.navigateTo(route, bodyPaneContent.getChildren()::add, transitionSupplier);
     }
 }

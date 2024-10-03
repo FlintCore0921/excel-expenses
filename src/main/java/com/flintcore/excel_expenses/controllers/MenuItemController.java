@@ -30,4 +30,8 @@ public class MenuItemController {
     public void removeStyle(SidebarItemStyle style) {
         btnTrigger.getStyleClass().remove(style.identifier);
     }
+
+    public boolean isSelected(){
+        return btnTrigger.getStyleClass().contains(SidebarItemStyle.ITEM_SELECTED.identifier);
+    }
 }

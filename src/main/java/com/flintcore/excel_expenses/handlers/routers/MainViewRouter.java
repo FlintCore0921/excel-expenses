@@ -13,7 +13,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.Objects;
 import java.util.function.Consumer;
-import java.util.function.Supplier;
+import java.util.function.Function;
 
 @Component
 public class MainViewRouter {
@@ -30,7 +30,7 @@ public class MainViewRouter {
     public void navigateTo(
             final EMainRoute route,
             Consumer<Node> paneConsumer,
-            Supplier<Transition> transition
+            Function<Node, Transition> transition
     ) {
         URL resource = Objects.requireNonNull(
                 getClass().getResource(route.resourceRoute)
@@ -40,10 +40,12 @@ public class MainViewRouter {
         loader.setControllerFactory(applicationContext::getBean);
 
         try {
-            paneConsumer.accept(loader.load());
+            Node ndLoaded = loader.load();
+            NullableUtils.executeNonNull(paneConsumer, () -> paneConsumer.accept(ndLoaded));
+
             NullableUtils.executeNonNull(
                     transition,
-                    tr -> tr.get().play()
+                    tr -> tr.apply(ndLoaded).play()
             );
         } catch (IOException e) {
             this.errorConsumerHandler.accept(e);
