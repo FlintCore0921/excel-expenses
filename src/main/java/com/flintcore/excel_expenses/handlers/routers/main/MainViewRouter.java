@@ -1,6 +1,8 @@
-package com.flintcore.excel_expenses.handlers.routers;
+package com.flintcore.excel_expenses.handlers.routers.main;
 
 import com.flintcore.excel_expenses.handlers.exceptions.ErrorConsumerHandler;
+import com.flintcore.excel_expenses.handlers.routers.IRouter;
+import com.flintcore.excel_expenses.handlers.routers.RouteManager;
 import data.utils.NullableUtils;
 import javafx.animation.Transition;
 import javafx.fxml.FXMLLoader;
@@ -16,15 +18,21 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 @Component
-public class MainViewRouter {
+public class MainViewRouter implements IRouter<EMainRoute> {
     private final ApplicationContext applicationContext;
+
+    private final RouteManager<EMainRoute> routerManager;
 
     @Getter
     private final ErrorConsumerHandler errorConsumerHandler;
 
-    public MainViewRouter(ApplicationContext applicationContext, ErrorConsumerHandler errorConsumerHandler) {
+    public MainViewRouter(
+            ApplicationContext applicationContext,
+            ErrorConsumerHandler errorConsumerHandler,
+            RouteManager<EMainRoute> routerManager) {
         this.applicationContext = applicationContext;
         this.errorConsumerHandler = errorConsumerHandler;
+        this.routerManager = routerManager;
     }
 
     public void navigateTo(
@@ -32,6 +40,12 @@ public class MainViewRouter {
             Consumer<Node> paneConsumer,
             Function<Node, Transition> transition
     ) {
+        if(this.routerManager.isCurrentRoute(route)) {
+            return;
+        }
+
+        routerManager.navigateTo(route);
+
         URL resource = Objects.requireNonNull(
                 getClass().getResource(route.resourceRoute)
         );
@@ -54,5 +68,11 @@ public class MainViewRouter {
 
     public void navigateTo(final EMainRoute route, Consumer<Node> paneConsume) {
         this.navigateTo(route, paneConsume, null);
+    }
+
+    @Override
+    public void navigateBack(Consumer<Node> paneConsumer, Function<Node, Transition> transition) {
+        this.routerManager.navigateBack();
+        this.navigateTo(this.routerManager.currentRoute(), paneConsumer, transition);
     }
 }

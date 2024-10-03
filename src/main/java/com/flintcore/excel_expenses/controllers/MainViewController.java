@@ -2,11 +2,10 @@ package com.flintcore.excel_expenses.controllers;
 
 import com.flintcore.excel_expenses.factories.MainNavbarConfiguratorFactory;
 import com.flintcore.excel_expenses.handlers.WindowActionsHolder;
-import com.flintcore.excel_expenses.handlers.routers.EMainRoute;
-import com.flintcore.excel_expenses.handlers.routers.MainViewRouter;
+import com.flintcore.excel_expenses.handlers.routers.main.EMainRoute;
+import com.flintcore.excel_expenses.handlers.routers.main.MainViewRouter;
 import com.flintcore.excel_expenses.models.NodeWrapper;
 import javafx.animation.FadeTransition;
-import javafx.animation.PauseTransition;
 import javafx.animation.Transition;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
@@ -23,7 +22,6 @@ import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.net.URL;
-import java.util.List;
 import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.function.Function;
@@ -59,19 +57,13 @@ public class MainViewController implements Initializable {
 
         bodyPaneContent = (StackPane) this.bodyPane.getContent();
 // Just testing
-        Platform.runLater(() -> {
-            PauseTransition pauseTransition = new PauseTransition(Duration.seconds(1D));
+        navigateToRoute(EMainRoute.Home, node -> {
+            node.opacityProperty().set(0);
 
-            pauseTransition.setOnFinished(ev -> navigateToRoute(EMainRoute.Home, node -> {
-                node.opacityProperty().set(0);
-
-                FadeTransition transition = new FadeTransition(Duration.seconds(1D), node);
-                transition.setFromValue(0D);
-                transition.setToValue(1D);
-                return transition;
-            }));
-
-            pauseTransition.play();
+            FadeTransition transition = new FadeTransition(Duration.millis(600), node);
+            transition.setFromValue(0D);
+            transition.setToValue(1D);
+            return transition;
         });
     }
 
@@ -92,7 +84,7 @@ public class MainViewController implements Initializable {
     private void buildNavbarItems() {
         Map<EMainRoute, NodeWrapper<Node, MenuItemController>> nodeWrapperList =
                 navbarItemFactory.buildMainNavbarItems(
-                        List.of(EMainRoute.Home),
+                        EMainRoute.availableRoutes(),
                         this::navigateToRoute
                 );
 

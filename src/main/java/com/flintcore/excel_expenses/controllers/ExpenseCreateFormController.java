@@ -1,5 +1,6 @@
 package com.flintcore.excel_expenses.controllers;
 
+import com.flintcore.excel_expenses.models.expenses.IBusiness;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
@@ -19,7 +20,7 @@ public class ExpenseCreateFormController {
     private Button btnSubmit;
 
     @FXML
-    private ComboBox<?> localFilterBox;
+    private ComboBox<IBusiness> localFilterBox;
 
     @FXML
     private TextField localNameTxt;
@@ -47,4 +48,6 @@ public class ExpenseCreateFormController {
 
     @FXML
     private TextField receiptNFCTxt;
+
+
 }

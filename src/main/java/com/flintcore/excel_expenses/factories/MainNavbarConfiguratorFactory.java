@@ -1,7 +1,7 @@
 package com.flintcore.excel_expenses.factories;
 
 import com.flintcore.excel_expenses.controllers.MenuItemController;
-import com.flintcore.excel_expenses.handlers.routers.EMainRoute;
+import com.flintcore.excel_expenses.handlers.routers.main.EMainRoute;
 import com.flintcore.excel_expenses.models.NodeWrapper;
 import javafx.scene.Node;
 import lombok.RequiredArgsConstructor;

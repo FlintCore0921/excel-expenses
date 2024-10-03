@@ -28,11 +28,27 @@
    <children>
       <StackPane styleClass="top-title" GridPane.columnSpan="2147483647">
          <children>
-            <Label alignment="CENTER" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" text="New expense">
-               <font>
-                  <Font name="Segoe UI Bold Italic" size="28.0" />
-               </font>
-            </Label>
+            <HBox>
+               <children>
+                  <StackPane fx:id="btnBack">
+                     <padding>
+                        <Insets bottom="15.0" left="15.0" right="15.0" top="15.0" />
+                     </padding>
+                     <children>
+                        <Label text="&lt;">
+                           <font>
+                              <Font name="Segoe UI Bold" size="21.0" />
+                           </font>
+                        </Label>
+                     </children>
+                  </StackPane>
+                  <Label alignment="CENTER" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" text="New expense" HBox.hgrow="ALWAYS">
+                     <font>
+                        <Font name="Segoe UI Bold Italic" size="28.0" />
+                     </font>
+                  </Label>
+               </children>
+            </HBox>
          </children>
       </StackPane>
       <StackPane prefHeight="150.0" prefWidth="200.0" GridPane.rowIndex="2">
