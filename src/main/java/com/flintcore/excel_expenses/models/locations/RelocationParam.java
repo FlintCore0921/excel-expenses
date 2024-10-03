@@ -1,6 +1,5 @@
-package com.flintcore.excel_expenses.models;
+package com.flintcore.excel_expenses.models.locations;
 
-import javafx.scene.Node;
 import javafx.stage.Window;
 
 import java.awt.*;

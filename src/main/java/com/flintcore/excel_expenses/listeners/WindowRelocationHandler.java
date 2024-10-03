@@ -1,6 +1,6 @@
 package com.flintcore.excel_expenses.listeners;
 
-import com.flintcore.excel_expenses.models.RelocationParam;
+import com.flintcore.excel_expenses.models.locations.RelocationParam;
 import javafx.event.EventHandler;
 import javafx.event.EventType;
 import javafx.scene.input.MouseEvent;

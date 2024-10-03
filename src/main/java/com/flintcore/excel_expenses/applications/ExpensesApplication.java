@@ -2,7 +2,7 @@ package com.flintcore.excel_expenses.applications;
 
 import com.flintcore.excel_expenses.ExcelExpensesApplication;
 import com.flintcore.excel_expenses.listeners.WindowRelocationHandler;
-import com.flintcore.excel_expenses.models.RelocationParam;
+import com.flintcore.excel_expenses.models.locations.RelocationParam;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
