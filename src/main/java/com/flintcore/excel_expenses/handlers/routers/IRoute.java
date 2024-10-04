@@ -1,5 +1,8 @@
 package com.flintcore.excel_expenses.handlers.routers;
 
-public interface IRoute {
+import com.flintcore.excel_expenses.models.IOrderSortable;
+
+public interface IRoute extends IOrderSortable {
+    String getName();
     String getRoute();
 }

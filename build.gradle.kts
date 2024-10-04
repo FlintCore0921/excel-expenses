@@ -35,6 +35,8 @@ repositories {
 dependencies {
 	implementation("com.flintCore:data-utils:1.2.2")
 
+	implementation("org.apache.commons:commons-text:1.12.0")
+
 	implementation("org.openjfx:javafx-controls:$javafxVersion")
 	implementation("org.openjfx:javafx-fxml:$javafxVersion")
 

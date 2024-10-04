@@ -3,9 +3,7 @@ package com.flintcore.excel_expenses.handlers;
 import javafx.application.Platform;
 import javafx.scene.shape.Circle;
 import javafx.stage.Stage;
-import lombok.Getter;
 
-@Getter
 public record WindowActionsHolder(Circle btnClose, Circle btnMinimize) {
     public WindowActionsHolder(Circle btnClose, Circle btnMinimize) {
         this.btnClose = btnClose;

@@ -1,5 +1,7 @@
 package com.flintcore.excel_expenses.controllers;
 
+import com.flintcore.excel_expenses.handlers.routers.IRoute;
+import com.flintcore.excel_expenses.handlers.routers.routers.ApplicationRouter;
 import com.flintcore.excel_expenses.models.NodeWrapper;
 import com.flintcore.excel_expenses.models.menues.SidebarItemStyle;
 import data.utils.NullableUtils;
@@ -20,16 +22,20 @@ public class SidebarController implements Initializable {
     @FXML
     private VBox navbarActions;
 
+    private final ApplicationRouter applicationRouter;
 
-    private Enum<?> lastItemSelected;
+    private IRoute lastItemSelected;
+    private ObservableMap<IRoute, MenuItemController> navbarController;
 
-    private ObservableMap<Enum<?>, MenuItemController> navbarController;
+    public SidebarController(ApplicationRouter applicationRouter) {
+        this.applicationRouter = applicationRouter;
+    }
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
     }
 
-    public void setRoutes(Map<? extends Enum<?>, NodeWrapper<Node, MenuItemController>> routes) {
+    public void setRoutes(Map<IRoute, NodeWrapper<Node, MenuItemController>> routes) {
         NullableUtils.executeIsNull(this.navbarController,
                 () -> this.navbarController = FXCollections.observableHashMap()
         );
@@ -39,11 +45,11 @@ public class SidebarController implements Initializable {
         routes.forEach(this::appendRoute);
     }
 
-    public MenuItemController getControllerOf(Enum<?> key) {
+    public MenuItemController getControllerOf(IRoute key) {
         return this.navbarController.get(key);
     }
 
-    public void appendRoute(Enum<?> identifier, NodeWrapper<Node, MenuItemController> node) {
+    public void appendRoute(IRoute identifier, NodeWrapper<Node, MenuItemController> node) {
         this.navbarActions.getChildren().add(node.nodeView());
         MenuItemController controller = node.controller();
         this.navbarController.put(identifier, controller);
@@ -51,9 +57,12 @@ public class SidebarController implements Initializable {
         controller.setOnTrigger(ev -> {
             SidebarItemStyle selectedStyle = SidebarItemStyle.ITEM_SELECTED;
             NullableUtils.executeNonNull(lastItemSelected,
-                    it -> this.getControllerOf(it).removeStyle(selectedStyle));
+                    it -> this.getControllerOf(it).removeStyle(selectedStyle)
+            );
             controller.addStyle(selectedStyle);
             lastItemSelected = identifier;
+
+            this.applicationRouter.navigateTo(identifier);
         });
     }
 

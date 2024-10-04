@@ -11,7 +11,7 @@ import java.util.Objects;
 @AllArgsConstructor
 @Getter
 public enum EMainRoute implements IRoute {
-    Home("/templates/Homepage.fxml"),
+    HOME("/templates/Homepage.fxml"),
     EXPENSES("/templates/expensePage.fxml"),
     LOCALS(""),
     REGISTER("");
@@ -22,5 +22,15 @@ public enum EMainRoute implements IRoute {
         return Arrays.stream(values())
                 .filter(rt -> Objects.isNull(rt) || !rt.getRoute().isBlank())
                 .toList();
+    }
+
+    @Override
+    public String getName() {
+        return name();
+    }
+
+    @Override
+    public int getOrder() {
+        return ordinal();
     }
 }

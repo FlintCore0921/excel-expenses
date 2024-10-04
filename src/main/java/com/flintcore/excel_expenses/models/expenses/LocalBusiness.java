@@ -9,7 +9,6 @@ import java.io.Serializable;
 import java.util.Comparator;
 
 @Builder
-@Getter
 public record LocalBusiness(
         String name,
         String RNC
@@ -22,5 +21,15 @@ public record LocalBusiness(
         return Comparator.comparing(LocalBusiness::getRNC)
                 .thenComparing(LocalBusiness::getName)
                 .compare(this, o);
+    }
+
+    @Override
+    public String getRNC() {
+        return RNC();
+    }
+
+    @Override
+    public String getName() {
+        return name();
     }
 }

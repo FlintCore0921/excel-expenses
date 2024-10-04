@@ -27,7 +27,7 @@ public class RouteManager<T> {
     }
 
     public void navigateBack() {
-
+        navigateBackTo(this.currentRoute());
     }
 
     public void navigateBackTo(T route) {
@@ -41,10 +41,10 @@ public class RouteManager<T> {
     }
 
     public boolean isCurrentRoute(T route) {
-        return !this.routeHistory.isEmpty() || this.routeHistory.peek().equals(route);
+        return !this.routeHistory.isEmpty() && this.routeHistory.peek().equals(route);
     }
 
     public T currentRoute() {
-        return this.routeHistory.peek();
+        return !this.routeHistory.isEmpty() ? this.routeHistory.peek() : null;
     }
 }

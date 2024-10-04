@@ -5,12 +5,14 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import lombok.Getter;
+import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import java.util.function.Consumer;
 
 @Getter
 @Component
+@Scope("prototype")
 public class MenuItemController {
     @FXML
     private Button btnTrigger;
@@ -31,7 +33,11 @@ public class MenuItemController {
         btnTrigger.getStyleClass().remove(style.identifier);
     }
 
-    public boolean isSelected(){
+    public boolean isSelected() {
         return btnTrigger.getStyleClass().contains(SidebarItemStyle.ITEM_SELECTED.identifier);
+    }
+
+    public void trigger() {
+        this.btnTrigger.fire();
     }
 }

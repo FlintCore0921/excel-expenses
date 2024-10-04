@@ -1,7 +1,7 @@
 package com.flintcore.excel_expenses.factories;
 
 import com.flintcore.excel_expenses.controllers.MenuItemController;
-import com.flintcore.excel_expenses.handlers.routers.main.EMainRoute;
+import com.flintcore.excel_expenses.handlers.routers.IRoute;
 import com.flintcore.excel_expenses.models.NodeWrapper;
 import javafx.scene.Node;
 import lombok.RequiredArgsConstructor;
@@ -9,6 +9,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -36,9 +37,9 @@ public class MainNavbarConfiguratorFactory {
         };
     }
 
-    public Map<EMainRoute, NodeWrapper<Node, MenuItemController>> buildMainNavbarItems(
-            List<EMainRoute> routes,
-            Consumer<EMainRoute> routeTrigger
+    public Map<IRoute, NodeWrapper<Node, MenuItemController>> buildMainNavbarItems(
+            List<? extends IRoute> routes,
+            Consumer<IRoute> routeTrigger
     ) {
         Supplier<NodeWrapper<Node, MenuItemController>> nodeViewBuilder = getNodeViewBuilder();
 
@@ -49,13 +50,18 @@ public class MainNavbarConfiguratorFactory {
                     MenuItemController controller = nodeWrapper.controller();
 
                     controller.setText(
-                            StringUtils.capitalize(rt.name())
+                            StringUtils.capitalize(rt.getName().toLowerCase())
                     );
 
                     controller.setOnTrigger(e -> routeTrigger.accept(rt));
 
                     return Map.entry(rt, nodeWrapper);
                 })
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+                .collect(Collectors.toMap(
+                        Map.Entry::getKey,
+                        Map.Entry::getValue,
+                        (old, curr) -> old,
+                        LinkedHashMap::new
+                ));
     }
 }

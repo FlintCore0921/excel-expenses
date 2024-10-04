@@ -7,7 +7,17 @@ import lombok.Getter;
 @AllArgsConstructor
 @Getter
 public enum EExpenseRoute implements IRoute {
-    HOME("/templates/expensePage.fxml"),
-    CREATE("");
-    public final String route;
+    CREATE("/templates/createExpenseForm.fxml");
+    private final String route;
+
+    @Override
+    public String getName() {
+        return name();
+    }
+
+
+    @Override
+    public int getOrder() {
+        return ordinal();
+    }
 }

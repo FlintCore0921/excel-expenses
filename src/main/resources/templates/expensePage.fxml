@@ -15,25 +15,25 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" stylesheets="@styles/expensePageStyles.css" xmlns="http://javafx.com/javafx/23" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.flintcore.excel_expenses.controllers.ExpensePageController">
+<BorderPane stylesheets="@styles/expensePageStyles.css" xmlns="http://javafx.com/javafx/23" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.flintcore.excel_expenses.controllers.ExpensePageController">
    <top>
       <StackPane BorderPane.alignment="CENTER">
          <children>
             <HBox>
                <children>
                   <Button fx:id="btnCreateExpense" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" mnemonicParsing="false" text="Add Expense" HBox.hgrow="ALWAYS">
-                     <HBox.margin>
-                        <Insets bottom="6.0" left="6.0" right="6.0" top="6.0" />
-                     </HBox.margin>
+                     <font>
+                        <Font name="System Italic" size="28.0" />
+                     </font>
                      <styleClass>
                         <String fx:value="transparent-bg" />
                         <String fx:value="action-button" />
                      </styleClass>
-                     <font>
-                        <Font size="28.0" />
-                     </font>
                   </Button>
                </children>
+               <padding>
+                  <Insets bottom="7.0" left="7.0" right="7.0" top="7.0" />
+               </padding>
             </HBox>
          </children>
       </StackPane>
@@ -55,12 +55,12 @@
                      <children>
                         <TextField promptText="Search" GridPane.columnIndex="2">
                            <font>
-                              <Font size="18.0" />
+                              <Font name="Segoe UI Italic" size="22.0" />
                            </font>
                         </TextField>
                         <Label maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" text="Expense List" GridPane.columnIndex="1">
                            <font>
-                              <Font size="24.0" />
+                              <Font name="Segoe UI Italic" size="24.0" />
                            </font>
                            <padding>
                               <Insets left="40.0" />
