@@ -20,12 +20,14 @@ public class TransitionFactory {
             Duration duration,
             Supplier<Double> fromValue
     ) {
-        Bounds boundsInParent = node.getBoundsInParent();
+        Bounds bounds = ObjectUtils.defaultIfNull(
+                node.getParent().getBoundsInParent(), node.getBoundsInParent()
+        );
 
         Supplier<Double> doubleSupplier = ObjectUtils
                 .defaultIfNull(fromValue, IDefaultTransitions.SLIDE_HORIZONTAL_FROM);
 
-        double fromXValue = boundsInParent.getWidth() * doubleSupplier.get();
+        double fromXValue = bounds.getWidth() * doubleSupplier.get();
 
         TranslateTransition transition = new TranslateTransition(duration, node);
         transition.setFromX(fromXValue);
@@ -44,7 +46,7 @@ public class TransitionFactory {
             Node node,
             Duration duration
     ) {
-        return createSlideOutHorizontallyTransition(node, duration, IDefaultTransitions.SLIDE_HORIZONTAL_FROM);
+        return createSlideInHorizontallyTransition(node, duration, IDefaultTransitions.SLIDE_HORIZONTAL_FROM);
     }
 
     public Transition createSlideOutHorizontallyTransition(
@@ -52,12 +54,14 @@ public class TransitionFactory {
             Duration duration,
             Supplier<Double> fromValue
     ) {
-        Bounds boundsInParent = node.getBoundsInParent();
+        Bounds bounds = ObjectUtils.defaultIfNull(
+                node.getParent().getBoundsInParent(), node.getBoundsInParent()
+        );
 
         Supplier<Double> doubleSupplier = ObjectUtils
                 .defaultIfNull(fromValue, IDefaultTransitions.SLIDE_HORIZONTAL_FROM);
 
-        double fromXValue = boundsInParent.getWidth() * doubleSupplier.get();
+        double fromXValue = bounds.getWidth() * doubleSupplier.get();
 
         TranslateTransition transition = new TranslateTransition(duration, node);
         transition.setFromX(0.0);

@@ -27,7 +27,7 @@ import java.util.function.BiFunction;
 @Component
 public class ApplicationRouter implements IApplicationRouter<IRoute> {
 
-    public static final int ENTER_MILLIS_ANIMATION = 600;
+    public static final int ENTER_MILLIS_ANIMATION = 500;
     public static final int EXIT_MILLIS_ANIMATION = 200;
 
 

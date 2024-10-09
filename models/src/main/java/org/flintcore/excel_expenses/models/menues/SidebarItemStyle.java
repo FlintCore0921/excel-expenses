@@ -1,4 +1,4 @@
-package com.flintcore.excel_expenses.models.menues;
+package org.flintcore.excel_expenses.models.menues;
 
 import lombok.AllArgsConstructor;
 

@@ -3,7 +3,6 @@ package com.flintcore.excel_expenses.factories;
 import com.flintcore.excel_expenses.models.NodeWrapper;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
-import javafx.scene.Parent;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;

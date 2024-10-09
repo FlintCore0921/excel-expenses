@@ -1,4 +1,4 @@
-package com.flintcore.excel_expenses.models.expenses;
+package org.flintcore.excel_expenses.models.expenses;
 
 import lombok.NonNull;
 
