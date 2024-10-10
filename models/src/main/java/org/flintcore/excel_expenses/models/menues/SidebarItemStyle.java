@@ -6,5 +6,5 @@ import lombok.AllArgsConstructor;
 public enum SidebarItemStyle {
     ITEM_SELECTED("selected");
 
-    public String identifier;
+    public final String identifier;
 }

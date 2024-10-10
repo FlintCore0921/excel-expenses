@@ -1,11 +1,12 @@
+
 group = "com.flintcore"
 version = "0.0.1"
 
-dependencies {
-    testImplementation(platform(libs.junit.bom))
-    testImplementation(libs.junit.jupiter)
+javafx {
+    version = libs.versions.javafx.get()
+    modules = listOf("javafx.graphics")
 }
 
-tasks.test {
-    useJUnitPlatform()
+dependencies {
+    compileOnly(libs.javafx.graphics)
 }

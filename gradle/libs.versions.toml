@@ -3,9 +3,12 @@ flint-data-utils = "1.2.2"
 apache-commons-text = "1.12.0"
 javafx = "22"
 junit = "5.10.0"
+excelib="1.0.0"
 
 [libraries]
 data_utils = { group = "com.flintCore", name = "data-utils", version.ref = "flint-data-utils" }
+excelib_bom = { group="org.flintcore.excelib", name="excelib-bom", version.ref="excelib" }
+excelib_commons = { group="org.flintcore.excelib", name="commons" }
 
 lombok = { group = "org.projectlombok", name = "lombok" }
 
@@ -13,6 +16,7 @@ apache_commons_text = { group = "org.apache.commons", name = "commons-text", ver
 
 javafx_controls = { group = "org.openjfx", name = "javafx-controls", version.ref = "javafx" }
 javafx_fxml = { group = "org.openjfx", name = "javafx-fxml", version.ref = "javafx" }
+javafx_graphics = { group = "org.openjfx", name = "javafx-graphics", version.ref = "javafx" }
 
 spring_boot_starter = { group = "org.springframework.boot", name = "spring-boot-starter" }
 spring_boot_devtools = { group = "org.springframework.boot", name = "spring-boot-devtools" }
