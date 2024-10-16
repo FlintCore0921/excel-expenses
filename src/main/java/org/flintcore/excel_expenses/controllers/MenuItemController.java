@@ -5,6 +5,7 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import lombok.Getter;
+import org.flintcore.excel_expenses.managers.factories.navigation.IMenuItemHandler;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
@@ -13,7 +14,7 @@ import java.util.function.Consumer;
 @Getter
 @Component
 @Scope("prototype")
-public class MenuItemController {
+public class MenuItemController implements IMenuItemHandler {
     @FXML
     private Button btnTrigger;
 

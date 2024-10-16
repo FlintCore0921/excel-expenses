@@ -17,6 +17,7 @@ apache_commons_text = { group = "org.apache.commons", name = "commons-text", ver
 javafx_controls = { group = "org.openjfx", name = "javafx-controls", version.ref = "javafx" }
 javafx_fxml = { group = "org.openjfx", name = "javafx-fxml", version.ref = "javafx" }
 javafx_graphics = { group = "org.openjfx", name = "javafx-graphics", version.ref = "javafx" }
+javafx_base = { group = "org.openjfx", name = "javafx-base", version.ref = "javafx" }
 
 spring_boot_starter = { group = "org.springframework.boot", name = "spring-boot-starter" }
 spring_boot_devtools = { group = "org.springframework.boot", name = "spring-boot-devtools" }

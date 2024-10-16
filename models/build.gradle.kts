@@ -1,4 +1,7 @@
+plugins {
+    id("org.openjfx.javafxplugin")
 
+}
 group = "com.flintcore"
 version = "0.0.1"
 

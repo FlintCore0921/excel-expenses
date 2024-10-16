@@ -37,7 +37,7 @@
          <children>
             <HBox alignment="CENTER" GridPane.rowSpan="2147483647">
                <children>
-                  <Button maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" mnemonicParsing="false" text="Add receipt" HBox.hgrow="ALWAYS">
+                  <Button fx:id="btnNewReceipt" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" mnemonicParsing="false" text="Add receipt" HBox.hgrow="ALWAYS">
                      <styleClass>
                         <String fx:value="transparent-bg" />
                         <String fx:value="fast-actions-button" />
@@ -50,7 +50,7 @@
             </HBox>
             <HBox alignment="CENTER" prefWidth="200.0" GridPane.columnIndex="1" GridPane.columnSpan="2147483647" GridPane.rowSpan="2147483647">
                <children>
-                  <Button maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" mnemonicParsing="false" text="Add Local" HBox.hgrow="ALWAYS">
+                  <Button fx:id="btnNewBusiness" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" mnemonicParsing="false" text="Add Local" HBox.hgrow="ALWAYS">
                      <styleClass>
                         <String fx:value="transparent-bg" />
                         <String fx:value="fast-actions-button" />

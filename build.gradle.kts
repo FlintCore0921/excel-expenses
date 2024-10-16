@@ -1,4 +1,4 @@
-import org.gradle.kotlin.dsl.javafx
+import org.springframework.boot.gradle.tasks.bundling.BootJar
 
 plugins {
     java
@@ -41,6 +41,11 @@ allprojects {
     }
 
     dependencies {
+        project(":utilities").takeIf { it.name != project.name }?.let {
+            println("added into ${project.name}")
+            implementation(it)
+        }
+
         implementation(projectLibs.data.utils)
         implementation(projectLibs.apache.commons.text)
 
@@ -59,21 +64,32 @@ subprojects {
     apply(plugin = "java-library")
     apply(plugin = "org.springframework.boot")
     apply(plugin = "io.spring.dependency-management")
-    apply(plugin = "org.openjfx.javafxplugin")
 
     dependencies {
         testImplementation(platform(projectLibs.junit.bom))
         testImplementation(projectLibs.junit.jupiter)
+        testImplementation(projectLibs.spring.boot.starter.test)
     }
 
     tasks.test {
         useJUnitPlatform()
+    }
+
+    tasks.getByName<Jar>("jar") {
+        enabled = true
+    }
+
+    tasks.getByName<BootJar>("bootJar") {
+        enabled = false
     }
 }
 
 dependencies {
 //    my modules
     implementation(project(":models"))
+    implementation(project(":file-handler"))
+    implementation(project(":excels-handler"))
+    implementation(project(":managers"))
 
     implementation(libs.javafx.controls)
     implementation(libs.javafx.fxml)
@@ -81,7 +97,6 @@ dependencies {
     implementation(platform(libs.excelib.bom))
     configureImplementationExcelib(*ExcelibModules.values())
 
-//    implementation(libs.spring.boot.starter)
     developmentOnly(libs.spring.boot.devtools)
     testImplementation(libs.spring.boot.starter.test)
     testRuntimeOnly(libs.junit.platform.launcher)

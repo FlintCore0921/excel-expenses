@@ -1,10 +1,11 @@
 package org.flintcore.excel_expenses.controllers;
 
-import org.flintcore.excel_expenses.factories.MainNavbarConfiguratorFactory;
+import org.flintcore.excel_expenses.managers.factories.navigation.IMenuItemHandler;
+import org.flintcore.excel_expenses.managers.factories.navigation.MainNavbarConfiguratorFactory;
 import org.flintcore.excel_expenses.handlers.WindowActionsHolder;
-import org.flintcore.excel_expenses.handlers.routers.IRoute;
-import org.flintcore.excel_expenses.handlers.routers.main.EMainRoute;
-import org.flintcore.excel_expenses.handlers.routers.routers.ApplicationRouter;
+import org.flintcore.excel_expenses.managers.routers.IRoute;
+import org.flintcore.excel_expenses.managers.routers.main.EMainRoute;
+import org.flintcore.excel_expenses.managers.routers.ApplicationRouter;
 import org.flintcore.excel_expenses.models.NodeWrapper;
 import javafx.animation.Transition;
 import javafx.application.Platform;
@@ -72,7 +73,7 @@ public class MainViewController implements Initializable {
     }
 
     private void buildNavbarItems() {
-        Map<IRoute, NodeWrapper<Node, MenuItemController>> nodeWrapperList =
+        Map<IRoute, NodeWrapper<Node, IMenuItemHandler>> nodeWrapperList =
                 navbarItemFactory.buildMainNavbarItems(
                         EMainRoute.availableRoutes(),
                         this.applicationRouter::navigateTo
