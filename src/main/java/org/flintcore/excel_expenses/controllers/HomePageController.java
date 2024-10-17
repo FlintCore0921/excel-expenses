@@ -7,6 +7,7 @@ import javafx.scene.layout.VBox;
 import lombok.RequiredArgsConstructor;
 import org.flintcore.excel_expenses.managers.routers.expenses.EExpenseRoute;
 import org.flintcore.excel_expenses.managers.routers.ApplicationRouter;
+import org.flintcore.excel_expenses.managers.routers.local.ELocalRoute;
 import org.springframework.stereotype.Component;
 
 import java.net.URL;
@@ -21,6 +22,7 @@ public class HomePageController implements Initializable {
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         this.btnNewReceipt.setOnAction(evt -> this.appRouter.navigateTo(EExpenseRoute.CREATE));
+        this.btnNewBusiness.setOnAction(evt -> this.appRouter.navigateTo(ELocalRoute.CREATE));
     }
 
     @FXML

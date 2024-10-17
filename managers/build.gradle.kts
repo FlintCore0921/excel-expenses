@@ -16,4 +16,8 @@ dependencies {
     compileOnly(project(":models"))
     compileOnly(libs.javafx.controls)
     compileOnly(libs.javafx.fxml)
+
+    testCompileOnly(project(":models"))
+    testCompileOnly(libs.javafx.controls)
+    testCompileOnly(libs.javafx.fxml)
 }

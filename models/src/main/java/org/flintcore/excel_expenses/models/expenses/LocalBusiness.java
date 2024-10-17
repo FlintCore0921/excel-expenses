@@ -5,6 +5,7 @@ import lombok.NonNull;
 
 import java.io.Serial;
 import java.util.Comparator;
+import java.util.Objects;
 
 @Builder
 public record LocalBusiness(
@@ -23,6 +24,12 @@ public record LocalBusiness(
 
     public int compareTo(@NonNull LocalBusiness o) {
         return this.compareTo((IBusiness) o);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        return obj instanceof IBusiness business
+                && Objects.equals(this.RNC, business.getRNC());
     }
 
     @Override

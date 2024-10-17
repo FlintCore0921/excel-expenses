@@ -12,6 +12,7 @@ fun DependencyHandlerScope.configureCompileOnlyExcelib(
     modules.forEach {
         val dependencyNotation = excelibDependencyFormat.format(it.name.lowercase())
         add("compileOnly", dependencyNotation)
+        add("testCompileOnly", dependencyNotation)
     }
 }
 

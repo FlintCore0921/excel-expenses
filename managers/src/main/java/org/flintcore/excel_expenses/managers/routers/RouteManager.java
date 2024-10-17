@@ -24,7 +24,7 @@ public class RouteManager<T> {
     }
 
     public boolean canNavigateBack() {
-        return this.routeHistory.size() > 2;
+        return this.routeHistory.size() > 1;
     }
 
     public boolean canNavigateBackTo(T route) {

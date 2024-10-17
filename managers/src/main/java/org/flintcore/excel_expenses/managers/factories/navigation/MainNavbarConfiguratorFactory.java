@@ -49,7 +49,7 @@ public class MainNavbarConfiguratorFactory {
                     IMenuItemHandler controller = nodeWrapper.controller();
 
                     controller.setText(
-                            StringUtils.capitalize(rt.getName().toLowerCase())
+                            StringUtils.capitalize(rt.name().toLowerCase())
                     );
 
                     controller.setOnTrigger(e -> routeTrigger.accept(rt));

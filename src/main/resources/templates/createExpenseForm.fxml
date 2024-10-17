@@ -51,14 +51,14 @@
                <children>
                   <StackPane fx:id="btnBack">
                      <padding>
-                        <Insets bottom="15.0" left="15.0" right="15.0" top="15.0" />
+                        <Insets bottom="7.0" left="7.0" right="7.0" top="7.0" />
                      </padding>
                      <children>
-                        <Label text="&lt;">
-                           <font>
-                              <Font name="Segoe UI Bold" size="21.0" />
-                           </font>
-                        </Label>
+                        <ImageView fitWidth="32.0" pickOnBounds="true" preserveRatio="true">
+                           <image>
+                              <Image url="@../images/go_back.png" />
+                           </image>
+                        </ImageView>
                      </children>
                   </StackPane>
                   <Label alignment="CENTER" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" text="New expense" HBox.hgrow="ALWAYS">
@@ -140,11 +140,12 @@
                            <children>
                               <Button fx:id="btnRegisterLocal" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" mnemonicParsing="false" text="Register new local" VBox.vgrow="ALWAYS">
                                  <font>
-                                    <Font name="Segoe UI Bold Italic" size="18.0" />
+                                    <Font name="Segoe UI Bold Italic" size="20.0" />
                                  </font>
                                  <styleClass>
                                     <String fx:value="transparent-bg" />
                                     <String fx:value="register-button" />
+                                    <String fx:value="white-text" />
                                  </styleClass>
                               </Button>
                            </children>

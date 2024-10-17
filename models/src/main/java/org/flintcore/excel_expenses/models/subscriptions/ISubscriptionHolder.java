@@ -6,10 +6,11 @@ import javafx.util.Subscription;
 import java.util.List;
 
 public interface ISubscriptionHolder<T, R> {
-    default List<Subscription> addSubscription(List<T> types, R action) {
+    default Subscription addSubscription(List<T> types, R action) {
         return types.stream()
                 .map(e -> addSubscription(e, action))
-                .toList();
+                .reduce(Subscription::combine)
+                .orElseThrow();
     }
 
      Subscription addSubscription(T type, R action);

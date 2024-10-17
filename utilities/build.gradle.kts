@@ -15,4 +15,6 @@ javafx {
 dependencies {
     compileOnly(libs.javafx.controls)
     compileOnly(libs.javafx.fxml)
+    testCompileOnly(libs.javafx.controls)
+    testCompileOnly(libs.javafx.fxml)
 }

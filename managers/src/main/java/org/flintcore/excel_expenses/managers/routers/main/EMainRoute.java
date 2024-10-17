@@ -25,11 +25,6 @@ public enum EMainRoute implements IRoute {
     }
 
     @Override
-    public String getName() {
-        return name();
-    }
-
-    @Override
     public int getOrder() {
         return ordinal();
     }

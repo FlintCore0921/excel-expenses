@@ -90,6 +90,7 @@ dependencies {
     implementation(project(":file-handler"))
     implementation(project(":excels-handler"))
     implementation(project(":managers"))
+    implementation(project(":tasks-schedules"))
 
     implementation(libs.javafx.controls)
     implementation(libs.javafx.fxml)

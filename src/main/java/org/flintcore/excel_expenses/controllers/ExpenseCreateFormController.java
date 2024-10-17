@@ -1,6 +1,7 @@
 package org.flintcore.excel_expenses.controllers;
 
 import data.utils.NullableUtils;
+import jakarta.annotation.PreDestroy;
 import javafx.animation.Interpolator;
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
@@ -17,6 +18,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.util.Duration;
+import javafx.util.Subscription;
 import org.flintcore.excel_expenses.handlers.fields.NumericTextFieldChangeListener;
 import org.flintcore.excel_expenses.handlers.fields.TextFieldChangeListener;
 import org.flintcore.excel_expenses.handlers.fields.businesses.BusinessSelectionListener;
@@ -25,11 +27,14 @@ import org.flintcore.excel_expenses.handlers.filters.BusinessStringConverter;
 import org.flintcore.excel_expenses.handlers.focus.TextFieldFocusListener;
 import org.flintcore.excel_expenses.managers.routers.ApplicationRouter;
 import org.flintcore.excel_expenses.listeners.keyboards.ComboBoxRemoteKeyListener;
+import org.flintcore.excel_expenses.managers.routers.local.ELocalRoute;
 import org.flintcore.excel_expenses.models.expenses.IBusiness;
 import org.flintcore.excel_expenses.models.expenses.LocalBusiness;
 import org.flintcore.excel_expenses.models.expenses.Receipt;
+import org.flintcore.excel_expenses.models.subscriptions.SubscriptionHolder;
 import org.flintcore.excel_expenses.services.business.LocalBusinessFileFXService;
 import org.flintcore.utilities.dates.DateUtils;
+import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import java.net.URL;
@@ -38,21 +43,24 @@ import java.util.ResourceBundle;
 import java.util.function.Consumer;
 
 @Component
+@Scope("prototype")
 public class ExpenseCreateFormController implements Initializable {
 
     private final ApplicationRouter appRouter;
+    private final SubscriptionHolder subscriptionManager;
     private final LocalBusinessFileFXService localBusinessService;
     private Receipt.ReceiptBuilder receiptBuilder;
     private LocalBusiness.LocalBusinessBuilder businessBuilder;
 
-    public ExpenseCreateFormController(ApplicationRouter appRouter, LocalBusinessFileFXService localBusinessService) {
+    public ExpenseCreateFormController(ApplicationRouter appRouter, SubscriptionHolder subscriptionManager, LocalBusinessFileFXService localBusinessService) {
         this.appRouter = appRouter;
+        this.subscriptionManager = subscriptionManager;
         this.localBusinessService = localBusinessService;
     }
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        this.btnBack.setOnMousePressed(evt -> this.appRouter.navigateBack());
+        configureBtnRouting();
 
         // Fields
         // Local business
@@ -101,6 +109,13 @@ public class ExpenseCreateFormController implements Initializable {
 
         // Button fields
         configureLocalRequestButton();
+
+        // Button add Expense Local
+    }
+
+    private void configureBtnRouting() {
+        this.btnBack.setOnMousePressed(evt -> this.appRouter.navigateBack());
+        this.btnRegisterLocal.setOnAction(e -> this.appRouter.navigateTo(ELocalRoute.CREATE));
     }
 
     // Set up the load again btn
@@ -110,21 +125,25 @@ public class ExpenseCreateFormController implements Initializable {
         Timeline loadingAnimation = new Timeline(
                 new KeyFrame(Duration.ZERO,
                         new KeyValue(this.btnLoadRNC.opacityProperty(), 1.0, Interpolator.EASE_BOTH)),
-                new KeyFrame(Duration.seconds(1),
+                new KeyFrame(Duration.millis(300),
                         new KeyValue(this.btnLoadRNC.opacityProperty(), 0.0, Interpolator.EASE_BOTH)),
-                new KeyFrame(Duration.seconds(2),
+                new KeyFrame(Duration.millis(600),
                         new KeyValue(this.btnLoadRNC.opacityProperty(), 1.0, Interpolator.EASE_BOTH))
         );
 
         loadingAnimation.setCycleCount(Timeline.INDEFINITE);
 
         // Stop animation when done
-        this.localBusinessService.listenRequestTask(
+         Subscription onDoneRequest = this.localBusinessService.listenRequestTask(
                 List.of(
                         WorkerStateEvent.WORKER_STATE_SUCCEEDED,
                         WorkerStateEvent.WORKER_STATE_FAILED,
                         WorkerStateEvent.WORKER_STATE_CANCELLED
                 ), loadingAnimation::stop
+        );
+
+        this.subscriptionManager.appendSubscriptionOn(
+                this.localBusinessService, onDoneRequest
         );
 
         this.btnLoadRNC.setOnAction(e -> {
@@ -164,7 +183,6 @@ public class ExpenseCreateFormController implements Initializable {
         this.localFilterBox.converterProperty().set(
                 new BusinessStringConverter(this.localFilterBox::getItems)
         );
-
         // Set the value of current combo box
         this.localFilterBox.valueProperty().subscribe(
                 new BusinessSelectionListener(
@@ -191,6 +209,11 @@ public class ExpenseCreateFormController implements Initializable {
 
             consumer.accept(b);
         };
+    }
+
+    @PreDestroy
+    private void onDeleteReference() {
+        this.subscriptionManager.close();
     }
 
     @FXML

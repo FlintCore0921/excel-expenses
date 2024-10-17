@@ -9,9 +9,6 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.stereotype.Component;
 
 @SpringBootApplication
-@ComponentScans({
-        @ComponentScan("org.flintcore.excelib")
-})
 public class ExcelExpensesApplication {
     public static void main(String[] args) {
 //		SpringApplication.run(ExcelExpensesApplication.class, args);

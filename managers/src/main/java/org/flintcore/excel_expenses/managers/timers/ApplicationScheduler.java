@@ -44,6 +44,6 @@ public class ApplicationScheduler implements IScheduler {
 
     @PreDestroy
     private void cancelTimers() {
-        this.holderTimer.cancel();
+        NullableUtils.executeNonNull(this.holderTimer, Timer::cancel);
     }
 }

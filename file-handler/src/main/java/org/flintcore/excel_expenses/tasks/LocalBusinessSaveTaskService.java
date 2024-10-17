@@ -17,7 +17,10 @@ import org.flintcore.excel_expenses.models.lists.SerialListHolder;
 import org.flintcore.excel_expenses.models.subscriptions.IEventSubscriptionHolder;
 import org.springframework.stereotype.Component;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.function.Supplier;
 
 @Component
@@ -69,8 +72,11 @@ public class LocalBusinessSaveTaskService
     }
 
     private EventHandler<WorkerStateEvent> callSubscriptionsHandler() {
-        return e -> NullableUtils.executeNonNull(this.subscriptions.get(e.getEventType()),
-                l -> l.forEach(Runnable::run));
+        return e -> NullableUtils.executeNonNull(
+                this.subscriptions,
+                subs -> NullableUtils.executeNonNull(subs.get(e.getEventType()),
+                        l -> l.forEach(Runnable::run))
+        );
     }
 
     @PreDestroy
