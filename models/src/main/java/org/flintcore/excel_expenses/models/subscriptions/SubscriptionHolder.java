@@ -16,7 +16,7 @@ public class SubscriptionHolder implements Closeable {
     public void appendSubscriptionOn(Object key, Subscription scheduled) {
         initSubscriptions();
 
-        this.subscriptions.computeIfAbsent(key, e -> new HashSet<>())
+        this.subscriptions.computeIfAbsent(key, e -> Collections.synchronizedSet(new HashSet<>()))
                 .add(scheduled);
     }
 
@@ -25,17 +25,16 @@ public class SubscriptionHolder implements Closeable {
                 () -> this.subscriptions = new HashMap<>());
     }
 
-    public void remove(Object key){
+    public void remove(Object key) {
         NullableUtils.executeNonNull(this.subscriptions, mp -> mp.remove(key));
     }
 
     public void close() {
-        NullableUtils.executeNonNull(this.subscriptions,
-                subs -> {
-                    subs.values().forEach(
-                            l -> l.forEach(Subscription::unsubscribe)
-                    );
-                    subs.clear();
-                });
+        NullableUtils.executeNonNull(this.subscriptions, subs -> {
+            subs.values().forEach(
+                    l -> l.forEach(Subscription::unsubscribe)
+            );
+            subs.clear();
+        });
     }
 }

@@ -9,10 +9,7 @@ import javafx.util.Subscription;
 import lombok.RequiredArgsConstructor;
 import org.flintcore.excel_expenses.models.subscriptions.IEventSubscriptionHolder;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 @RequiredArgsConstructor
 public abstract class ObservableTask<T> extends Task<T>
@@ -33,7 +30,7 @@ public abstract class ObservableTask<T> extends Task<T>
     protected Subscription listenSubscription(EventType<WorkerStateEvent> type, Runnable action) {
         try {
             Set<Runnable> subscriptions = getEventListenerHolder()
-                    .computeIfAbsent(type, __ -> new HashSet<>());
+                    .computeIfAbsent(type, __ -> Collections.synchronizedSet(new HashSet<>()));
 
             subscriptions.add(action);
 
@@ -46,7 +43,7 @@ public abstract class ObservableTask<T> extends Task<T>
     private void callSubscriptionsHandler() {
         EventHandler<WorkerStateEvent> eventListenerHandler = e -> NullableUtils.executeNonNull(this.events,
                 subs -> NullableUtils.executeNonNull(subs.get(e.getEventType()),
-                        l -> l.forEach(Runnable::run)
+                        l -> List.copyOf(l).forEach(Runnable::run)
                 )
         );
 

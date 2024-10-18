@@ -1,9 +1,6 @@
 package org.flintcore.excel_expenses.tasks.bussiness.local;
 
 import data.utils.NullableUtils;
-import javafx.concurrent.WorkerStateEvent;
-import javafx.event.EventType;
-import javafx.util.Subscription;
 import lombok.Setter;
 import org.flintcore.excel_expenses.managers.validators.LocalBusinessValidator;
 import org.flintcore.excel_expenses.models.expenses.LocalBusiness;
@@ -12,6 +9,7 @@ import org.flintcore.excel_expenses.services.business.LocalBusinessFileFXService
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.concurrent.Future;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
@@ -55,9 +53,12 @@ public class RegisterLocalBusinessOnFileTask extends ObservableTask<Void> {
 
             validateBusinessContent(localBusiness);
 
-            this.localBusinessFileService.registerBusiness(
-                    localBusiness
-            );
+            Future<Boolean> wasBusinessAdded = this.localBusinessFileService
+                    .registerBusiness(localBusiness);
+
+            if (!wasBusinessAdded.get()) {
+                throw new RuntimeException("Business already exists");
+            }
         } catch (Exception e) {
             this.consumeException(e);
             throw e;

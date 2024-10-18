@@ -9,7 +9,7 @@ version = rootProject.version
 
 javafx {
     version = libs.versions.javafx.get()
-    modules = listOf("javafx.controls")
+    modules = listOf("javafx.controls", "javafx.fxml")
 }
 
 dependencies {

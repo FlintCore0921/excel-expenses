@@ -2,7 +2,6 @@ package org.flintcore.excel_expenses.tasks;
 
 import data.utils.NullableUtils;
 import jakarta.annotation.PostConstruct;
-import jakarta.annotation.PreDestroy;
 import javafx.concurrent.Service;
 import javafx.concurrent.Task;
 import javafx.concurrent.WorkerStateEvent;
@@ -17,10 +16,7 @@ import org.flintcore.excel_expenses.models.lists.SerialListHolder;
 import org.flintcore.excel_expenses.models.subscriptions.IEventSubscriptionHolder;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Supplier;
 
 @Component
@@ -28,15 +24,18 @@ import java.util.function.Supplier;
 public class LocalBusinessSaveTaskService
         extends Service<Void>
         implements IEventSubscriptionHolder<WorkerStateEvent, Runnable> {
+
     private final LocalBusinessFileManager localBusinessFileManager;
+
     @Setter
     private Supplier<SerialListHolder<LocalBusiness>> localBusinessSupplier;
+
     private Map<EventType<WorkerStateEvent>, List<Runnable>> subscriptions;
 
     public Subscription addSubscription(EventType<WorkerStateEvent> type, Runnable action) {
         initSubscriptionsHolder();
         List<Runnable> subscriptionsIn = this.subscriptions
-                .computeIfAbsent(type, __ -> new ArrayList<>());
+                .computeIfAbsent(type, __ -> Collections.synchronizedList(new ArrayList<>()));
 
         subscriptionsIn.add(action);
         return () -> subscriptionsIn.remove(action);
@@ -63,24 +62,21 @@ public class LocalBusinessSaveTaskService
     @PostConstruct
     private void setupListeners() {
         EventHandler<WorkerStateEvent> subscriptionsHandler = callSubscriptionsHandler();
-
-        setOnSucceeded(subscriptionsHandler);
-        setOnFailed(subscriptionsHandler);
-        setOnScheduled(subscriptionsHandler);
-        setOnCancelled(subscriptionsHandler);
         setOnReady(subscriptionsHandler);
+        setOnScheduled(subscriptionsHandler);
+        setOnRunning(subscriptionsHandler);
+        setOnSucceeded(subscriptionsHandler);
+        setOnCancelled(subscriptionsHandler);
+        setOnFailed(subscriptionsHandler);
     }
 
     private EventHandler<WorkerStateEvent> callSubscriptionsHandler() {
         return e -> NullableUtils.executeNonNull(
                 this.subscriptions,
-                subs -> NullableUtils.executeNonNull(subs.get(e.getEventType()),
-                        l -> l.forEach(Runnable::run))
+                subs -> NullableUtils.executeNonNull(
+                        subs.get(e.getEventType()),
+                        l -> List.copyOf(l).forEach(Runnable::run)
+                )
         );
-    }
-
-    @PreDestroy
-    private void onDestroy() {
-        NullableUtils.executeNonNull(subscriptions, Map::clear);
     }
 }

@@ -10,7 +10,6 @@ import javafx.scene.control.*;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.util.Duration;
-import javafx.util.Subscription;
 import org.flintcore.excel_expenses.managers.routers.ApplicationRouter;
 import org.flintcore.excel_expenses.managers.validators.LocalBusinessValidator;
 import org.flintcore.excel_expenses.models.alerts.CancelableTaskAlert;
@@ -91,21 +90,7 @@ public class LocalBusinessCreateFormController implements Initializable {
         this.btnSave.setOnAction(e -> {
             if (Objects.nonNull(this.registerTask)) return;
 
-            Runnable task = this::requestRegisterLocalBusinessTask;
-
-            if (this.localBusinessFileService.isRequestingData()) {
-                Subscription onDoneRequestData = this.localBusinessFileService.listenRequestTask(
-                        TaskFxEvent.WORKER_STATE_SUCCEEDED,
-                        task
-                );
-
-                this.registerTask.addSubscription(
-                        TaskFxEvent.WORKER_STATE_RUNNING,
-                        onDoneRequestData::unsubscribe
-                );
-            } else {
-                task.run();
-            }
+            this.requestRegisterLocalBusinessTask();
         });
     }
 

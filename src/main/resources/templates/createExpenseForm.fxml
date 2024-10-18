@@ -89,7 +89,7 @@
                                        <children>
                                           <StackPane HBox.hgrow="ALWAYS">
                                              <children>
-                                                <ComboBox fx:id="localFilterBox" visibleRowCount="5" />
+                                                <ComboBox fx:id="localFilterBox" maxWidth="1.7976931348623157E308" visibleRowCount="5" StackPane.alignment="BOTTOM_CENTER" />
                                                 <TextField fx:id="localRNCTxt" alignment="CENTER" promptText="Local Name...">
                                                    <font>
                                                       <Font name="Segoe UI Bold" size="20.0" />
