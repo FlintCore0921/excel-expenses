@@ -28,7 +28,7 @@ public record LocalBusiness(
 
     @Override
     public boolean equals(Object obj) {
-        return obj instanceof IBusiness business
+        return this == obj || obj instanceof IBusiness business
                 && Objects.equals(this.RNC, business.getRNC());
     }
 

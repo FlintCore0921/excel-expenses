@@ -8,12 +8,11 @@ import java.util.List;
 import java.util.Objects;
 import java.util.function.Supplier;
 
-public class BusinessStringConverter extends StringConverter<IBusiness> {
+public class BusinessStringConverter<T extends IBusiness> extends StringConverter<T> {
+    private final Supplier<List<T>> dataSupplier;
     private final String separator;
 
-    private final Supplier<List<IBusiness>> dataSupplier;
-
-    public BusinessStringConverter(Supplier<List<IBusiness>> dataSupplier) {
+    public BusinessStringConverter(Supplier<List<T>> dataSupplier) {
         this.dataSupplier = dataSupplier;
         this.separator = "-";
     }
@@ -24,9 +23,9 @@ public class BusinessStringConverter extends StringConverter<IBusiness> {
     }
 
     @Override
-    public IBusiness fromString(String displayText) {
-        List<IBusiness> businesses = dataSupplier.get();
-        LocalBusiness business = extractFrom(displayText);
+    public T fromString(String displayText) {
+        List<T> businesses = dataSupplier.get();
+        T business = extractFrom(displayText);
 
         return businesses.stream()
                 .filter(b -> b.compareTo(business) == 0)
@@ -34,8 +33,9 @@ public class BusinessStringConverter extends StringConverter<IBusiness> {
                 .orElse(null);
     }
 
-    private LocalBusiness extractFrom(String data) {
+    @SuppressWarnings("unchecked")
+    private T extractFrom(String data) {
         String[] parts = data.split(separator);
-        return new LocalBusiness(parts[1].trim(), parts[0].trim());
+        return (T) new LocalBusiness(parts[1].trim(), parts[0].trim());
     }
 }

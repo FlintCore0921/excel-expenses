@@ -10,25 +10,26 @@ public final class ObservableListUtils {
         throw new UnsupportedOperationException();
     }
 
+    /**Concat and listen changes in the provided lists.
+     *
+     * @param lists lists to be added and updated*/
     @SafeVarargs
     public static <T> ObservableList<T> concat(ObservableList<? extends T>... lists) {
-        ObservableList<T> observabled = FXCollections.observableArrayList();
+        ObservableList<T> observable = FXCollections.observableArrayList();
 
         for (ObservableList<? extends T> list : lists) {
-            list.addListener((ListChangeListener<? super T>) change -> {
+            list.addListener((ListChangeListener<?  super T>) change -> {
                     while(change.next()){
                         if (change.wasAdded()) {
-                            observabled.addAll(change.getAddedSubList());
+                            observable.addAll(change.getAddedSubList());
                         }
                         if (change.wasRemoved()) {
-                            observabled.removeAll(change.getRemoved());
+                            observable.removeAll(change.getRemoved());
                         }
                     }
             });
-
-            observabled.addAll(list);
         }
 
-        return observabled;
+        return observable;
     }
 }

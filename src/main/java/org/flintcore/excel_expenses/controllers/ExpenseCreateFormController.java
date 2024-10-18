@@ -16,7 +16,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.TextField;
-import javafx.scene.input.MouseEvent;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
@@ -47,6 +47,8 @@ import java.util.ResourceBundle;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
+import java.util.function.Supplier;
 
 @Component
 @Scope("prototype")
@@ -72,8 +74,8 @@ public class ExpenseCreateFormController implements Initializable {
         // Fields
         // Local business
         configureLocalBusinessFields();
-        configureBusinessFilterBox();
-        configureLocalRequestButton();
+        configureLocalBusinessFilterBox();
+        configureLocalBusinessRequestButton();
 
         // Price
         configurePriceFields();
@@ -84,8 +86,11 @@ public class ExpenseCreateFormController implements Initializable {
 
         onFirstRequestBusinessList();
     }
+
     private void onFirstRequestBusinessList() {
         AtomicReference<Subscription> onFirstRequestDataSet = new AtomicReference<>();
+
+        PauseTransition onFilterRNC = new PauseTransition(Duration.seconds(.5));
 
         Runnable onFirstRequest = () -> {
             NullableUtils.executeNonNull(onFirstRequestDataSet.get(), Subscription::unsubscribe);
@@ -94,14 +99,21 @@ public class ExpenseCreateFormController implements Initializable {
                     .getLocalBusinessList();
 
             listBusinessFuture.thenAcceptAsync(localBusinessList -> {
-                ObservableList<IBusiness> boxItems = this.localFilterBox.getItems();
+                ObservableList<IBusiness> boxItems = this.localFilterBox.getItems(),
+                        concatenatedList = ObservableListUtils.concat(
+                                boxItems, localBusinessList
+                        );
 
-                FilteredList<IBusiness> businessList = ObservableListUtils.concat(
-                        boxItems, localBusinessList
-                ).filtered(b -> b.getRNC().contains(this.localRNCTxt.getText()));
+                FilteredList<IBusiness> businessList = new FilteredList<>(concatenatedList);
 
-                this.localRNCTxt.textProperty().subscribe(field -> {
-                    businessList.setPredicate(b -> b.getRNC().toLowerCase().contains(field));
+                this.localRNCTxt.addEventFilter(KeyEvent.KEY_TYPED, evt -> {
+                    String rncField = this.localRNCTxt.getText().toLowerCase();
+
+                    Predicate<IBusiness> businessPredicate = b -> b.getRNC().toLowerCase()
+                            .contains(rncField);
+
+                    onFilterRNC.setOnFinished(e -> businessList.setPredicate(businessPredicate));
+                    onFilterRNC.playFromStart();
                 });
 
                 this.localFilterBox.setItems(businessList);
@@ -111,7 +123,9 @@ public class ExpenseCreateFormController implements Initializable {
         onFirstRequestDataSet.set(
                 this.localBusinessService.listenRequestTask(
                         TaskFxEvent.WORKER_STATE_SCHEDULED,
-                        onFirstRequest));
+                        onFirstRequest
+                )
+        );
 
         this.subscriptionManager.appendSubscriptionOn(
                 this.localBusinessService,
@@ -120,69 +134,38 @@ public class ExpenseCreateFormController implements Initializable {
     }
 
     private void configureLocalBusinessFields() {
-        this.localNameTxt.textProperty().addListener(
-                new TextFieldChangeListener(
-                        consumeBusinessBuilder(n -> this.businessBuilder.name(n))
-                )
+        this.localNameTxt.textProperty().subscribe(
+                consumeBusinessBuilder(n -> this.businessBuilder.name(n))
         );
 
-        // Focus shows list of items
-        this.localRNCTxt.addEventFilter(MouseEvent.MOUSE_CLICKED,
-                e -> this.localFilterBox.show());
-        // UP and DOWN movement
+        // UP, DOWN and ENTER movement
         this.localRNCTxt.setOnKeyPressed(
                 new ComboBoxRemoteKeyListener<>(this.localFilterBox)
         );
 
-        this.localRNCTxt.textProperty().addListener(
-                new TextFieldChangeListener(
-                        consumeBusinessBuilder(RNC -> this.businessBuilder.RNC(RNC))
-                )
+        this.localRNCTxt.textProperty().subscribe(
+                consumeBusinessBuilder(RNC -> this.businessBuilder.RNC(RNC))
         );
+
+        this.localRNCTxt.textProperty().subscribe(this.localFilterBox::show);
     }
 
-    private void configureReceiptFields() {
-        // Receipts
-        this.receiptNFCTxt.textProperty().addListener(
-                new TextFieldChangeListener(
-                        consumeReceiptBuilder(NFC -> this.receiptBuilder.NFC(NFC))
-                )
+    private void configureLocalBusinessFilterBox() {
+        Supplier<List<IBusiness>> supplier = () -> this.localFilterBox.getItems();
+
+        this.localFilterBox.converterProperty().set(
+                new BusinessStringConverter<>(supplier)
+        );
+        // Set the value of current combo box
+        this.localFilterBox.valueProperty().subscribe(
+                new BusinessSelectionListener<>(this.localNameTxt, this.localRNCTxt)
         );
 
-        this.receiptDate.valueProperty().addListener(
-                new LocalDateChangeListener(
-                        consumeReceiptBuilder(
-                                dateCreation -> this.receiptBuilder.dateCreation(
-                                        DateUtils.convertToDate(dateCreation)
-                                ))
-                )
-        );
+        this.localFilterBox.valueProperty()
+                .subscribe(e -> System.out.println(this.localFilterBox.getItems()));
     }
 
-    private void configurePriceFields() {
-        this.priceTxt.textProperty().addListener(
-                new NumericTextFieldChangeListener<>(
-                        consumeReceiptBuilder(price -> this.receiptBuilder.price(price)),
-                        Double::parseDouble
-                )
-        );
-
-        this.percentServicePriceTxt.textProperty().addListener(
-                new NumericTextFieldChangeListener<>(
-                        consumeReceiptBuilder(servPrc -> this.receiptBuilder.servicePrice(servPrc)),
-                        Double::parseDouble
-                )
-        );
-
-        this.priceItbisTxt.textProperty().addListener(
-                new NumericTextFieldChangeListener<>(
-                        consumeReceiptBuilder(itb -> this.receiptBuilder.itbPrice(itb)),
-                        Double::parseDouble
-                )
-        );
-    }
-
-    private void configureLocalRequestButton() {
+    private void configureLocalBusinessRequestButton() {
         // Stop animation when done
         AtomicReference<FadeTransition> onLoadingAnimation = new AtomicReference<>();
 
@@ -234,13 +217,44 @@ public class ExpenseCreateFormController implements Initializable {
         });
     }
 
-    private void configureBusinessFilterBox() {
-        this.localFilterBox.converterProperty().set(
-                new BusinessStringConverter(this.localFilterBox::getItems)
+    private void configureReceiptFields() {
+        // Receipts
+        this.receiptNFCTxt.textProperty().addListener(
+                new TextFieldChangeListener(
+                        consumeReceiptBuilder(NFC -> this.receiptBuilder.NFC(NFC))
+                )
         );
-        // Set the value of current combo box
-        this.localFilterBox.valueProperty().subscribe(
-                new BusinessSelectionListener(this.localNameTxt, this.localRNCTxt)
+
+        this.receiptDate.valueProperty().addListener(
+                new LocalDateChangeListener(
+                        consumeReceiptBuilder(
+                                dateCreation -> this.receiptBuilder.dateCreation(
+                                        DateUtils.convertToDate(dateCreation)
+                                ))
+                )
+        );
+    }
+
+    private void configurePriceFields() {
+        this.priceTxt.textProperty().addListener(
+                new NumericTextFieldChangeListener<>(
+                        consumeReceiptBuilder(price -> this.receiptBuilder.price(price)),
+                        Double::parseDouble
+                )
+        );
+
+        this.percentServicePriceTxt.textProperty().addListener(
+                new NumericTextFieldChangeListener<>(
+                        consumeReceiptBuilder(servPrc -> this.receiptBuilder.servicePrice(servPrc)),
+                        Double::parseDouble
+                )
+        );
+
+        this.priceItbisTxt.textProperty().addListener(
+                new NumericTextFieldChangeListener<>(
+                        consumeReceiptBuilder(itb -> this.receiptBuilder.itbPrice(itb)),
+                        Double::parseDouble
+                )
         );
     }
 
@@ -301,12 +315,12 @@ public class ExpenseCreateFormController implements Initializable {
     }
 
     private <T> Consumer<T> consumeBusinessBuilder(Consumer<T> consumer) {
-        return b -> {
+        return value -> {
             NullableUtils.executeIsNull(this.businessBuilder,
                     () -> this.businessBuilder = LocalBusiness.builder()
             );
 
-            consumer.accept(b);
+            consumer.accept(value);
         };
     }
 
