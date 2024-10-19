@@ -161,27 +161,7 @@ public class ExpenseCreateFormController implements Initializable {
         ComboBoxRemoteKeyListener rncKeyListener = this.rncFilterEventManager
                 .getRemoteRNCKeyListener();
 
-        // Set the fields values
-        rncKeyListener.appendConsumer(b -> {
-            if (Objects.isNull(b)) return;
 
-            log.info("select business");
-
-            this.localRNCTxt.setText(b.getRNC());
-            this.localNameTxt.setText(b.getName());
-        });
-
-        // Set the fields empty when no selected.
-        rncKeyListener.appendConsumer(b -> {
-            if (Objects.nonNull(b)) return;
-            log.info("no select business");
-            this.localNameTxt.clear();
-            this.localRNCTxt.clear();
-        });
-
-        // Set the value of current combo box
-        this.localFilterBox.valueProperty()
-                .subscribe(consumeBusinessBuilder(b -> b));
     }
 
     private void configureLocalBusinessRequestButton() {

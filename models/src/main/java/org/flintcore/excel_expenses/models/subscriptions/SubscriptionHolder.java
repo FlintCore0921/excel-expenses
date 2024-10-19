@@ -20,21 +20,39 @@ public class SubscriptionHolder implements Closeable {
                 .add(scheduled);
     }
 
+    public void remove(Object key) {
+        NullableUtils.executeNonNull(this.subscriptions,
+                mp -> mp.remove(key)
+        );
+    }
+
+    /**
+     * Clear all the subscriptions held by this class.
+     */
+    public void close() {
+        NullableUtils.executeNonNull(this.subscriptions, subs -> {
+            subs.keySet().iterator().forEachRemaining(this::close);
+        });
+    }
+
+    public void close(Object key) {
+        NullableUtils.executeNonNull(this.subscriptions, () -> stopSubscriptionsOn(key));
+    }
+
+    private void stopSubscriptionsOn(Object key) {
+        NullableUtils.executeNonNull(this.subscriptions.remove(key),
+                subsHolder -> {
+                    Iterator<Subscription> iterator = subsHolder.iterator();
+                    while (iterator.hasNext()) {
+                        Subscription subscription = iterator.next();
+                        subscription.unsubscribe();
+                        iterator.remove();
+                    }
+                });
+    }
+
     private void initSubscriptions() {
         NullableUtils.executeIsNull(this.subscriptions,
                 () -> this.subscriptions = new HashMap<>());
-    }
-
-    public void remove(Object key) {
-        NullableUtils.executeNonNull(this.subscriptions, mp -> mp.remove(key));
-    }
-
-    public void close() {
-        NullableUtils.executeNonNull(this.subscriptions, subs -> {
-            subs.values().forEach(
-                    l -> l.forEach(Subscription::unsubscribe)
-            );
-            subs.clear();
-        });
     }
 }

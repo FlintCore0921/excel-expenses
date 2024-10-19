@@ -13,7 +13,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.flintcore.excel_expenses.files.business.LocalBusinessFileManager;
 import org.flintcore.excel_expenses.models.expenses.LocalBusiness;
-import org.flintcore.excel_expenses.models.subscriptions.IEventSubscriptionHolder;
+import org.flintcore.excel_expenses.models.subscriptions.events.IEventSubscriptionHolder;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
@@ -61,7 +61,7 @@ public class LocalBusinessRequestTaskService
     private EventHandler<WorkerStateEvent> callSubscriptionsHandler() {
         return e -> NullableUtils.executeNonNull(this.subscriptions,
                 subs -> NullableUtils.executeNonNull(subs.get(e.getEventType()),
-                        l -> List.copyOf(l).forEach(Runnable::run)
+                        l -> l.iterator().forEachRemaining(Runnable::run)
                 )
         );
     }

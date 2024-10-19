@@ -13,7 +13,7 @@ import lombok.Setter;
 import org.flintcore.excel_expenses.files.business.LocalBusinessFileManager;
 import org.flintcore.excel_expenses.models.expenses.LocalBusiness;
 import org.flintcore.excel_expenses.models.lists.SerialListHolder;
-import org.flintcore.excel_expenses.models.subscriptions.IEventSubscriptionHolder;
+import org.flintcore.excel_expenses.models.subscriptions.events.IEventSubscriptionHolder;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
@@ -75,7 +75,7 @@ public class LocalBusinessSaveTaskService
                 this.subscriptions,
                 subs -> NullableUtils.executeNonNull(
                         subs.get(e.getEventType()),
-                        l -> List.copyOf(l).forEach(Runnable::run)
+                        l -> l.iterator().forEachRemaining(Runnable::run)
                 )
         );
     }

@@ -7,7 +7,7 @@ import javafx.event.EventHandler;
 import javafx.event.EventType;
 import javafx.util.Subscription;
 import lombok.RequiredArgsConstructor;
-import org.flintcore.excel_expenses.models.subscriptions.IEventSubscriptionHolder;
+import org.flintcore.excel_expenses.models.subscriptions.events.IEventSubscriptionHolder;
 
 import java.util.*;
 
@@ -43,7 +43,7 @@ public abstract class ObservableTask<T> extends Task<T>
     private void callSubscriptionsHandler() {
         EventHandler<WorkerStateEvent> eventListenerHandler = e -> NullableUtils.executeNonNull(this.events,
                 subs -> NullableUtils.executeNonNull(subs.get(e.getEventType()),
-                        l -> List.copyOf(l).forEach(Runnable::run)
+                        l -> l.iterator().forEachRemaining(Runnable::run)
                 )
         );
 

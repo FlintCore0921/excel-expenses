@@ -19,7 +19,7 @@ public class BusinessSelectionHandler<T extends IBusiness> implements Consumer<T
 
         NullableUtils.executeNonNull(
                 this.consumers,
-                l -> List.copyOf(l).forEach(call -> call.accept(business))
+                l -> l.iterator().forEachRemaining(call -> call.accept(business))
         );
     }
 

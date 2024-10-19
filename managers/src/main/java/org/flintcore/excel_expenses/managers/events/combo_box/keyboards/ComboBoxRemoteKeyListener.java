@@ -5,78 +5,60 @@ import javafx.event.EventHandler;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.util.Subscription;
-import lombok.RequiredArgsConstructor;
+import org.flintcore.excel_expenses.models.subscriptions.consumers.ISubscriptionConsumerHandler;
+import org.flintcore.excel_expenses.models.subscriptions.consumers.MultiSubscriptionConsumerHandler;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 /**
  * Up and Down Movement
  */
-@RequiredArgsConstructor
 public class ComboBoxRemoteKeyListener implements EventHandler<KeyEvent> {
+    private ISubscriptionConsumerHandler<KeyCode, Runnable> onHandleListeners;
+
     private final Supplier<Integer> sizeSupplier;
-    private int selectedIndex = -1;
-    private List<Runnable> onHandleListeners;
-    private List<Consumer<Integer>> onEnterListeners;
+    private int selectedIndex;
 
-    public Subscription appendOnEnterListener(final Consumer<Integer> listener) {
-        NullableUtils.executeIsNull(this.onEnterListeners,
-                () -> this.onEnterListeners = new ArrayList<>());
-
-        if (!this.onEnterListeners.contains(listener)) {
-            this.onEnterListeners.add(listener);
-        }
-
-        return () -> this.onEnterListeners.remove(listener);
+    public ComboBoxRemoteKeyListener(Supplier<Integer> sizeSupplier) {
+        this.sizeSupplier = sizeSupplier;
+        resetIndex();
     }
 
-    public Subscription appendOnHandleListener(final Runnable listener) {
-        NullableUtils.executeIsNull(this.onHandleListeners,
-                () -> this.onHandleListeners = new ArrayList<>());
-
-        if (!this.onHandleListeners.contains(listener)) {
-            this.onHandleListeners.add(listener);
-        }
-
-        return () -> this.onHandleListeners.remove(listener);
-    }
 
     @Override
     public void handle(KeyEvent evt) {
-        KeyCode code = evt.getCode();
-
-        switch (code) {
-            case UP -> onUpCalled();
-            case DOWN -> onDownCalled();
-            case ENTER -> onEnterCalled();
-        }
+        this.onHandleListeners.accept(evt.getCode());
     }
 
-    private void onKeyHandledSelected() {
-        NullableUtils.executeNonNull(this.onHandleListeners,
-                l -> List.copyOf(l).forEach(Runnable::run));
+    public Subscription appendOnEnterListener(final Consumer<Integer> listener) {
+        initConsumerHandler();
+        return this.onHandleListeners.addSubscription(KeyCode.ENTER,
+                () -> listener.accept(selectedIndex)
+        );
     }
 
-    private void onEnterCalled() {
-        NullableUtils.executeNonNull(this.onEnterListeners,
-                l -> {
-                    List.copyOf(l).forEach(c -> c.accept(this.selectedIndex - 1));
-                    this.selectedIndex = -1;
-                }
+    public Subscription appendOnHandleListener(KeyCode key, final Runnable listener) {
+        initConsumerHandler();
+        return () -> this.onHandleListeners.addSubscription(key, listener);
+    }
+
+    private void initConsumerHandler() {
+        NullableUtils.executeIsNull(this.onHandleListeners,
+                () -> this.onHandleListeners = new MultiSubscriptionConsumerHandler<>()
         );
     }
 
     private void onDownCalled() {
         this.selectedIndex = Math.min(this.sizeSupplier.get(), ++selectedIndex);
-        onKeyHandledSelected();
     }
-
 
     private void onUpCalled() {
         this.selectedIndex = Math.max(0, --selectedIndex);
-        onKeyHandledSelected();
+    }
+
+    // Reset the selection index of the ComboBox
+    private void resetIndex() {
+        selectedIndex = -1;
     }
 }
