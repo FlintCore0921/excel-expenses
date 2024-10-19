@@ -8,11 +8,11 @@ import java.util.List;
 import java.util.Objects;
 import java.util.function.Supplier;
 
-public class BusinessStringConverter<T extends IBusiness> extends StringConverter<T> {
+public class BasicBusinessStringConverter<T extends IBusiness> extends StringConverter<T> {
     private final Supplier<List<T>> dataSupplier;
     private final String separator;
 
-    public BusinessStringConverter(Supplier<List<T>> dataSupplier) {
+    public BasicBusinessStringConverter(Supplier<List<T>> dataSupplier) {
         this.dataSupplier = dataSupplier;
         this.separator = "-";
     }

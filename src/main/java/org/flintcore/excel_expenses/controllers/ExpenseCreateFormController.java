@@ -1,12 +1,12 @@
 package org.flintcore.excel_expenses.controllers;
 
 import data.utils.NullableUtils;
-import events.TaskFxEvent;
 import jakarta.annotation.PreDestroy;
 import javafx.animation.*;
 import javafx.application.Platform;
 import javafx.beans.binding.Binding;
 import javafx.beans.binding.Bindings;
+import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.concurrent.WorkerStateEvent;
@@ -16,7 +16,6 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.TextField;
-import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
@@ -25,12 +24,13 @@ import javafx.util.Subscription;
 import lombok.extern.log4j.Log4j2;
 import org.flintcore.excel_expenses.handlers.fields.NumericTextFieldChangeListener;
 import org.flintcore.excel_expenses.handlers.fields.TextFieldChangeListener;
-import org.flintcore.excel_expenses.handlers.fields.businesses.BusinessSelectionListener;
 import org.flintcore.excel_expenses.handlers.fields.dates.LocalDateChangeListener;
-import org.flintcore.excel_expenses.handlers.filters.BusinessStringConverter;
-import org.flintcore.excel_expenses.listeners.keyboards.ComboBoxRemoteKeyListener;
+import org.flintcore.excel_expenses.handlers.filters.BasicBusinessStringConverter;
+import org.flintcore.excel_expenses.managers.events.combo_box.keyboards.ComboBoxRemoteKeyListener;
+import org.flintcore.excel_expenses.managers.events.texts.fitlters.RNCFilterEventManager;
 import org.flintcore.excel_expenses.managers.routers.ApplicationRouter;
 import org.flintcore.excel_expenses.managers.routers.local.ELocalRoute;
+import org.flintcore.excel_expenses.models.events.TaskFxEvent;
 import org.flintcore.excel_expenses.models.expenses.IBusiness;
 import org.flintcore.excel_expenses.models.expenses.LocalBusiness;
 import org.flintcore.excel_expenses.models.expenses.Receipt;
@@ -43,12 +43,11 @@ import org.springframework.stereotype.Component;
 
 import java.net.URL;
 import java.util.List;
+import java.util.Objects;
 import java.util.ResourceBundle;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
-import java.util.function.Predicate;
-import java.util.function.Supplier;
 
 @Component
 @Scope("prototype")
@@ -60,8 +59,16 @@ public class ExpenseCreateFormController implements Initializable {
     private final LocalBusinessFileFXService localBusinessService;
     private Receipt.ReceiptBuilder receiptBuilder;
     private LocalBusiness.LocalBusinessBuilder businessBuilder;
+    private ResourceBundle bundles;
 
-    public ExpenseCreateFormController(ApplicationRouter appRouter, SubscriptionHolder subscriptionManager, LocalBusinessFileFXService localBusinessService) {
+    // Listeners
+    private RNCFilterEventManager rncFilterEventManager;
+
+    public ExpenseCreateFormController(
+            ApplicationRouter appRouter,
+            SubscriptionHolder subscriptionManager,
+            LocalBusinessFileFXService localBusinessService
+    ) {
         this.appRouter = appRouter;
         this.subscriptionManager = subscriptionManager;
         this.localBusinessService = localBusinessService;
@@ -69,7 +76,10 @@ public class ExpenseCreateFormController implements Initializable {
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
+        this.bundles = resources;
+
         configureBtnRouting();
+        initFXMLListeners();
 
         // Fields
         // Local business
@@ -87,10 +97,14 @@ public class ExpenseCreateFormController implements Initializable {
         onFirstRequestBusinessList();
     }
 
+    private void initFXMLListeners() {
+        this.rncFilterEventManager = new RNCFilterEventManager(this.localRNCTxt, this.localFilterBox);
+    }
+
     private void onFirstRequestBusinessList() {
         AtomicReference<Subscription> onFirstRequestDataSet = new AtomicReference<>();
 
-        PauseTransition onFilterRNC = new PauseTransition(Duration.seconds(.5));
+        PauseTransition onFilterRNC = new PauseTransition(Duration.seconds(1));
 
         Runnable onFirstRequest = () -> {
             NullableUtils.executeNonNull(onFirstRequestDataSet.get(), Subscription::unsubscribe);
@@ -106,17 +120,11 @@ public class ExpenseCreateFormController implements Initializable {
 
                 FilteredList<IBusiness> businessList = new FilteredList<>(concatenatedList);
 
-                this.localRNCTxt.addEventFilter(KeyEvent.KEY_TYPED, evt -> {
-                    String rncField = this.localRNCTxt.getText().toLowerCase();
-
-                    Predicate<IBusiness> businessPredicate = b -> b.getRNC().toLowerCase()
-                            .contains(rncField);
-
-                    onFilterRNC.setOnFinished(e -> businessList.setPredicate(businessPredicate));
-                    onFilterRNC.playFromStart();
-                });
-
                 this.localFilterBox.setItems(businessList);
+
+                businessList.addListener((ListChangeListener<? super IBusiness>) change -> {
+                    System.out.printf("List changed: %s%n", change.getList());
+                });
             }, Platform::runLater);
         };
 
@@ -138,11 +146,6 @@ public class ExpenseCreateFormController implements Initializable {
                 consumeBusinessBuilder(n -> this.businessBuilder.name(n))
         );
 
-        // UP, DOWN and ENTER movement
-        this.localRNCTxt.setOnKeyPressed(
-                new ComboBoxRemoteKeyListener<>(this.localFilterBox)
-        );
-
         this.localRNCTxt.textProperty().subscribe(
                 consumeBusinessBuilder(RNC -> this.businessBuilder.RNC(RNC))
         );
@@ -151,18 +154,34 @@ public class ExpenseCreateFormController implements Initializable {
     }
 
     private void configureLocalBusinessFilterBox() {
-        Supplier<List<IBusiness>> supplier = () -> this.localFilterBox.getItems();
-
         this.localFilterBox.converterProperty().set(
-                new BusinessStringConverter<>(supplier)
-        );
-        // Set the value of current combo box
-        this.localFilterBox.valueProperty().subscribe(
-                new BusinessSelectionListener<>(this.localNameTxt, this.localRNCTxt)
+                new BasicBusinessStringConverter<>(this.localFilterBox::getItems)
         );
 
+        ComboBoxRemoteKeyListener rncKeyListener = this.rncFilterEventManager
+                .getRemoteRNCKeyListener();
+
+        // Set the fields values
+        rncKeyListener.appendConsumer(b -> {
+            if (Objects.isNull(b)) return;
+
+            log.info("select business");
+
+            this.localRNCTxt.setText(b.getRNC());
+            this.localNameTxt.setText(b.getName());
+        });
+
+        // Set the fields empty when no selected.
+        rncKeyListener.appendConsumer(b -> {
+            if (Objects.nonNull(b)) return;
+            log.info("no select business");
+            this.localNameTxt.clear();
+            this.localRNCTxt.clear();
+        });
+
+        // Set the value of current combo box
         this.localFilterBox.valueProperty()
-                .subscribe(e -> System.out.println(this.localFilterBox.getItems()));
+                .subscribe(consumeBusinessBuilder(b -> b));
     }
 
     private void configureLocalBusinessRequestButton() {

@@ -1,4 +1,4 @@
-package events;
+package org.flintcore.excel_expenses.models.events;
 
 import javafx.concurrent.Worker;
 import javafx.concurrent.WorkerStateEvent;

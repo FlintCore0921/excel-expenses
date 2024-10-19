@@ -13,6 +13,7 @@ import lombok.NonNull;
 import lombok.Setter;
 import org.flintcore.excel_expenses.managers.exceptions.ErrorConsumerHandler;
 import org.flintcore.excel_expenses.managers.factories.views.RouteTransitionNavigationFactory;
+import org.flintcore.excel_expenses.managers.properties.CompoundResourceBundle;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
@@ -28,12 +29,14 @@ public class ApplicationRouter implements IApplicationRouter<IRoute> {
     public static final int ENTER_MILLIS_ANIMATION = 500;
     public static final int EXIT_MILLIS_ANIMATION = 200;
 
-
     private final RouteManager<IRoute> routeManager;
     private final ApplicationContext applicationContext;
     private final RouteTransitionNavigationFactory transitionFactory;
     @Getter
     private final ErrorConsumerHandler errorConsumerHandler;
+
+    // Bundles
+    private final CompoundResourceBundle bundlerManager;
 
     private BiFunction<Node, @NonNull Node, Transition> onNavigateTransition;
     private BiFunction<Node, @NonNull Node, Transition> onNavigateBackTransition;
@@ -45,11 +48,13 @@ public class ApplicationRouter implements IApplicationRouter<IRoute> {
     public ApplicationRouter(ApplicationContext applicationContext,
                              RouteManager<IRoute> routeManager,
                              RouteTransitionNavigationFactory transitionFactory,
-                             ErrorConsumerHandler errorConsumerHandler) {
+                             ErrorConsumerHandler errorConsumerHandler,
+                             CompoundResourceBundle bundlerManager) {
         this.routeManager = routeManager;
         this.applicationContext = applicationContext;
         this.errorConsumerHandler = errorConsumerHandler;
         this.transitionFactory = transitionFactory;
+        this.bundlerManager = bundlerManager;
     }
 
     @PostConstruct
@@ -124,6 +129,7 @@ public class ApplicationRouter implements IApplicationRouter<IRoute> {
         this.routeManager.navigateTo(route);
 
         try {
+
             FXMLLoader loader = buildFML(route);
             Node currentNode = loader.load();
             List<Node> childrenContainer = this.parentContainer.getChildren();
@@ -154,7 +160,9 @@ public class ApplicationRouter implements IApplicationRouter<IRoute> {
                 getClass().getResource(route.getRoute())
         );
 
-        FXMLLoader loader = new FXMLLoader(resource);
+        this.bundlerManager.registerBundles(route.getBundlePaths());
+
+        FXMLLoader loader = new FXMLLoader(resource, this.bundlerManager);
         loader.setControllerFactory(applicationContext::getBean);
         return loader;
     }

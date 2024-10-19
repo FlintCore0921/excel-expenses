@@ -1,6 +1,6 @@
 package org.flintcore.excel_expenses.models.alerts;
 
-import events.TaskFxEvent;
+import org.flintcore.excel_expenses.models.events.TaskFxEvent;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonBar;

@@ -31,7 +31,7 @@
    <children>
       <StackPane GridPane.rowIndex="2">
          <children>
-            <Button fx:id="btnSubmit" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" mnemonicParsing="false" text="Save">
+            <Button fx:id="btnSubmit" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" mnemonicParsing="false" text="%messages.save">
                <font>
                   <Font name="Segoe UI Bold Italic" size="24.0" />
                </font>
@@ -61,7 +61,7 @@
                         </ImageView>
                      </children>
                   </StackPane>
-                  <Label alignment="CENTER" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" text="New expense" HBox.hgrow="ALWAYS">
+                  <Label alignment="CENTER" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" text="%expense.form.title" HBox.hgrow="ALWAYS">
                      <font>
                         <Font name="Segoe UI Bold Italic" size="28.0" />
                      </font>
@@ -90,7 +90,7 @@
                                           <StackPane HBox.hgrow="ALWAYS">
                                              <children>
                                                 <ComboBox fx:id="localFilterBox" maxWidth="1.7976931348623157E308" visibleRowCount="5" StackPane.alignment="BOTTOM_CENTER" />
-                                                <TextField fx:id="localRNCTxt" alignment="CENTER" promptText="Local Name...">
+                                                <TextField fx:id="localRNCTxt" alignment="CENTER" promptText="%expense.form.name.prompt">
                                                    <font>
                                                       <Font name="Segoe UI Bold" size="20.0" />
                                                    </font>
@@ -124,7 +124,7 @@
                                           <Font name="Segoe UI" size="28.0" />
                                        </font>
                                     </Label>
-                                    <TextField fx:id="localNameTxt" alignment="CENTER" disable="true" editable="false" promptText="-- None --">
+                                    <TextField fx:id="localNameTxt" alignment="CENTER" disable="true" editable="false" promptText="%expense.empty-name">
                                        <font>
                                           <Font name="Segoe UI Bold" size="20.0" />
                                        </font>

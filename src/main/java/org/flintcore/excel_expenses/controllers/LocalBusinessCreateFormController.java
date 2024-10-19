@@ -1,6 +1,6 @@
 package org.flintcore.excel_expenses.controllers;
 
-import events.TaskFxEvent;
+import org.flintcore.excel_expenses.models.events.TaskFxEvent;
 import javafx.animation.PauseTransition;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;

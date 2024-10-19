@@ -1,7 +1,7 @@
 package org.flintcore.excel_expenses.services.business;
 
 import data.utils.NullableUtils;
-import events.TaskFxEvent;
+import org.flintcore.excel_expenses.models.events.TaskFxEvent;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import javafx.application.Platform;
