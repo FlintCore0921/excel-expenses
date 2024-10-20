@@ -9,7 +9,6 @@ import javafx.beans.binding.Bindings;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
-import javafx.concurrent.WorkerStateEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
@@ -26,8 +25,7 @@ import org.flintcore.excel_expenses.handlers.fields.NumericTextFieldChangeListen
 import org.flintcore.excel_expenses.handlers.fields.TextFieldChangeListener;
 import org.flintcore.excel_expenses.handlers.fields.dates.LocalDateChangeListener;
 import org.flintcore.excel_expenses.handlers.filters.BasicBusinessStringConverter;
-import org.flintcore.excel_expenses.managers.events.combo_box.keyboards.ComboBoxRemoteKeyListener;
-import org.flintcore.excel_expenses.managers.events.texts.fitlters.RNCFilterEventManager;
+import org.flintcore.excel_expenses.managers.events.texts.filters.business.RNCFilterManager;
 import org.flintcore.excel_expenses.managers.routers.ApplicationRouter;
 import org.flintcore.excel_expenses.managers.routers.local.ELocalRoute;
 import org.flintcore.excel_expenses.models.events.TaskFxEvent;
@@ -42,8 +40,6 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import java.net.URL;
-import java.util.List;
-import java.util.Objects;
 import java.util.ResourceBundle;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicReference;
@@ -57,12 +53,14 @@ public class ExpenseCreateFormController implements Initializable {
     private final ApplicationRouter appRouter;
     private final SubscriptionHolder subscriptionManager;
     private final LocalBusinessFileFXService localBusinessService;
+
+    // Required builders
     private Receipt.ReceiptBuilder receiptBuilder;
     private LocalBusiness.LocalBusinessBuilder businessBuilder;
-    private ResourceBundle bundles;
 
-    // Listeners
-    private RNCFilterEventManager rncFilterEventManager;
+    @SuppressWarnings("all")
+    private ResourceBundle _bundles;
+    private RNCFilterManager rncFilterManager;
 
     public ExpenseCreateFormController(
             ApplicationRouter appRouter,
@@ -76,7 +74,7 @@ public class ExpenseCreateFormController implements Initializable {
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        this.bundles = resources;
+        this._bundles = resources;
 
         configureBtnRouting();
         initFXMLListeners();
@@ -90,21 +88,20 @@ public class ExpenseCreateFormController implements Initializable {
         // Price
         configurePriceFields();
 
-
         configureReceiptFields();
         configureSections();
 
-        onFirstRequestBusinessList();
+        setUpListenCallToServices();
     }
 
     private void initFXMLListeners() {
-        this.rncFilterEventManager = new RNCFilterEventManager(this.localRNCTxt, this.localFilterBox);
+        // Add filtering logic
+        rncFilterManager = new RNCFilterManager(this.localRNCTxt, this.localFilterBox);
+        this.rncFilterManager.setup();
     }
 
-    private void onFirstRequestBusinessList() {
+    private void setUpListenCallToServices() {
         AtomicReference<Subscription> onFirstRequestDataSet = new AtomicReference<>();
-
-        PauseTransition onFilterRNC = new PauseTransition(Duration.seconds(1));
 
         Runnable onFirstRequest = () -> {
             NullableUtils.executeNonNull(onFirstRequestDataSet.get(), Subscription::unsubscribe);
@@ -143,14 +140,12 @@ public class ExpenseCreateFormController implements Initializable {
 
     private void configureLocalBusinessFields() {
         this.localNameTxt.textProperty().subscribe(
-                consumeBusinessBuilder(n -> this.businessBuilder.name(n))
+                consumeBusinessBuilder(name -> this.businessBuilder.name(name))
         );
 
         this.localRNCTxt.textProperty().subscribe(
                 consumeBusinessBuilder(RNC -> this.businessBuilder.RNC(RNC))
         );
-
-        this.localRNCTxt.textProperty().subscribe(this.localFilterBox::show);
     }
 
     private void configureLocalBusinessFilterBox() {
@@ -158,61 +153,51 @@ public class ExpenseCreateFormController implements Initializable {
                 new BasicBusinessStringConverter<>(this.localFilterBox::getItems)
         );
 
-        ComboBoxRemoteKeyListener rncKeyListener = this.rncFilterEventManager
-                .getRemoteRNCKeyListener();
-
-
+        this.rncFilterManager.selectedBusinessProperty.subscribe(b -> {
+            log.info("Value selected from filter: {}", b);
+        });
     }
 
     private void configureLocalBusinessRequestButton() {
         // Stop animation when done
-        AtomicReference<FadeTransition> onLoadingAnimation = new AtomicReference<>();
+        final Duration loadingDefaultDuration = Duration.millis(600);
 
-        Subscription onDoneRequest = this.localBusinessService.listenRequestTask(
-                List.of(
-                        WorkerStateEvent.WORKER_STATE_SUCCEEDED,
-                        WorkerStateEvent.WORKER_STATE_FAILED,
-                        WorkerStateEvent.WORKER_STATE_CANCELLED
-                ), () -> {
-                    PauseTransition onPauseTransition = new PauseTransition(
-                            Duration.seconds(.5)
-                    );
-
-                    onPauseTransition.setOnFinished(e -> {
-                        FadeTransition loadingAnimation = onLoadingAnimation.getAndSet(null);
-
-                        loadingAnimation.stop();
-                        loadingAnimation.setFromValue(this.btnLoadRNC.getOpacity());
-                        loadingAnimation.setToValue(1.0);
-                        loadingAnimation.setCycleCount(1);
-
-                        loadingAnimation.play();
-                    });
-
-                    onPauseTransition.play();
-                }
+        FadeTransition loadingAnimation = new FadeTransition(
+                loadingDefaultDuration, this.btnLoadRNC
         );
+        loadingAnimation.setAutoReverse(true);
 
-        this.subscriptionManager.appendSubscriptionOn(
-                this.localBusinessService, onDoneRequest
-        );
+        PauseTransition onPauseTransition = new PauseTransition(loadingDefaultDuration);
 
-        this.btnLoadRNC.setOnAction(e -> {
-            this.localBusinessService.requestData();
-            if (this.localBusinessService.isRequestingData()) {
-                FadeTransition loadingAnimation = new FadeTransition(
-                        Duration.millis(600), this.btnLoadRNC
+        Bindings.createBooleanBinding(
+                this.localBusinessService::isRequestingData
+        ).subscribe(requesting -> {
+            onPauseTransition.stop();
+
+            onPauseTransition.setOnFinished(e -> {
+                loadingAnimation.stop();
+
+                loadingAnimation.setFromValue(
+                      requesting ? loadingAnimation.getNode().getOpacity() : 0
                 );
 
-                loadingAnimation.setFromValue(1.0);
-                loadingAnimation.setToValue(0D);
-                loadingAnimation.setCycleCount(Timeline.INDEFINITE);
-                loadingAnimation.setAutoReverse(true);
+                loadingAnimation.setToValue(requesting ? 0 : 1.0);
+                loadingAnimation.setCycleCount(requesting ? 1: Transition.INDEFINITE);
 
-                onLoadingAnimation.set(loadingAnimation);
+                loadingAnimation.playFromStart();
+            });
 
-                loadingAnimation.play();
-            }
+            onPauseTransition.setDuration(
+                    requesting ? Duration.ZERO : loadingDefaultDuration
+            );
+
+            onPauseTransition.playFromStart();
+        });
+
+        this.btnLoadRNC.setOnAction(e ->
+
+        {
+            this.localBusinessService.requestData();
         });
     }
 

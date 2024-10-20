@@ -128,8 +128,11 @@ public class ApplicationRouter implements IApplicationRouter<IRoute> {
 
         this.routeManager.navigateTo(route);
 
-        try {
+        setView(route, onRoutesUpdate);
+    }
 
+    private void setView(IRoute route, BiFunction<Node, @NonNull Node, Transition> onRoutesUpdate) {
+        try {
             FXMLLoader loader = buildFML(route);
             Node currentNode = loader.load();
             List<Node> childrenContainer = this.parentContainer.getChildren();

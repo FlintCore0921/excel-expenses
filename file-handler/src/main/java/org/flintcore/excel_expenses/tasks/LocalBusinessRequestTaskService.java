@@ -25,8 +25,6 @@ public class LocalBusinessRequestTaskService
         extends Service<List<LocalBusiness>>
         implements IEventSubscriptionHolder<WorkerStateEvent, Runnable> {
 
-//    private static final long MINIMUM_TIME_MILLIS = 11000L;
-
     private final LocalBusinessFileManager localBusinessFileManager;
     private Map<EventType<WorkerStateEvent>, List<Runnable>> subscriptions;
 
@@ -56,6 +54,11 @@ public class LocalBusinessRequestTaskService
         this.setOnSucceeded(subscriptionsHandler);
         this.setOnFailed(subscriptionsHandler);
         this.setOnCancelled(subscriptionsHandler);
+
+        this.runningProperty().subscribe(
+                runn -> log.info("State at moment to run {} change {}",
+                        runn, this.stateProperty().get())
+        );
     }
 
     private EventHandler<WorkerStateEvent> callSubscriptionsHandler() {

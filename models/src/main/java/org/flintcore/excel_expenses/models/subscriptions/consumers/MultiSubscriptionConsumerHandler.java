@@ -1,31 +1,44 @@
 package org.flintcore.excel_expenses.models.subscriptions.consumers;
 
-import data.utils.NullableUtils;
 import javafx.util.Subscription;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Set;
 
 @Component
 @Scope("prototype")
-public class MultiSubscriptionConsumerHandler<T, R extends Runnable>
-        extends SubscriptionConsumerHandlerImpl<T, R, Set<R>> {
+public class MultiSubscriptionConsumerHandler<T, R extends Runnable, L extends Set<R>>
+        extends SubscriptionRunnableConsumerHandler<T, R, L> {
 
     @Override
     public void accept(T t) {
-        NullableUtils.executeNonNull(this.subscriptions.get(t),
-                l -> l.iterator().forEachRemaining(Runnable::run)
-        );
+        triggerHandlers(this.subscriptions.get(t));
+        super.accept(t);
+        triggerHandlers(this.lastSubscriptions.get(t));
     }
 
     @Override
     public Subscription addSubscription(T type, R action) {
         initSubscriptionHolder(HashMap::new);
-
-        Set<R> holder = this.subscriptions.computeIfAbsent(type, t -> new HashSet<>());
+        L holder = this.subscriptions.computeIfAbsent(type, this::computeResult);
         holder.add(action);
 
         return () -> holder.remove(action);
+    }
+
+    @Override
+    public Subscription addLastSubscription(T t, R listener) {
+        initLastSubscriptionHolder();
+        L holder = this.lastSubscriptions.computeIfAbsent(t, this::computeResult);
+        holder.add(listener);
+        return () -> holder.remove(listener);
+    }
+
+    @SuppressWarnings("unchecked")
+    protected L computeResult(T _key) {
+        return (L) new HashSet<R>();
     }
 }
