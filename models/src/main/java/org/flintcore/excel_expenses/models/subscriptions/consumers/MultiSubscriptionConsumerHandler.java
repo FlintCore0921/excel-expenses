@@ -1,23 +1,24 @@
 package org.flintcore.excel_expenses.models.subscriptions.consumers;
 
+import data.utils.NullableUtils;
 import javafx.util.Subscription;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
+import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.concurrent.CopyOnWriteArraySet;
 
 @Component
 @Scope("prototype")
-public class MultiSubscriptionConsumerHandler<T, R extends Runnable, L extends Set<R>>
+public class MultiSubscriptionConsumerHandler<T, R extends Runnable, L extends Collection<R>>
         extends SubscriptionRunnableConsumerHandler<T, R, L> {
 
     @Override
     public void accept(T t) {
-        triggerHandlers(this.subscriptions.get(t));
-        super.accept(t);
-        triggerHandlers(this.lastSubscriptions.get(t));
+        NullableUtils.executeNonNull(this.subscriptions.get(t), this::triggerHandlers);
+        triggerOneTimeHandlers();
+        NullableUtils.executeNonNull(this.lastSubscriptions.get(t), this::triggerHandlers);
     }
 
     @Override
@@ -30,6 +31,12 @@ public class MultiSubscriptionConsumerHandler<T, R extends Runnable, L extends S
     }
 
     @Override
+    public void addOneTimeSubscription(T type, R action) {
+        initOneTimeSubscriptionHolder();
+        this.oneTimeSubscriptions.add(action);
+    }
+
+    @Override
     public Subscription addLastSubscription(T t, R listener) {
         initLastSubscriptionHolder();
         L holder = this.lastSubscriptions.computeIfAbsent(t, this::computeResult);
@@ -39,6 +46,11 @@ public class MultiSubscriptionConsumerHandler<T, R extends Runnable, L extends S
 
     @SuppressWarnings("unchecked")
     protected L computeResult(T _key) {
-        return (L) new HashSet<R>();
+        return (L) new CopyOnWriteArraySet<R>();
+    }
+
+    @Override
+    protected void triggerHandlers(Iterable<R> generalSubscriptions) {
+        NullableUtils.executeNonNull(generalSubscriptions, super::triggerHandlers);
     }
 }

@@ -16,7 +16,10 @@ import org.flintcore.excel_expenses.models.expenses.LocalBusiness;
 import org.flintcore.excel_expenses.models.subscriptions.events.IEventSubscriptionHolder;
 import org.springframework.stereotype.Component;
 
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 @Component
 @RequiredArgsConstructor
@@ -33,7 +36,7 @@ public class LocalBusinessRequestTaskService
         initSubscriptionsHolder();
 
         List<Runnable> subscriptionsIn = this.subscriptions
-                .computeIfAbsent(type, __ -> Collections.synchronizedList(new ArrayList<>()));
+                .computeIfAbsent(type, __ -> new CopyOnWriteArrayList<>());
         subscriptionsIn.add(action);
 
         return () -> subscriptionsIn.remove(action);
@@ -41,7 +44,8 @@ public class LocalBusinessRequestTaskService
 
     private void initSubscriptionsHolder() {
         NullableUtils.executeIsNull(this.subscriptions,
-                () -> this.subscriptions = new HashMap<>());
+                () -> this.subscriptions = new ConcurrentHashMap<>()
+        );
     }
 
     @PostConstruct
@@ -54,11 +58,6 @@ public class LocalBusinessRequestTaskService
         this.setOnSucceeded(subscriptionsHandler);
         this.setOnFailed(subscriptionsHandler);
         this.setOnCancelled(subscriptionsHandler);
-
-        this.runningProperty().subscribe(
-                runn -> log.info("State at moment to run {} change {}",
-                        runn, this.stateProperty().get())
-        );
     }
 
     private EventHandler<WorkerStateEvent> callSubscriptionsHandler() {

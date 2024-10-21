@@ -9,7 +9,11 @@ import javafx.util.Subscription;
 import lombok.RequiredArgsConstructor;
 import org.flintcore.excel_expenses.models.subscriptions.events.IEventSubscriptionHolder;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 @RequiredArgsConstructor
 public abstract class ObservableTask<T> extends Task<T>
@@ -23,7 +27,7 @@ public abstract class ObservableTask<T> extends Task<T>
     }
 
     protected Map<EventType<WorkerStateEvent>, Set<Runnable>> getEventListenerHolder() {
-        NullableUtils.executeIsNull(this.events, () -> this.events = new HashMap<>());
+        NullableUtils.executeIsNull(this.events, () -> this.events = new ConcurrentHashMap<>());
         return events;
     }
 

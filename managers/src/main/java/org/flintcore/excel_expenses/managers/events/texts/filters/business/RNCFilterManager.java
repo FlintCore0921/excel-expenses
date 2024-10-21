@@ -2,6 +2,7 @@ package org.flintcore.excel_expenses.managers.events.texts.filters.business;
 
 import data.utils.NullableUtils;
 import javafx.animation.PauseTransition;
+import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
 import javafx.beans.property.Property;
@@ -22,17 +23,19 @@ import org.flintcore.excel_expenses.managers.events.texts.filters.TextFilterList
 import org.flintcore.excel_expenses.models.expenses.IBusiness;
 import org.flintcore.utilities.lists.ObservableListUtils;
 
+import java.io.Closeable;
+import java.io.IOException;
 import java.util.Objects;
 import java.util.function.Predicate;
 
 @Log4j2
-public class RNCFilterManager extends TextFilterListenerManager<IBusiness> {
+public class RNCFilterManager extends TextFilterListenerManager<IBusiness>
+        implements Closeable {
     // Own properties
     public final Property<IBusiness> selectedBusinessProperty;
-
     // Listeners
     @Getter
-    protected RemoteKeyListener remoteRNCKeyListener;
+    protected RemoteKeyListener remoteKeyListener;
 
     // Combo Filter
     protected final ComboBox<IBusiness> optionsBox;
@@ -64,24 +67,22 @@ public class RNCFilterManager extends TextFilterListenerManager<IBusiness> {
         ObservableValue<? extends ObservableList<? extends IBusiness>> sourceMap =
                 this.itemsFilteredProperty.map(FilteredList::getSource);
 
-        BooleanBinding mainListNotEmptyBinding = Bindings.createBooleanBinding(
-                () -> {
-                    ObservableList<? extends IBusiness> value = sourceMap.getValue();
-                    return Objects.nonNull(value) && value.isEmpty();
-                },
-                sourceMap
-        ).not();
+        BooleanBinding mainListNotEmptyBinding = Bindings.createBooleanBinding(() -> {
+            ObservableList<? extends IBusiness> value = sourceMap.getValue();
+            return Objects.isNull(value) || value.isEmpty();
+        }, sourceMap).not();
 
         this.canFilterTextBinding = this.itemsFilteredProperty.isNotNull()
                 .or(this.textFilterProperty.isNotEmpty())
                 .and(mainListNotEmptyBinding);
 
-        PauseTransition filterDebounce = new PauseTransition(
+        final PauseTransition filterDebounce = new PauseTransition(
                 Duration.millis(450)
         );
 
         Subscription onFilterSubscription = this.textFilterProperty
                 .when(this.canFilterTextBinding)
+                .when(this.textFilterNotEmptyBinding)
                 .subscribe(text -> {
                     filterDebounce.stop();
 
@@ -99,37 +100,51 @@ public class RNCFilterManager extends TextFilterListenerManager<IBusiness> {
     private void setUpOptionsBoxListen() {
         canSelectItemBinding = Bindings.createBooleanBinding(() -> {
             FilteredList<IBusiness> filteredList = this.itemsFilteredProperty.get();
-            return Objects.nonNull(filteredList) && !filteredList.isEmpty();
+            return Objects.isNull(filteredList) || filteredList.isEmpty();
         }, this.itemsFilteredProperty).not();
     }
 
     private void addKeyListeners() {
         initKeyFilterListener();
 
-        this.remoteRNCKeyListener.appendHandlerListener(KeyCode.DOWN,
-                this.optionsBox.getSelectionModel()::selectNext
+        this.subsManager.appendSubscriptionOn(this,
+                this.remoteKeyListener.appendHandlerListener(KeyCode.DOWN,
+                        () -> this.optionsBox.getSelectionModel().selectNext()
+                )
         );
 
-        this.remoteRNCKeyListener.appendHandlerListener(KeyCode.UP,
-                this.optionsBox.getSelectionModel()::selectPrevious
+        this.subsManager.appendSubscriptionOn(this,
+                this.remoteKeyListener.appendHandlerListener(KeyCode.UP,
+                        () -> this.optionsBox.getSelectionModel().selectPrevious()
+                )
         );
 
+        this.remoteKeyListener.appendGeneralListener(() -> this.optionsBox.show());
 
         // select the current index selected.
-        this.remoteRNCKeyListener.appendHandlerListener(KeyCode.ENTER, () -> {
-            // If can select item in list
-            if (!this.canSelectItemBinding.get()) return;
-            this.selectedBusinessProperty.setValue(this.optionsBox.valueProperty().get());
-        });
+        this.subsManager.appendSubscriptionOn(this,
+                this.remoteKeyListener.appendHandlerListener(KeyCode.ENTER, () -> {
+                    // can select item in list ?
+                    if (!this.canSelectItemBinding.get()) return;
+                    this.selectedBusinessProperty.setValue(this.optionsBox.valueProperty().get());
+                    this.optionsBox.hide();
+                })
+        );
     }
 
     private void initKeyFilterListener() {
-        NullableUtils.executeIsNull(this.remoteRNCKeyListener,
-                () -> this.remoteRNCKeyListener = new RemoteKeyListener()
-        );
+        NullableUtils.executeIsNull(this.remoteKeyListener, () -> {
+            this.remoteKeyListener = new RemoteKeyListener();
+            this.textFilter.setOnKeyPressed(this.remoteKeyListener);
+        });
     }
 
     private Predicate<IBusiness> buildFilter(String toFilter) {
         return b -> this.filterComparator.apply(b).contains(toFilter);
+    }
+
+    @Override
+    public void close() throws IOException {
+        Platform.runLater(this.subsManager::close);
     }
 }

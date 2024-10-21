@@ -1,6 +1,8 @@
 package org.flintcore.excel_expenses.services.business;
 
 import data.utils.NullableUtils;
+import javafx.beans.property.ReadOnlyBooleanProperty;
+import lombok.extern.log4j.Log4j2;
 import org.flintcore.excel_expenses.models.events.TaskFxEvent;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
@@ -28,6 +30,7 @@ import java.util.TimerTask;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+@Log4j2
 @Service
 @RequiredArgsConstructor
 public class LocalBusinessFileFXService {
@@ -53,12 +56,12 @@ public class LocalBusinessFileFXService {
         this.requiresRequest = new AtomicBoolean(true);
     }
 
-    public boolean isRequestingData() {
-        return this.localBusinessRequestTask.isRunning();
+    public ReadOnlyBooleanProperty requestingProperty() {
+        return this.localBusinessRequestTask.runningProperty();
     }
 
-    public boolean isStoringData() {
-        return this.localBusinessSaveTask.isRunning();
+    public ReadOnlyBooleanProperty storingProperty() {
+        return this.localBusinessSaveTask.runningProperty();
     }
 
     public CompletableFuture<ObservableList<LocalBusiness>> getLocalBusinessList() {
@@ -153,15 +156,23 @@ public class LocalBusinessFileFXService {
     }
 
     private void setupOnLoadListeners() {
+        // Debug
+        this.subscriptionManager.appendSubscriptionOn(this,
+                this.listenRequestTask(
+                        TaskFxEvent.WORKER_STATE_READY,
+                        () -> log.info("ON Ready called!")
+                )
+        );
+
         Subscription onReady = this.listenRequestTask(
-                WorkerStateEvent.WORKER_STATE_RUNNING,
+                TaskFxEvent.WORKER_STATE_RUNNING,
                 () -> {
                     this.localBusinessList.clear();
                     this.localBusinessList.add(getOnRunningFlag());
                 });
 
         Subscription onSuccess = this.listenRequestTask(
-                WorkerStateEvent.WORKER_STATE_SUCCEEDED,
+                TaskFxEvent.WORKER_STATE_SUCCEEDED,
                 () -> {
                     this.requiresRequest.set(false);
                     this.localBusinessList.clear();
@@ -171,7 +182,7 @@ public class LocalBusinessFileFXService {
                 });
 
         Subscription onFail = this.listenRequestTask(
-                WorkerStateEvent.WORKER_STATE_FAILED,
+                TaskFxEvent.WORKER_STATE_FAILED,
                 () -> {
                     this.localBusinessList.clear();
                     this.localBusinessList.add(getOnFailedFlag());

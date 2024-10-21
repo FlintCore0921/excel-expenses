@@ -3,9 +3,10 @@ package org.flintcore.excel_expenses.models.subscriptions;
 import javafx.event.Event;
 import javafx.util.Subscription;
 
+import java.io.Closeable;
 import java.util.List;
 
-public interface ISubscriptionHolder<T, R> {
+public interface ISubscriptionHolder<T, R> extends Closeable {
     default Subscription addSubscription(List<T> types, R action) {
         return types.stream()
                 .map(e -> addSubscription(e, action))
@@ -14,5 +15,7 @@ public interface ISubscriptionHolder<T, R> {
     }
 
      Subscription addSubscription(T type, R action);
+
+    void addOneTimeSubscription(T type, R action);
 }
 

@@ -17,6 +17,7 @@ import org.flintcore.excel_expenses.models.subscriptions.events.IEventSubscripti
 import org.springframework.stereotype.Component;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 
 @Component
@@ -56,7 +57,7 @@ public class LocalBusinessSaveTaskService
 
     private void initSubscriptionsHolder() {
         NullableUtils.executeIsNull(this.subscriptions,
-                () -> this.subscriptions = new HashMap<>());
+                () -> this.subscriptions = new ConcurrentHashMap<>());
     }
 
     @PostConstruct

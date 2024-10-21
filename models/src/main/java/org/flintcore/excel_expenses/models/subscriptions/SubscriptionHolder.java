@@ -7,6 +7,7 @@ import org.springframework.stereotype.Component;
 
 import java.io.Closeable;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Component
 @Scope("prototype")
@@ -53,6 +54,6 @@ public class SubscriptionHolder implements Closeable {
 
     private void initSubscriptions() {
         NullableUtils.executeIsNull(this.subscriptions,
-                () -> this.subscriptions = new HashMap<>());
+                () -> this.subscriptions = new ConcurrentHashMap<>());
     }
 }

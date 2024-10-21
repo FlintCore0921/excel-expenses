@@ -8,7 +8,6 @@ import javafx.beans.binding.Binding;
 import javafx.beans.binding.Bindings;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
-import javafx.collections.transformation.FilteredList;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
@@ -35,7 +34,6 @@ import org.flintcore.excel_expenses.models.expenses.Receipt;
 import org.flintcore.excel_expenses.models.subscriptions.SubscriptionHolder;
 import org.flintcore.excel_expenses.services.business.LocalBusinessFileFXService;
 import org.flintcore.utilities.dates.DateUtils;
-import org.flintcore.utilities.lists.ObservableListUtils;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
@@ -109,20 +107,20 @@ public class ExpenseCreateFormController implements Initializable {
             CompletableFuture<ObservableList<LocalBusiness>> listBusinessFuture = this.localBusinessService
                     .getLocalBusinessList();
 
-            listBusinessFuture.thenAcceptAsync(localBusinessList -> {
-                ObservableList<IBusiness> boxItems = this.localFilterBox.getItems(),
-                        concatenatedList = ObservableListUtils.concat(
-                                boxItems, localBusinessList
-                        );
+            listBusinessFuture.thenAcceptAsync(localBusinessList -> localBusinessList.addListener(
+                    (ListChangeListener<LocalBusiness>) c -> {
+                        while (c.next()) {
+                            ObservableList<IBusiness> boxItems = this.localFilterBox.getItems();
 
-                FilteredList<IBusiness> businessList = new FilteredList<>(concatenatedList);
+                            if (c.wasAdded()) {
+                                boxItems.addAll(c.getAddedSubList());
+                            }
 
-                this.localFilterBox.setItems(businessList);
-
-                businessList.addListener((ListChangeListener<? super IBusiness>) change -> {
-                    System.out.printf("List changed: %s%n", change.getList());
-                });
-            }, Platform::runLater);
+                            if (c.wasRemoved()) {
+                                boxItems.removeAll(c.getRemoved());
+                            }
+                        }
+                    }), Platform::runLater);
         };
 
         onFirstRequestDataSet.set(
@@ -146,6 +144,10 @@ public class ExpenseCreateFormController implements Initializable {
         this.localRNCTxt.textProperty().subscribe(
                 consumeBusinessBuilder(RNC -> this.businessBuilder.RNC(RNC))
         );
+        // Disable the RNC field if service is requesting data.
+        this.localRNCTxt.disableProperty().bind(
+                this.localBusinessService.requestingProperty()
+        );
     }
 
     private void configureLocalBusinessFilterBox() {
@@ -153,9 +155,9 @@ public class ExpenseCreateFormController implements Initializable {
                 new BasicBusinessStringConverter<>(this.localFilterBox::getItems)
         );
 
-        this.rncFilterManager.selectedBusinessProperty.subscribe(b -> {
-            log.info("Value selected from filter: {}", b);
-        });
+        this.rncFilterManager.selectedBusinessProperty.subscribe(
+                b -> log.info("Value selected from filter: {}", b)
+        );
     }
 
     private void configureLocalBusinessRequestButton() {
@@ -165,24 +167,23 @@ public class ExpenseCreateFormController implements Initializable {
         FadeTransition loadingAnimation = new FadeTransition(
                 loadingDefaultDuration, this.btnLoadRNC
         );
+
         loadingAnimation.setAutoReverse(true);
 
         PauseTransition onPauseTransition = new PauseTransition(loadingDefaultDuration);
 
-        Bindings.createBooleanBinding(
-                this.localBusinessService::isRequestingData
-        ).subscribe(requesting -> {
+        this.localBusinessService.requestingProperty().subscribe(requesting -> {
             onPauseTransition.stop();
 
             onPauseTransition.setOnFinished(e -> {
                 loadingAnimation.stop();
 
                 loadingAnimation.setFromValue(
-                      requesting ? loadingAnimation.getNode().getOpacity() : 0
+                        requesting ? loadingAnimation.getNode().getOpacity() : 0
                 );
 
                 loadingAnimation.setToValue(requesting ? 0 : 1.0);
-                loadingAnimation.setCycleCount(requesting ? 1: Transition.INDEFINITE);
+                loadingAnimation.setCycleCount(requesting ? Transition.INDEFINITE : 1);
 
                 loadingAnimation.playFromStart();
             });
@@ -194,11 +195,7 @@ public class ExpenseCreateFormController implements Initializable {
             onPauseTransition.playFromStart();
         });
 
-        this.btnLoadRNC.setOnAction(e ->
-
-        {
-            this.localBusinessService.requestData();
-        });
+        this.btnLoadRNC.setOnAction(e -> this.localBusinessService.requestData());
     }
 
     private void configureReceiptFields() {
