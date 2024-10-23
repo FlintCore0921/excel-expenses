@@ -15,7 +15,6 @@ public interface ISubscriptionHolder<T, R> extends Closeable {
     }
 
      Subscription addSubscription(T type, R action);
-
     void addOneTimeSubscription(T type, R action);
 }
 

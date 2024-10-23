@@ -1,24 +1,25 @@
 package org.flintcore.excel_expenses.managers.events.texts.filters;
 
-import javafx.beans.binding.Bindings;
-import javafx.beans.binding.BooleanBinding;
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleObjectProperty;
-import javafx.beans.property.StringProperty;
+import javafx.beans.property.*;
+import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.scene.control.TextField;
 import lombok.NonNull;
 import lombok.Setter;
 import org.apache.commons.lang3.ObjectUtils;
 import org.flintcore.excel_expenses.models.subscriptions.SubscriptionHolder;
+import org.flintcore.utilities.properties.PropertyListenerUtils;
 
+import java.util.List;
 import java.util.function.Function;
 
 public abstract class TextFilterListenerManager<T> {
     protected TextField textFilter;
     protected StringProperty textFilterProperty;
-    protected BooleanBinding textFilterNotEmptyBinding;
     protected final ObjectProperty<FilteredList<T>> itemsFilteredProperty;
+    protected final IntegerProperty itemsFilteredSizeProperty;
+    protected final ObjectProperty<ObservableList<? extends T>> mainListProperty;
+    protected final IntegerProperty mainListSizeProperty;
     protected SubscriptionHolder subsManager;
     // Update filter comparator
     @Setter
@@ -31,25 +32,43 @@ public abstract class TextFilterListenerManager<T> {
     ) {
         this.textFilter = textFilter;
         this.textFilterProperty = textFilter.textProperty();
-        this.textFilterNotEmptyBinding = Bindings.and(
-                this.textFilterProperty.isNotNull(),
-                this.textFilterProperty.isNotEmpty()
-        );
+
         this.itemsFilteredProperty = ObjectUtils.defaultIfNull(
                 itemsSupplierProperty,
                 new SimpleObjectProperty<>(this, null, null)
         );
+        this.itemsFilteredSizeProperty = new SimpleIntegerProperty();
+        this.itemsFilteredSizeProperty.bind(
+                this.itemsFilteredProperty.map(List::size)
+        );
+
+        this.mainListProperty = new SimpleObjectProperty<>();
+        this.mainListProperty.bind(
+                this.itemsFilteredProperty.map(FilteredList::getSource)
+        );
+        this.mainListSizeProperty = new SimpleIntegerProperty();
+
         this.filterComparator = ObjectUtils.defaultIfNull(filterComparator, Object::toString);
         this.subsManager = new SubscriptionHolder();
+
+        applySizeProperty();
     }
 
-    public TextFilterListenerManager(TextField textFilter, FilteredList<T> listSupplier) {
+
+    public TextFilterListenerManager(@NonNull TextField textFilter, FilteredList<T> listSupplier) {
         this(textFilter, null, null);
         this.itemsFilteredProperty.setValue(listSupplier);
     }
 
-    public TextFilterListenerManager(TextField textFilter) {
+    public TextFilterListenerManager(@NonNull TextField textFilter) {
         this(textFilter, null);
+    }
+
+    private void applySizeProperty() {
+        // Filtered list
+        PropertyListenerUtils.bindSize(this.itemsFilteredProperty, this.itemsFilteredSizeProperty);
+        // Source list
+        PropertyListenerUtils.bindSize(this.mainListProperty, this.mainListSizeProperty);
     }
 
     /**

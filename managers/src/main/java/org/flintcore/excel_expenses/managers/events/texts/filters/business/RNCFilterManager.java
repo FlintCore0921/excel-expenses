@@ -3,13 +3,10 @@ package org.flintcore.excel_expenses.managers.events.texts.filters.business;
 import data.utils.NullableUtils;
 import javafx.animation.PauseTransition;
 import javafx.application.Platform;
-import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
-import javafx.beans.property.Property;
+import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
-import javafx.beans.value.ObservableValue;
 import javafx.collections.ObservableList;
-import javafx.collections.transformation.FilteredList;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
@@ -20,19 +17,21 @@ import lombok.NonNull;
 import lombok.extern.log4j.Log4j2;
 import org.flintcore.excel_expenses.managers.events.combo_box.keyboards.RemoteKeyListener;
 import org.flintcore.excel_expenses.managers.events.texts.filters.TextFilterListenerManager;
+import org.flintcore.excel_expenses.managers.rules.ILocalBusinessRules;
 import org.flintcore.excel_expenses.models.expenses.IBusiness;
+import org.flintcore.excel_expenses.models.properties.formatters.RNCFormatter;
 import org.flintcore.utilities.lists.ObservableListUtils;
 
 import java.io.Closeable;
 import java.io.IOException;
-import java.util.Objects;
+import java.util.List;
 import java.util.function.Predicate;
 
 @Log4j2
 public class RNCFilterManager extends TextFilterListenerManager<IBusiness>
         implements Closeable {
     // Own properties
-    public final Property<IBusiness> selectedBusinessProperty;
+    public final ObjectProperty<IBusiness> selectedBusinessProperty;
     // Listeners
     @Getter
     protected RemoteKeyListener remoteKeyListener;
@@ -41,7 +40,7 @@ public class RNCFilterManager extends TextFilterListenerManager<IBusiness>
     protected final ComboBox<IBusiness> optionsBox;
 
     // Global bindings
-    private BooleanBinding canFilterTextBinding, canSelectItemBinding;
+    protected BooleanBinding canFilterTextBinding, canSelectItemBinding;
 
     public RNCFilterManager(TextField textFilter, @NonNull ComboBox<IBusiness> optionsBox) {
         super(textFilter, null, IBusiness::getRNC);
@@ -53,28 +52,47 @@ public class RNCFilterManager extends TextFilterListenerManager<IBusiness>
     public void setup() {
         this.subsManager.close();
 
-        // Listen changes on the combo Box and set to main binding
-        this.itemsFilteredProperty.bind(
-                this.optionsBox.itemsProperty().map(ObservableListUtils::wrapInto)
-        );
+        setupItemsFilterValues();
 
         setUpFilterItemsListen();
         setUpOptionsBoxListen();
         addKeyListeners();
     }
 
+    @SuppressWarnings("unchecked")
+    public <T extends IBusiness> void addItems(List<T> items) {
+        ((ObservableList<T>) this.mainListProperty.get()).addAll(items);
+    }
+
+    @SuppressWarnings("unchecked")
+    public <T extends IBusiness> void addItems(@NonNull T... items) {
+        ((ObservableList<T>) this.mainListProperty.get()).addAll(items);
+    }
+
+    public <T extends IBusiness> void removeItems(List<T> items) {
+        this.mainListProperty.get().removeAll(items);
+    }
+
+    @SuppressWarnings("unchecked")
+    public <T extends IBusiness> void removeItems(@NonNull T... items) {
+        ((ObservableList<T>) this.mainListProperty.get()).removeAll(items);
+    }
+
+    private void setupItemsFilterValues() {
+        this.itemsFilteredProperty.set(
+                ObservableListUtils.wrapInto(this.optionsBox.getItems())
+        );
+
+        this.optionsBox.itemsProperty().bind(this.itemsFilteredProperty);
+    }
+
     protected void setUpFilterItemsListen() {
-        ObservableValue<? extends ObservableList<? extends IBusiness>> sourceMap =
-                this.itemsFilteredProperty.map(FilteredList::getSource);
+        this.canFilterTextBinding = this.textFilterProperty.isNotEmpty()
+                .and(this.mainListSizeProperty.greaterThan(0));
 
-        BooleanBinding mainListNotEmptyBinding = Bindings.createBooleanBinding(() -> {
-            ObservableList<? extends IBusiness> value = sourceMap.getValue();
-            return Objects.isNull(value) || value.isEmpty();
-        }, sourceMap).not();
-
-        this.canFilterTextBinding = this.itemsFilteredProperty.isNotNull()
-                .or(this.textFilterProperty.isNotEmpty())
-                .and(mainListNotEmptyBinding);
+        this.textFilter.setTextFormatter(
+                new RNCFormatter(ILocalBusinessRules.RNC_SIZE)
+        );
 
         final PauseTransition filterDebounce = new PauseTransition(
                 Duration.millis(450)
@@ -82,36 +100,30 @@ public class RNCFilterManager extends TextFilterListenerManager<IBusiness>
 
         Subscription onFilterSubscription = this.textFilterProperty
                 .when(this.canFilterTextBinding)
-                .when(this.textFilterNotEmptyBinding)
-                .subscribe(text -> {
+                .subscribe((__o, text) -> {
                     filterDebounce.stop();
 
-                    filterDebounce.setOnFinished(e ->
-                            this.itemsFilteredProperty.get()
-                                    .setPredicate(buildFilter(text))
+                    filterDebounce.setOnFinished(e -> this.itemsFilteredProperty.get()
+                            .setPredicate(buildFilter(text))
                     );
 
                     filterDebounce.playFromStart();
                 });
 
+        Subscription onNoFilterSubscription = this.textFilterProperty
+                .when(this.canFilterTextBinding.not())
+                .subscribe((__o, __n) -> this.itemsFilteredProperty.get().setPredicate(null));
+
         this.subsManager.appendSubscriptionOn(this, onFilterSubscription);
+        this.subsManager.appendSubscriptionOn(this, onNoFilterSubscription);
     }
 
     private void setUpOptionsBoxListen() {
-        canSelectItemBinding = Bindings.createBooleanBinding(() -> {
-            FilteredList<IBusiness> filteredList = this.itemsFilteredProperty.get();
-            return Objects.isNull(filteredList) || filteredList.isEmpty();
-        }, this.itemsFilteredProperty).not();
+        canSelectItemBinding = this.itemsFilteredSizeProperty.greaterThan(0);
     }
 
     private void addKeyListeners() {
         initKeyFilterListener();
-
-        this.subsManager.appendSubscriptionOn(this,
-                this.remoteKeyListener.appendHandlerListener(KeyCode.DOWN,
-                        () -> this.optionsBox.getSelectionModel().selectNext()
-                )
-        );
 
         this.subsManager.appendSubscriptionOn(this,
                 this.remoteKeyListener.appendHandlerListener(KeyCode.UP,
@@ -119,14 +131,21 @@ public class RNCFilterManager extends TextFilterListenerManager<IBusiness>
                 )
         );
 
-        this.remoteKeyListener.appendGeneralListener(() -> this.optionsBox.show());
+        this.subsManager.appendSubscriptionOn(this,
+                this.remoteKeyListener.appendHandlerListener(KeyCode.DOWN,
+                        () -> this.optionsBox.getSelectionModel().selectNext()
+                )
+        );
+
+        this.remoteKeyListener.appendGeneralListener(this.optionsBox::show);
 
         // select the current index selected.
         this.subsManager.appendSubscriptionOn(this,
                 this.remoteKeyListener.appendHandlerListener(KeyCode.ENTER, () -> {
                     // can select item in list ?
                     if (!this.canSelectItemBinding.get()) return;
-                    this.selectedBusinessProperty.setValue(this.optionsBox.valueProperty().get());
+                    IBusiness currentSelection = this.optionsBox.valueProperty().get();
+                    this.selectedBusinessProperty.setValue(currentSelection);
                     this.optionsBox.hide();
                 })
         );
@@ -140,11 +159,17 @@ public class RNCFilterManager extends TextFilterListenerManager<IBusiness>
     }
 
     private Predicate<IBusiness> buildFilter(String toFilter) {
+        if (this.canFilterTextBinding.not().get()) return null;
         return b -> this.filterComparator.apply(b).contains(toFilter);
     }
 
     @Override
     public void close() throws IOException {
         Platform.runLater(this.subsManager::close);
+    }
+
+    @SuppressWarnings("unchecked")
+    public ObservableList<? super IBusiness> getItems() {
+        return (ObservableList<? super IBusiness>) this.mainListProperty.get();
     }
 }

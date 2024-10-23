@@ -11,10 +11,14 @@ public class SimpleSubscriptionConsumerHandler<T, R extends Runnable>
         extends SubscriptionRunnableConsumerHandler<T, R, R> {
     @Override
     public void accept(T t) {
-        NullableUtils.executeNonNull(this.subscriptions.get(t));
-        NullableUtils.executeNonNull(this.oneTimeSubscriptions, this::triggerHandlers);
-        NullableUtils.executeNonNull(this.generalSubscriptions, this::triggerHandlers);
-        NullableUtils.executeNonNull(this.lastSubscriptions.get(t));
+        NullableUtils.executeNonNull(this.subscriptions,
+                l -> NullableUtils.executeNonNull(l.get(t), Runnable::run)
+        );
+        triggerGeneralHandlers();
+        triggerOneTimeHandlers();
+        NullableUtils.executeNonNull(this.lastSubscriptions,
+                l -> NullableUtils.executeNonNull(l.get(t), Runnable::run)
+        );
     }
 
     @Override

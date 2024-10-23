@@ -1,19 +1,19 @@
 package org.flintcore.excel_expenses.services.business;
 
 import data.utils.NullableUtils;
-import javafx.beans.property.ReadOnlyBooleanProperty;
-import lombok.extern.log4j.Log4j2;
-import org.flintcore.excel_expenses.models.events.TaskFxEvent;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import javafx.application.Platform;
+import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.concurrent.WorkerStateEvent;
 import javafx.event.EventType;
 import javafx.util.Subscription;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 import org.flintcore.excel_expenses.managers.timers.ApplicationScheduler;
+import org.flintcore.excel_expenses.models.events.TaskFxEvent;
 import org.flintcore.excel_expenses.models.expenses.LocalBusiness;
 import org.flintcore.excel_expenses.models.lists.SerialListHolder;
 import org.flintcore.excel_expenses.models.subscriptions.SubscriptionHolder;
@@ -73,12 +73,21 @@ public class LocalBusinessFileFXService {
         return this.localBusinessRequestTask.addSubscription(type, action);
     }
 
+    public void listenRequestTaskOnce(EventType<WorkerStateEvent> type, Runnable action) {
+        this.localBusinessRequestTask.addOneTimeSubscription(type, action);
+    }
+
+
     public Subscription listenRequestTask(List<EventType<WorkerStateEvent>> type, Runnable action) {
         return this.localBusinessRequestTask.addSubscription(type, action);
     }
 
     public Subscription listenStoreTask(EventType<WorkerStateEvent> type, Runnable action) {
         return this.localBusinessSaveTask.addSubscription(type, action);
+    }
+
+    public void listenStoreTaskOnce(EventType<WorkerStateEvent> type, Runnable action) {
+        this.localBusinessSaveTask.addOneTimeSubscription(type, action);
     }
 
     public Subscription listenStoreTask(List<EventType<WorkerStateEvent>> type, Runnable action) {
@@ -152,6 +161,7 @@ public class LocalBusinessFileFXService {
                         new ArrayList<>(this.localBusinessList)
                 )
         );
+
         setupOnLoadListeners();
     }
 

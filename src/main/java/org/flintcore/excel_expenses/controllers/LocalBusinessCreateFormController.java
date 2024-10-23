@@ -1,6 +1,5 @@
 package org.flintcore.excel_expenses.controllers;
 
-import org.flintcore.excel_expenses.models.events.TaskFxEvent;
 import javafx.animation.PauseTransition;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
@@ -11,8 +10,10 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.util.Duration;
 import org.flintcore.excel_expenses.managers.routers.ApplicationRouter;
+import org.flintcore.excel_expenses.managers.rules.ILocalBusinessRules;
 import org.flintcore.excel_expenses.managers.validators.LocalBusinessValidator;
 import org.flintcore.excel_expenses.models.alerts.CancelableTaskAlert;
+import org.flintcore.excel_expenses.models.events.TaskFxEvent;
 import org.flintcore.excel_expenses.models.subscriptions.tasks.ObservableTask;
 import org.flintcore.excel_expenses.services.business.LocalBusinessFileFXService;
 import org.flintcore.excel_expenses.tasks.bussiness.local.RegisterLocalBusinessOnFileTask;
@@ -55,17 +56,19 @@ public class LocalBusinessCreateFormController implements Initializable {
     }
 
     private void configureNameTextField() {
+        // TODO FIX THIS
         this.localRNCTxt.addEventFilter(KeyEvent.KEY_TYPED, evt -> {
             String content = localRNCTxt.getText();
-            if (content.length() >= LocalBusinessValidator.RNC_SIZE
+            if (content.length() >= ILocalBusinessRules.RNC_SIZE
                     || !evt.getCharacter().matches("[0-9]")) {
                 evt.consume();
             }
         });
 
+        // TODO FIX THIS
         this.localNameTxt.addEventFilter(KeyEvent.KEY_TYPED, evt -> {
             String content = localNameTxt.getText();
-            if (content.length() >= LocalBusinessValidator.MAX_NAME_SIZE) {
+            if (content.length() >= ILocalBusinessRules.MAX_NAME_SIZE) {
                 evt.consume();
             }
         });
@@ -81,7 +84,7 @@ public class LocalBusinessCreateFormController implements Initializable {
                         this.localRNCTxt.textProperty(), this.localNameTxt.textProperty()
                 ),
                 Bindings.notEqual(
-                        LocalBusinessValidator.RNC_SIZE, this.localRNCTxt.lengthProperty()
+                        ILocalBusinessRules.RNC_SIZE, this.localRNCTxt.lengthProperty()
                 )
         ).reduce(Bindings::or).get();
 

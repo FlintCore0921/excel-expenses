@@ -1,6 +1,8 @@
 package org.flintcore.excel_expenses.tasks.bussiness.local;
 
 import data.utils.NullableUtils;
+import javafx.concurrent.WorkerStateEvent;
+import javafx.event.EventType;
 import lombok.Setter;
 import org.flintcore.excel_expenses.managers.validators.LocalBusinessValidator;
 import org.flintcore.excel_expenses.models.expenses.LocalBusiness;
@@ -9,6 +11,7 @@ import org.flintcore.excel_expenses.services.business.LocalBusinessFileFXService
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Map;
 import java.util.concurrent.Future;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -65,6 +68,19 @@ public class RegisterLocalBusinessOnFileTask extends ObservableTask<Void> {
         }
 
         return null;
+    }
+
+    @Override
+    public void addOneTimeSubscription(EventType<WorkerStateEvent> type, Runnable action) {
+        this.addSubscription(type, () -> {
+            action.run();
+            this.events.get(type).remove(action);
+        });
+    }
+
+    @Override
+    public void close() {
+        NullableUtils.executeNonNull(this.events, Map::clear);
     }
 
     @Override

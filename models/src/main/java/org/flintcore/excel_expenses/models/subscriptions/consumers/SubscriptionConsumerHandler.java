@@ -89,7 +89,6 @@ public abstract class SubscriptionConsumerHandler<T, R, L>
 
     protected void triggerGeneralHandlers() {
         NullableUtils.executeNonNull(this.generalSubscriptions, this::triggerHandlers);
-
     }
 
     protected abstract void handleValue(R value);

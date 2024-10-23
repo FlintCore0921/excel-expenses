@@ -19,7 +19,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public abstract class ObservableTask<T> extends Task<T>
         implements IEventSubscriptionHolder<WorkerStateEvent, Runnable> {
 
-    private Map<EventType<WorkerStateEvent>, Set<Runnable>> events;
+    protected Map<EventType<WorkerStateEvent>, Set<Runnable>> events;
 
     @Override
     public Subscription addSubscription(EventType<WorkerStateEvent> type, Runnable action) {

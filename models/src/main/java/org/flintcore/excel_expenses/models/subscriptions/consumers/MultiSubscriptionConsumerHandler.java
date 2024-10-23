@@ -16,14 +16,19 @@ public class MultiSubscriptionConsumerHandler<T, R extends Runnable, L extends C
 
     @Override
     public void accept(T t) {
-        NullableUtils.executeNonNull(this.subscriptions.get(t), this::triggerHandlers);
+        NullableUtils.executeNonNull(this.subscriptions,
+                l -> NullableUtils.executeNonNull(l.get(t), this::triggerHandlers)
+        );
+        triggerGeneralHandlers();
         triggerOneTimeHandlers();
-        NullableUtils.executeNonNull(this.lastSubscriptions.get(t), this::triggerHandlers);
+        NullableUtils.executeNonNull(this.lastSubscriptions,
+                l -> NullableUtils.executeNonNull(l.get(t), this::triggerHandlers)
+        );
     }
 
     @Override
     public Subscription addSubscription(T type, R action) {
-        initSubscriptionHolder(HashMap::new);
+        initSubscriptionHolder();
         L holder = this.subscriptions.computeIfAbsent(type, this::computeResult);
         holder.add(action);
 

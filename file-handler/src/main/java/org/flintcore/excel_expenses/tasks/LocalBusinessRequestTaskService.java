@@ -31,7 +31,6 @@ public class LocalBusinessRequestTaskService
     private final LocalBusinessFileManager localBusinessFileManager;
     private Map<EventType<WorkerStateEvent>, List<Runnable>> subscriptions;
 
-
     public Subscription addSubscription(EventType<WorkerStateEvent> type, Runnable action) {
         initSubscriptionsHolder();
 
@@ -40,6 +39,14 @@ public class LocalBusinessRequestTaskService
         subscriptionsIn.add(action);
 
         return () -> subscriptionsIn.remove(action);
+    }
+
+    @Override
+    public void addOneTimeSubscription(EventType<WorkerStateEvent> type, Runnable action) {
+        this.addSubscription(type, () -> {
+            action.run();
+            this.subscriptions.get(type).remove(action);
+        });
     }
 
     private void initSubscriptionsHolder() {
@@ -78,8 +85,9 @@ public class LocalBusinessRequestTaskService
         };
     }
 
+    @Override
     @PreDestroy
-    private void onDestroy() {
+    public void close() {
         NullableUtils.executeNonNull(this.subscriptions, Map::clear);
     }
 }

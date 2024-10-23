@@ -2,6 +2,7 @@ package org.flintcore.excel_expenses.tasks;
 
 import data.utils.NullableUtils;
 import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
 import javafx.concurrent.Service;
 import javafx.concurrent.Task;
 import javafx.concurrent.WorkerStateEvent;
@@ -16,7 +17,10 @@ import org.flintcore.excel_expenses.models.lists.SerialListHolder;
 import org.flintcore.excel_expenses.models.subscriptions.events.IEventSubscriptionHolder;
 import org.springframework.stereotype.Component;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 
@@ -40,6 +44,14 @@ public class LocalBusinessSaveTaskService
 
         subscriptionsIn.add(action);
         return () -> subscriptionsIn.remove(action);
+    }
+
+    @Override
+    public void addOneTimeSubscription(EventType<WorkerStateEvent> type, Runnable action) {
+        this.addSubscription(type, () -> {
+            action.run();
+            this.subscriptions.get(type).remove(action);
+        });
     }
 
     @Override
@@ -79,5 +91,11 @@ public class LocalBusinessSaveTaskService
                         l -> l.iterator().forEachRemaining(Runnable::run)
                 )
         );
+    }
+
+    @Override
+    @PreDestroy
+    public void close() {
+        NullableUtils.executeNonNull(this.subscriptions, Map::clear);
     }
 }

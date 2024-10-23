@@ -6,7 +6,6 @@ import javafx.animation.*;
 import javafx.application.Platform;
 import javafx.beans.binding.Binding;
 import javafx.beans.binding.Bindings;
-import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -34,10 +33,12 @@ import org.flintcore.excel_expenses.models.expenses.Receipt;
 import org.flintcore.excel_expenses.models.subscriptions.SubscriptionHolder;
 import org.flintcore.excel_expenses.services.business.LocalBusinessFileFXService;
 import org.flintcore.utilities.dates.DateUtils;
+import org.flintcore.utilities.lists.ObservableListUtils;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import java.net.URL;
+import java.util.Objects;
 import java.util.ResourceBundle;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicReference;
@@ -96,44 +97,29 @@ public class ExpenseCreateFormController implements Initializable {
         // Add filtering logic
         rncFilterManager = new RNCFilterManager(this.localRNCTxt, this.localFilterBox);
         this.rncFilterManager.setup();
+
+        localNameTxt.textProperty().bind(
+                this.rncFilterManager.selectedBusinessProperty
+                        .map(IBusiness::getName).orElse("")
+        );
+        this.rncFilterManager.selectedBusinessProperty.subscribe(business -> {
+            if(Objects.isNull(business)) return;
+            this.localRNCTxt.setText(business.getRNC());
+        });
     }
 
     private void setUpListenCallToServices() {
-        AtomicReference<Subscription> onFirstRequestDataSet = new AtomicReference<>();
+        this.localBusinessService.listenRequestTaskOnce(TaskFxEvent.WORKER_STATE_SCHEDULED, () -> {
+            CompletableFuture<ObservableList<LocalBusiness>> listBusinessFuture =
+                    this.localBusinessService.getLocalBusinessList();
 
-        Runnable onFirstRequest = () -> {
-            NullableUtils.executeNonNull(onFirstRequestDataSet.get(), Subscription::unsubscribe);
-
-            CompletableFuture<ObservableList<LocalBusiness>> listBusinessFuture = this.localBusinessService
-                    .getLocalBusinessList();
-
-            listBusinessFuture.thenAcceptAsync(localBusinessList -> localBusinessList.addListener(
-                    (ListChangeListener<LocalBusiness>) c -> {
-                        while (c.next()) {
-                            ObservableList<IBusiness> boxItems = this.localFilterBox.getItems();
-
-                            if (c.wasAdded()) {
-                                boxItems.addAll(c.getAddedSubList());
-                            }
-
-                            if (c.wasRemoved()) {
-                                boxItems.removeAll(c.getRemoved());
-                            }
-                        }
-                    }), Platform::runLater);
-        };
-
-        onFirstRequestDataSet.set(
-                this.localBusinessService.listenRequestTask(
-                        TaskFxEvent.WORKER_STATE_SCHEDULED,
-                        onFirstRequest
-                )
-        );
-
-        this.subscriptionManager.appendSubscriptionOn(
-                this.localBusinessService,
-                onFirstRequestDataSet.get()
-        );
+            listBusinessFuture.thenAcceptAsync(localBusinessList -> {
+                Subscription subscription = ObservableListUtils.listenList(
+                        localBusinessList, this.rncFilterManager.getItems()
+                );
+                this.subscriptionManager.appendSubscriptionOn(this, subscription);
+            }, Platform::runLater);
+        });
     }
 
     private void configureLocalBusinessFields() {
@@ -144,6 +130,7 @@ public class ExpenseCreateFormController implements Initializable {
         this.localRNCTxt.textProperty().subscribe(
                 consumeBusinessBuilder(RNC -> this.businessBuilder.RNC(RNC))
         );
+
         // Disable the RNC field if service is requesting data.
         this.localRNCTxt.disableProperty().bind(
                 this.localBusinessService.requestingProperty()
@@ -172,7 +159,7 @@ public class ExpenseCreateFormController implements Initializable {
 
         PauseTransition onPauseTransition = new PauseTransition(loadingDefaultDuration);
 
-        this.localBusinessService.requestingProperty().subscribe(requesting -> {
+        this.localBusinessService.requestingProperty().subscribe((old_, requesting) -> {
             onPauseTransition.stop();
 
             onPauseTransition.setOnFinished(e -> {
@@ -245,9 +232,9 @@ public class ExpenseCreateFormController implements Initializable {
 
     private void configureReceiptSection() {
         Binding<Boolean> onLocalSectionCompleted = Bindings.or(
-                this.localNameTxt.textProperty().isEmpty(),
-                this.localRNCTxt.textProperty().isEmpty()
-        ).not();
+                this.localNameTxt.textProperty().isNotNull(),
+                this.localRNCTxt.textProperty().isNotNull()
+        ).and(this.rncFilterManager.selectedBusinessProperty.isNotNull());
 
         final double xTranslatePos = this.receiptSection.getTranslateX(),
                 yTranslatePos = this.receiptSection.getTranslateY();
@@ -339,7 +326,8 @@ public class ExpenseCreateFormController implements Initializable {
     private TextField localRNCTxt;
 
     @FXML
-    private VBox localSection;
+    private VBox
+            localSection;
 
     @FXML
     private TextField percentServicePriceTxt;

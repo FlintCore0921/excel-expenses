@@ -24,7 +24,6 @@ public class RemoteKeyListener implements EventHandler<KeyEvent> {
 
     public Subscription appendHandlerListener(@NonNull KeyCode key, final Runnable listener) {
         initHandlerListeners();
-
         return this.onHandleListeners.addSubscription(key, listener);
     }
 
