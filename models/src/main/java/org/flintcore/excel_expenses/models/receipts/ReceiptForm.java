@@ -1,6 +1,7 @@
-package org.flintcore.excel_expenses.models.expenses;
+package org.flintcore.excel_expenses.models.receipts;
 
 import lombok.Getter;
+import org.flintcore.excel_expenses.models.expenses.LocalBusiness;
 
 @Getter
 public class ReceiptForm {
@@ -10,7 +11,7 @@ public class ReceiptForm {
 
     public ReceiptForm() {
         receiptBuilder = new Receipt.ReceiptBuilder();
-        localBusinessBuilder = new LocalBusiness.LocalBusinessBuilder();
+        localBusinessBuilder = LocalBusiness.builder();
     }
 
     public ReceiptInfo buildInfo() {

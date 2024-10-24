@@ -3,7 +3,7 @@ package org.flintcore.excel_expenses.files.receipts;
 import org.flintcore.excel_expenses.files.FileManager;
 import org.flintcore.excel_expenses.files.SerializeReader;
 import org.flintcore.excel_expenses.files.SerializeWriter;
-import org.flintcore.excel_expenses.models.expenses.Receipt;
+import org.flintcore.excel_expenses.models.receipts.Receipt;
 import org.springframework.stereotype.Component;
 
 @Component

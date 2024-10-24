@@ -22,6 +22,7 @@ public class NumericTextFieldChangeListener<T extends Number> implements ChangeL
     @Override
     public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
         NullableUtils.executeIsNull(this.handler, this::setHandler);
+        this.handler.stop();
         this.handler.setOnFinished(evt -> consumer.accept(mapper.apply(newValue)));
         this.handler.playFromStart();
     }

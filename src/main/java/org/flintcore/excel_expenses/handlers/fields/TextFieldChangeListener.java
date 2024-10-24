@@ -6,7 +6,6 @@ import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.util.Duration;
 
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
 public class TextFieldChangeListener implements ChangeListener<String> {
@@ -20,6 +19,7 @@ public class TextFieldChangeListener implements ChangeListener<String> {
     @Override
     public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
         NullableUtils.executeIsNull(this.handler, this::setHandler);
+        this.handler.stop();
         this.handler.setOnFinished(evt -> consumer.accept(newValue));
         this.handler.playFromStart();
     }

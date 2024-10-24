@@ -19,14 +19,15 @@ import javafx.util.Duration;
 import javafx.util.Subscription;
 import lombok.extern.log4j.Log4j2;
 import org.flintcore.excel_expenses.handlers.fields.NumericTextFieldChangeListener;
-import org.flintcore.excel_expenses.handlers.fields.TextFieldChangeListener;
-import org.flintcore.excel_expenses.handlers.fields.dates.LocalDateChangeListener;
+import org.flintcore.excel_expenses.managers.events.texts.fillers.NFCAutoCompleteListener;
 import org.flintcore.excel_expenses.managers.events.texts.filters.business.RNCFilterManager;
+import org.flintcore.excel_expenses.managers.pickers.dates.ByMonthCellFactory;
 import org.flintcore.excel_expenses.managers.routers.ApplicationRouter;
 import org.flintcore.excel_expenses.managers.routers.local.ELocalRoute;
 import org.flintcore.excel_expenses.models.expenses.IBusiness;
 import org.flintcore.excel_expenses.models.expenses.LocalBusiness;
-import org.flintcore.excel_expenses.models.expenses.Receipt;
+import org.flintcore.excel_expenses.models.properties.formatters.StaticNumericFormatter;
+import org.flintcore.excel_expenses.models.receipts.Receipt;
 import org.flintcore.excel_expenses.models.subscriptions.SubscriptionHolder;
 import org.flintcore.excel_expenses.services.business.LocalBusinessFileFXService;
 import org.flintcore.utilities.dates.DateUtils;
@@ -35,6 +36,7 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import java.net.URL;
+import java.util.List;
 import java.util.Objects;
 import java.util.ResourceBundle;
 import java.util.concurrent.CompletableFuture;
@@ -55,7 +57,9 @@ public class ExpenseCreateFormController implements Initializable {
 
     @SuppressWarnings("all")
     private ResourceBundle _bundles;
+    // Listeners
     private RNCFilterManager rncFilterManager;
+    private NFCAutoCompleteListener NFCListener;
 
     public boolean hasRequested;
 
@@ -85,6 +89,7 @@ public class ExpenseCreateFormController implements Initializable {
         // Price
         configurePriceFields();
 
+        // Receipts
         configureReceiptFields();
         configureSections();
     }
@@ -119,7 +124,7 @@ public class ExpenseCreateFormController implements Initializable {
                         .map(IBusiness::getName).orElse("")
         );
 
-        this.rncFilterManager.selectedBusinessProperty.subscribe(business -> {
+        this.rncFilterManager.selectedBusinessProperty.subscribe((old, business) -> {
             if (Objects.isNull(business)) return;
             this.localRNCTxt.setText(business.getRNC());
         });
@@ -139,9 +144,7 @@ public class ExpenseCreateFormController implements Initializable {
     }
 
     private void configureLocalBusinessFilterBox() {
-        this.rncFilterManager.selectedBusinessProperty.subscribe(
-                b -> log.info("Value selected from filter: {}", b)
-        );
+
     }
 
     private void configureLocalBusinessRequestButton() {
@@ -184,24 +187,28 @@ public class ExpenseCreateFormController implements Initializable {
 
     private void configureReceiptFields() {
         // Receipts
-        this.receiptNFCTxt.textProperty().addListener(
-                new TextFieldChangeListener(
-                        consumeReceiptBuilder(NFC -> this.receiptBuilder.NFC(NFC))
-                )
+        this.NFCListener = new NFCAutoCompleteListener(this.receiptNFCTxt);
+
+        this.NFCListener.NFCProperty.subscribe(
+                consumeReceiptBuilder(NFC -> this.receiptBuilder.NFC(NFC))
         );
 
-        this.receiptDate.valueProperty().addListener(
-                new LocalDateChangeListener(
-                        consumeReceiptBuilder(
-                                dateCreation -> this.receiptBuilder.dateCreation(
-                                        DateUtils.convertToDate(dateCreation)
-                                )
+        // Picker
+        this.receiptDate.setDayCellFactory(new ByMonthCellFactory());
+
+        this.receiptDate.valueProperty().subscribe(
+                consumeReceiptBuilder(dateCreation -> this.receiptBuilder.dateCreation(
+                                DateUtils.convertToDate(dateCreation)
                         )
                 )
         );
     }
 
     private void configurePriceFields() {
+        // Text formatter
+        List.of(this.priceTxt, this.priceItbisTxt, this.percentServicePriceTxt)
+                .forEach(tx -> tx.setTextFormatter(new StaticNumericFormatter(2)));
+
         this.priceTxt.textProperty().addListener(
                 new NumericTextFieldChangeListener<>(
                         consumeReceiptBuilder(price -> this.receiptBuilder.price(price)),
