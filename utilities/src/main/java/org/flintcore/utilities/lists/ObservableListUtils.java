@@ -48,6 +48,7 @@ public final class ObservableListUtils {
             }
         };
 
+        observable.addAll(list);
         list.addListener(changeListener);
 
         return () -> list.removeListener(changeListener);

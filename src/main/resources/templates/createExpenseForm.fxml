@@ -70,7 +70,7 @@
             </HBox>
          </children>
       </StackPane>
-      <ScrollPane fitToHeight="true" fitToWidth="true" hbarPolicy="NEVER" styleClass="no-insets" GridPane.rowIndex="1">
+      <ScrollPane fitToHeight="true" fitToWidth="true" hbarPolicy="NEVER" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" styleClass="no-insets" GridPane.rowIndex="1">
          <content>
             <VBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" spacing="5.0">
                <children>
@@ -89,7 +89,7 @@
                                        <children>
                                           <StackPane HBox.hgrow="ALWAYS">
                                              <children>
-                                                <ComboBox fx:id="localFilterBox" maxWidth="1.7976931348623157E308" visibleRowCount="5" StackPane.alignment="BOTTOM_CENTER" />
+                                                <ComboBox fx:id="localFilterBox" focusTraversable="false" maxWidth="1.7976931348623157E308" visibleRowCount="5" StackPane.alignment="BOTTOM_CENTER" />
                                                 <TextField fx:id="localRNCTxt" alignment="CENTER" promptText="%expense.form.name.prompt">
                                                    <font>
                                                       <Font name="Segoe UI Bold" size="20.0" />

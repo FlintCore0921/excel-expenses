@@ -1,4 +1,4 @@
-package org.flintcore.excel_expenses.handlers.filters;
+package org.flintcore.excel_expenses.managers.filters;
 
 import javafx.util.StringConverter;
 import org.flintcore.excel_expenses.models.expenses.IBusiness;

@@ -4,8 +4,7 @@ import data.utils.NullableUtils;
 import jakarta.annotation.PreDestroy;
 import javafx.animation.*;
 import javafx.application.Platform;
-import javafx.beans.binding.Binding;
-import javafx.beans.binding.Bindings;
+import javafx.beans.binding.BooleanBinding;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -22,11 +21,9 @@ import lombok.extern.log4j.Log4j2;
 import org.flintcore.excel_expenses.handlers.fields.NumericTextFieldChangeListener;
 import org.flintcore.excel_expenses.handlers.fields.TextFieldChangeListener;
 import org.flintcore.excel_expenses.handlers.fields.dates.LocalDateChangeListener;
-import org.flintcore.excel_expenses.handlers.filters.BasicBusinessStringConverter;
 import org.flintcore.excel_expenses.managers.events.texts.filters.business.RNCFilterManager;
 import org.flintcore.excel_expenses.managers.routers.ApplicationRouter;
 import org.flintcore.excel_expenses.managers.routers.local.ELocalRoute;
-import org.flintcore.excel_expenses.models.events.TaskFxEvent;
 import org.flintcore.excel_expenses.models.expenses.IBusiness;
 import org.flintcore.excel_expenses.models.expenses.LocalBusiness;
 import org.flintcore.excel_expenses.models.expenses.Receipt;
@@ -41,7 +38,6 @@ import java.net.URL;
 import java.util.Objects;
 import java.util.ResourceBundle;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
 @Component
@@ -60,6 +56,8 @@ public class ExpenseCreateFormController implements Initializable {
     @SuppressWarnings("all")
     private ResourceBundle _bundles;
     private RNCFilterManager rncFilterManager;
+
+    public boolean hasRequested;
 
     public ExpenseCreateFormController(
             ApplicationRouter appRouter,
@@ -89,27 +87,18 @@ public class ExpenseCreateFormController implements Initializable {
 
         configureReceiptFields();
         configureSections();
-
-        setUpListenCallToServices();
     }
 
     private void initFXMLListeners() {
         // Add filtering logic
         rncFilterManager = new RNCFilterManager(this.localRNCTxt, this.localFilterBox);
         this.rncFilterManager.setup();
-
-        localNameTxt.textProperty().bind(
-                this.rncFilterManager.selectedBusinessProperty
-                        .map(IBusiness::getName).orElse("")
-        );
-        this.rncFilterManager.selectedBusinessProperty.subscribe(business -> {
-            if(Objects.isNull(business)) return;
-            this.localRNCTxt.setText(business.getRNC());
-        });
     }
 
-    private void setUpListenCallToServices() {
-        this.localBusinessService.listenRequestTaskOnce(TaskFxEvent.WORKER_STATE_SCHEDULED, () -> {
+    private void callDataFromServices() {
+        if (this.hasRequested) return;
+
+        try {
             CompletableFuture<ObservableList<LocalBusiness>> listBusinessFuture =
                     this.localBusinessService.getLocalBusinessList();
 
@@ -119,10 +108,22 @@ public class ExpenseCreateFormController implements Initializable {
                 );
                 this.subscriptionManager.appendSubscriptionOn(this, subscription);
             }, Platform::runLater);
-        });
+        } finally {
+            this.hasRequested = true;
+        }
     }
 
     private void configureLocalBusinessFields() {
+        localNameTxt.textProperty().bind(
+                this.rncFilterManager.selectedBusinessProperty
+                        .map(IBusiness::getName).orElse("")
+        );
+
+        this.rncFilterManager.selectedBusinessProperty.subscribe(business -> {
+            if (Objects.isNull(business)) return;
+            this.localRNCTxt.setText(business.getRNC());
+        });
+
         this.localNameTxt.textProperty().subscribe(
                 consumeBusinessBuilder(name -> this.businessBuilder.name(name))
         );
@@ -138,10 +139,6 @@ public class ExpenseCreateFormController implements Initializable {
     }
 
     private void configureLocalBusinessFilterBox() {
-        this.localFilterBox.converterProperty().set(
-                new BasicBusinessStringConverter<>(this.localFilterBox::getItems)
-        );
-
         this.rncFilterManager.selectedBusinessProperty.subscribe(
                 b -> log.info("Value selected from filter: {}", b)
         );
@@ -182,7 +179,7 @@ public class ExpenseCreateFormController implements Initializable {
             onPauseTransition.playFromStart();
         });
 
-        this.btnLoadRNC.setOnAction(e -> this.localBusinessService.requestData());
+        this.btnLoadRNC.setOnAction(e -> callDataFromServices());
     }
 
     private void configureReceiptFields() {
@@ -198,7 +195,8 @@ public class ExpenseCreateFormController implements Initializable {
                         consumeReceiptBuilder(
                                 dateCreation -> this.receiptBuilder.dateCreation(
                                         DateUtils.convertToDate(dateCreation)
-                                ))
+                                )
+                        )
                 )
         );
     }
@@ -231,32 +229,31 @@ public class ExpenseCreateFormController implements Initializable {
     }
 
     private void configureReceiptSection() {
-        Binding<Boolean> onLocalSectionCompleted = Bindings.or(
-                this.localNameTxt.textProperty().isNotNull(),
-                this.localRNCTxt.textProperty().isNotNull()
-        ).and(this.rncFilterManager.selectedBusinessProperty.isNotNull());
+        BooleanBinding onLocalSectionCompleted = this.rncFilterManager.selectedBusinessProperty
+                .isNotNull();
+
+        receiptSection.visibleProperty().bind(
+                // Bind it while the animation move the section
+                receiptSection.opacityProperty().isNotEqualTo(0.0, 0)
+        );
 
         final double xTranslatePos = this.receiptSection.getTranslateX(),
                 yTranslatePos = this.receiptSection.getTranslateY();
 
-        AtomicReference<ParallelTransition> onReceiptTransition = new AtomicReference<>();
+        final TranslateTransition translateTransition = new TranslateTransition(
+                Duration.millis(600.0), this.receiptSection
+        );
 
-        onLocalSectionCompleted.subscribe(completed -> {
-            NullableUtils.executeNonNull(onReceiptTransition.get(), Transition::stop);
+        final FadeTransition fadeTransition = new FadeTransition(
+                Duration.millis(600.0), this.receiptSection
+        );
 
-            final TranslateTransition translateTransition = new TranslateTransition(
-                    Duration.millis(600.0), this.receiptSection
-            );
+        final ParallelTransition showReceiptTransition = new ParallelTransition(
+                translateTransition, fadeTransition
+        );
 
-            final FadeTransition fadeTransition = new FadeTransition(
-                    Duration.millis(600.0), this.receiptSection
-            );
-
-            final ParallelTransition showReceiptTransition = new ParallelTransition(
-                    translateTransition, fadeTransition
-            );
-
-            onReceiptTransition.set(showReceiptTransition);
+        Subscription localSectionSubscription = onLocalSectionCompleted.subscribe(completed -> {
+            showReceiptTransition.stop();
 
             translateTransition.setFromX(completed ? xTranslatePos : 0);
             translateTransition.setFromY(completed ? yTranslatePos : 0);
@@ -266,10 +263,10 @@ public class ExpenseCreateFormController implements Initializable {
             fadeTransition.setFromValue(completed ? 0 : 1.0);
             fadeTransition.setToValue(completed ? 1.0 : 0);
 
-            showReceiptTransition.setOnFinished(e -> onReceiptTransition.set(null));
-
-            showReceiptTransition.play();
+            showReceiptTransition.playFromStart();
         });
+
+        this.subscriptionManager.appendSubscriptionOn(this, localSectionSubscription);
     }
 
     private <T> Consumer<T> consumeReceiptBuilder(Consumer<T> consumer) {
@@ -299,8 +296,8 @@ public class ExpenseCreateFormController implements Initializable {
 
     @PreDestroy
     private void onDeleteReference() {
-        String message = "Cleaning subscriptions from %s ...".formatted(getClass().getSimpleName());
-        log.info(message);
+        log.info("Cleaning subscriptions from {} ...", getClass().getSimpleName());
+        this.rncFilterManager.close();
         this.subscriptionManager.close();
     }
 
@@ -326,8 +323,7 @@ public class ExpenseCreateFormController implements Initializable {
     private TextField localRNCTxt;
 
     @FXML
-    private VBox
-            localSection;
+    private VBox localSection;
 
     @FXML
     private TextField percentServicePriceTxt;

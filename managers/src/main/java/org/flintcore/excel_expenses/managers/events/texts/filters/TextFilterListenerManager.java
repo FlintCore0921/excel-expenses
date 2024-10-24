@@ -10,10 +10,10 @@ import org.apache.commons.lang3.ObjectUtils;
 import org.flintcore.excel_expenses.models.subscriptions.SubscriptionHolder;
 import org.flintcore.utilities.properties.PropertyListenerUtils;
 
-import java.util.List;
+import java.io.Closeable;
 import java.util.function.Function;
 
-public abstract class TextFilterListenerManager<T> {
+public abstract class TextFilterListenerManager<T> implements Closeable {
     protected TextField textFilter;
     protected StringProperty textFilterProperty;
     protected final ObjectProperty<FilteredList<T>> itemsFilteredProperty;
@@ -38,9 +38,6 @@ public abstract class TextFilterListenerManager<T> {
                 new SimpleObjectProperty<>(this, null, null)
         );
         this.itemsFilteredSizeProperty = new SimpleIntegerProperty();
-        this.itemsFilteredSizeProperty.bind(
-                this.itemsFilteredProperty.map(List::size)
-        );
 
         this.mainListProperty = new SimpleObjectProperty<>();
         this.mainListProperty.bind(
