@@ -1,4 +1,4 @@
-package org.flintcore.excel_expenses.tasks;
+package org.flintcore.excel_expenses.tasks.business;
 
 import data.utils.NullableUtils;
 import jakarta.annotation.PostConstruct;
@@ -18,8 +18,9 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.CopyOnWriteArraySet;
 
 @Component
 @RequiredArgsConstructor
@@ -29,13 +30,13 @@ public class LocalBusinessRequestTaskService
         implements IEventSubscriptionHolder<WorkerStateEvent, Runnable> {
 
     private final LocalBusinessFileManager localBusinessFileManager;
-    private Map<EventType<WorkerStateEvent>, List<Runnable>> subscriptions;
+    private Map<EventType<WorkerStateEvent>, Set<Runnable>> subscriptions;
 
     public Subscription addSubscription(EventType<WorkerStateEvent> type, Runnable action) {
         initSubscriptionsHolder();
 
-        List<Runnable> subscriptionsIn = this.subscriptions
-                .computeIfAbsent(type, __ -> new CopyOnWriteArrayList<>());
+        Set<Runnable> subscriptionsIn = this.subscriptions
+                .computeIfAbsent(type, __ -> new CopyOnWriteArraySet<>());
         subscriptionsIn.add(action);
 
         return () -> subscriptionsIn.remove(action);

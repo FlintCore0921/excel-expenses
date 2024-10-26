@@ -4,13 +4,11 @@ import org.flintcore.excel_expenses.files.FileManager;
 import org.flintcore.excel_expenses.files.SerializeReader;
 import org.flintcore.excel_expenses.files.SerializeWriter;
 import org.flintcore.excel_expenses.models.receipts.Receipt;
-import org.springframework.stereotype.Component;
 
-@Component
-public class ReceiptFileManager extends FileManager<Receipt> {
-    public static final String[] RECEIPT_FILE_PATH = {"app", "storage", "data", "receipts.txt"};
+public abstract class ReceiptFileManager<T extends Receipt> extends FileManager<T> {
+    protected static final String[] RECEIPTS_PATH = {"app", "storage", "receipts"};
 
     public ReceiptFileManager(SerializeWriter serializeWriter, SerializeReader serializeReader) {
-        super(RECEIPT_FILE_PATH, serializeWriter, serializeReader);
+        super(serializeWriter, serializeReader);
     }
 }

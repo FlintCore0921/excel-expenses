@@ -17,8 +17,8 @@ import org.flintcore.excel_expenses.models.events.TaskFxEvent;
 import org.flintcore.excel_expenses.models.expenses.LocalBusiness;
 import org.flintcore.excel_expenses.models.lists.SerialListHolder;
 import org.flintcore.excel_expenses.models.subscriptions.SubscriptionHolder;
-import org.flintcore.excel_expenses.tasks.LocalBusinessRequestTaskService;
-import org.flintcore.excel_expenses.tasks.LocalBusinessSaveTaskService;
+import org.flintcore.excel_expenses.tasks.business.LocalBusinessRequestTaskService;
+import org.flintcore.excel_expenses.tasks.business.LocalBusinessSaveTaskService;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 

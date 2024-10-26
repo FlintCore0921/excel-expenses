@@ -1,4 +1,4 @@
-package org.flintcore.excel_expenses.tasks;
+package org.flintcore.excel_expenses.tasks.business;
 
 import data.utils.NullableUtils;
 import jakarta.annotation.PostConstruct;

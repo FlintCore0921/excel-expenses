@@ -19,15 +19,11 @@ public abstract class FileManager<T extends Serializable> {
     protected final SerializeWriter serializeWriter;
     protected final SerializeReader serializeReader;
 
-    protected final String[] FILE_PATH;
-
     public FileManager(
-            String[] filePath,
             SerializeWriter serializeWriter,
             SerializeReader serializeReader) {
         this.serializeWriter = serializeWriter;
         this.serializeReader = serializeReader;
-        this.FILE_PATH = filePath;
 
         this.lock = new ReentrantReadWriteLock(true);
         this.writeLock = lock.writeLock();
@@ -37,7 +33,7 @@ public abstract class FileManager<T extends Serializable> {
     public void updateDataSet(SerialListHolder<T> data) {
         try {
             writeLock.lock();
-            this.serializeWriter.writeIn(FILE_PATH, new ArrayList<>(data.values()));
+            this.serializeWriter.writeIn(getFilePath(), new ArrayList<>(data.values()));
         } finally {
             writeLock.unlock();
         }
@@ -49,7 +45,7 @@ public abstract class FileManager<T extends Serializable> {
 
         try {
             readLock.lock();
-            read = this.serializeReader.read(FILE_PATH);
+            read = this.serializeReader.read(getFilePath());
         } finally {
             readLock.unlock();
         }
@@ -58,4 +54,6 @@ public abstract class FileManager<T extends Serializable> {
 
         return dataList;
     }
+
+    protected abstract String[] getFilePath();
 }
