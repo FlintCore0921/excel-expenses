@@ -14,12 +14,12 @@ import java.util.Date;
 @Builder
 public record Receipt(
         String NFC,
+        Date dateCreation,
+        IBusiness business,
         double price,
         double servicePrice,
-        double itbPrice,
-        Date dateCreation,
-        IBusiness business
-) implements Serializable, Comparable<Receipt> {
+        double itbPrice
+        ) implements Serializable, Comparable<Receipt> {
     @Serial
     private static final long serialVersionUID = 64621238L;
     public static final int RECEIPT_SCALE = 2;

@@ -42,7 +42,7 @@ public class StaticNumericFormatter extends TextFormatter<String> {
 
         private void initPattern() {
             NullableUtils.executeIsNull(this.formatPattern, () -> {
-                String fixedLengthText = length < 0 ? "*" : "{1,%s}".formatted(Integer.toString(length));
+                String fixedLengthText = length < 0 ? "*" : "{0,%s}".formatted(Integer.toString(length));
                 String pattern = "^\\d%s(\\.\\d{1,%d})?$".formatted(fixedLengthText, precision);
                 this.formatPattern = Pattern.compile(pattern);
             });
