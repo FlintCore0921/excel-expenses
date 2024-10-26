@@ -3,7 +3,6 @@ package org.flintcore.excel_expenses.tasks.business;
 import data.utils.NullableUtils;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
-import javafx.concurrent.Service;
 import javafx.concurrent.Task;
 import javafx.concurrent.WorkerStateEvent;
 import javafx.event.EventHandler;
@@ -13,21 +12,19 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.flintcore.excel_expenses.files.business.LocalBusinessFileManager;
 import org.flintcore.excel_expenses.models.expenses.LocalBusiness;
-import org.flintcore.excel_expenses.models.subscriptions.events.IEventSubscriptionHolder;
+import org.flintcore.excel_expenses.models.subscriptions.tasks.ObservableService;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArraySet;
 
 @Component
 @RequiredArgsConstructor
 @Log4j2
 public class LocalBusinessRequestTaskService
-        extends Service<List<LocalBusiness>>
-        implements IEventSubscriptionHolder<WorkerStateEvent, Runnable> {
+        extends ObservableService<List<LocalBusiness>> {
 
     private final LocalBusinessFileManager localBusinessFileManager;
     private Map<EventType<WorkerStateEvent>, Set<Runnable>> subscriptions;
@@ -36,7 +33,7 @@ public class LocalBusinessRequestTaskService
         initSubscriptionsHolder();
 
         Set<Runnable> subscriptionsIn = this.subscriptions
-                .computeIfAbsent(type, __ -> new CopyOnWriteArraySet<>());
+                .computeIfAbsent(type, this::buildSubscriptionHolder);
         subscriptionsIn.add(action);
 
         return () -> subscriptionsIn.remove(action);
@@ -50,22 +47,10 @@ public class LocalBusinessRequestTaskService
         });
     }
 
-    private void initSubscriptionsHolder() {
-        NullableUtils.executeIsNull(this.subscriptions,
-                () -> this.subscriptions = new ConcurrentHashMap<>()
-        );
-    }
-
+    @Override
     @PostConstruct
-    private void setupListeners() {
-        EventHandler<WorkerStateEvent> subscriptionsHandler = callSubscriptionsHandler();
-
-        this.setOnScheduled(subscriptionsHandler);
-        this.setOnReady(subscriptionsHandler);
-        this.setOnRunning(subscriptionsHandler);
-        this.setOnSucceeded(subscriptionsHandler);
-        this.setOnFailed(subscriptionsHandler);
-        this.setOnCancelled(subscriptionsHandler);
+    protected void setupListeners() {
+        super.setupListeners();
     }
 
     private EventHandler<WorkerStateEvent> callSubscriptionsHandler() {

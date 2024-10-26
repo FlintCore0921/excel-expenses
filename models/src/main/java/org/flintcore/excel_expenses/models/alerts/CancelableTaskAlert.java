@@ -22,7 +22,7 @@ public class CancelableTaskAlert extends Alert {
                 TaskFxEvent.WORKER_STATE_RUNNING, this::show
         );
         this.linkedTask.addSubscription(
-                TaskFxEvent.WORKER_STATE_DONE, this::close
+                TaskFxEvent.ALL_WORKER_STATE_DONE, this::close
         );
     }
 

@@ -36,7 +36,7 @@ class BusinessFileManagerTest {
         LocalBusiness localBusiness = new LocalBusiness("Local", "place");
         objects.add(localBusiness);
 
-        SerialListHolder<LocalBusiness> listHolder = new SerialListHolder<>(objects);
+        SerialListHolder<LocalBusiness> listHolder = SerialListHolder.from(objects);
 
         localBusinessFileManager.updateDataSet(listHolder);
         List<LocalBusiness> dataList = localBusinessFileManager.getDataList();

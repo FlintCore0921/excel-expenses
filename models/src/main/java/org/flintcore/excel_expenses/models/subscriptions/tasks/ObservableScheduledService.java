@@ -1,21 +1,23 @@
 package org.flintcore.excel_expenses.models.subscriptions.tasks;
 
 import data.utils.NullableUtils;
-import javafx.concurrent.Task;
+import javafx.concurrent.ScheduledService;
 import javafx.concurrent.WorkerStateEvent;
 import javafx.event.EventHandler;
 import javafx.event.EventType;
 import javafx.util.Subscription;
-import lombok.RequiredArgsConstructor;
 import org.flintcore.excel_expenses.models.subscriptions.events.IEventSubscriptionHolder;
 
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 
-@RequiredArgsConstructor
-public abstract class ObservableTask<T> extends Task<T>
+/**
+ * Task that can be scheduled in a period of time.
+ */
+public abstract class ObservableScheduledService<T> extends ScheduledService<T>
         implements IEventSubscriptionHolder<WorkerStateEvent, Runnable> {
 
     protected Map<EventType<WorkerStateEvent>, Set<Runnable>> events;
@@ -39,7 +41,7 @@ public abstract class ObservableTask<T> extends Task<T>
 
             return () -> subscriptions.remove(action);
         } finally {
-            this.callSubscriptionsHandler();
+            this.setupSubscriptionsHandler();
         }
     }
 
@@ -47,7 +49,13 @@ public abstract class ObservableTask<T> extends Task<T>
         return new CopyOnWriteArraySet<>();
     }
 
-    protected void callSubscriptionsHandler() {
+    protected void setupListeners() {
+        setupSubscriptionsHandler();
+    }
+
+    protected void setupSubscriptionsHandler() {
+        if (Objects.nonNull(getOnScheduled())) return;
+
         EventHandler<WorkerStateEvent> eventListenerHandler = e -> NullableUtils.executeNonNull(this.events,
                 subs -> NullableUtils.executeNonNull(subs.get(e.getEventType()),
                         l -> l.iterator().forEachRemaining(Runnable::run)
@@ -59,5 +67,10 @@ public abstract class ObservableTask<T> extends Task<T>
         setOnScheduled(eventListenerHandler);
         setOnCancelled(eventListenerHandler);
         setOnRunning(eventListenerHandler);
+    }
+
+    protected void initSubscriptionsHolder() {
+        NullableUtils.executeIsNull(this.events,
+                () -> this.events = new ConcurrentHashMap<>());
     }
 }

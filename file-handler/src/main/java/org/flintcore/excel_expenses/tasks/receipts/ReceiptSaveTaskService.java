@@ -1,4 +1,4 @@
-package org.flintcore.excel_expenses.tasks.business;
+package org.flintcore.excel_expenses.tasks.receipts;
 
 import data.utils.NullableUtils;
 import jakarta.annotation.PostConstruct;
@@ -6,11 +6,11 @@ import jakarta.annotation.PreDestroy;
 import javafx.concurrent.Task;
 import javafx.concurrent.WorkerStateEvent;
 import javafx.event.EventType;
-import lombok.RequiredArgsConstructor;
 import lombok.Setter;
-import org.flintcore.excel_expenses.files.business.LocalBusinessFileManager;
-import org.flintcore.excel_expenses.models.expenses.LocalBusiness;
+import org.flintcore.excel_expenses.files.receipts.PeriodReceiptFileManager;
+import org.flintcore.excel_expenses.files.receipts.ReceiptFileManager;
 import org.flintcore.excel_expenses.models.lists.SerialListHolder;
+import org.flintcore.excel_expenses.models.receipts.Receipt;
 import org.flintcore.excel_expenses.models.subscriptions.tasks.ObservableService;
 import org.springframework.stereotype.Component;
 
@@ -18,14 +18,16 @@ import java.util.Map;
 import java.util.function.Supplier;
 
 @Component
-@RequiredArgsConstructor
-public class LocalBusinessSaveTaskService extends ObservableService<Void> {
+public class ReceiptSaveTaskService extends ObservableService<Void> {
 
-    private final LocalBusinessFileManager localBusinessFileManager;
+    private final ReceiptFileManager<Receipt> receiptFileManager;
 
     @Setter
-    private Supplier<SerialListHolder<LocalBusiness>> localBusinessSupplier;
+    private Supplier<SerialListHolder<Receipt>> localBusinessSupplier;
 
+    public ReceiptSaveTaskService(PeriodReceiptFileManager receiptFileManager) {
+        this.receiptFileManager = receiptFileManager;
+    }
 
     @Override
     public void addOneTimeSubscription(EventType<WorkerStateEvent> type, Runnable action) {
@@ -40,13 +42,14 @@ public class LocalBusinessSaveTaskService extends ObservableService<Void> {
         return new Task<>() {
             @Override
             protected Void call() throws Exception {
-                localBusinessFileManager.updateDataSet(
+                receiptFileManager.updateDataSet(
                         localBusinessSupplier.get()
                 );
                 return null;
             }
         };
     }
+
 
     @Override
     @PostConstruct

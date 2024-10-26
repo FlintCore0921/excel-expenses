@@ -110,7 +110,7 @@ public class ExpenseCreateFormController implements Initializable {
 
         try {
             CompletableFuture<ObservableList<LocalBusiness>> listBusinessFuture =
-                    this.localBusinessService.getLocalBusinessList();
+                    this.localBusinessService.getDataList();
 
             listBusinessFuture.thenAcceptAsync(localBusinessList -> {
                 Subscription subscription = ObservableListUtils.listenList(

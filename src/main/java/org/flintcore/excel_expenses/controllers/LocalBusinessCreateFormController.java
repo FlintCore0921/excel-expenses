@@ -123,7 +123,7 @@ public class LocalBusinessCreateFormController implements Initializable {
 
         // Clean data
         registerTask.addSubscription(
-                TaskFxEvent.WORKER_STATE_DONE,
+                TaskFxEvent.ALL_WORKER_STATE_DONE,
                 () -> {
                     List.of(this.localRNCTxt, this.localNameTxt)
                             .forEach(TextInputControl::clear);
