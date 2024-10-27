@@ -9,10 +9,9 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-
 <VBox maxHeight="-Infinity" maxWidth="-Infinity" minHeight="40.0"
-      xmlns="http://javafx.com/javafx/22" xmlns:fx="http://javafx.com/fxml/1"
-      fx:controller="com.flintcore.excel_expenses.controllers.ExpenseItemController">
+      fx:controller="org.flintcore.excel_expenses.controllers.ExpenseItemController"
+      xmlns="http://javafx.com/javafx/22" xmlns:fx="http://javafx.com/fxml/1">
    <children>
       <GridPane VBox.vgrow="ALWAYS">
          <columnConstraints>

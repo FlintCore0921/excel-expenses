@@ -1,0 +1,29 @@
+@import "textStyles.css";
+@import "boxStyles.css";
+
+.top-title {
+    -fx-background-color: radial-gradient(center 50% 80% , radius 70% ,
+    #cb6ce6, rgba(140, 82, 255, 0.91));
+}
+
+.register-button {
+    -fx-background-color: radial-gradient(
+            focus-angle 240deg, focus-distance 60%, center 50% 50%, radius 80%,
+            rgba(203, 108, 230, 0.9), rgba(140, 82, 255, 0.8));
+}
+
+.submit-button {
+    -fx-background-color: radial-gradient(
+            focus-angle 160deg, focus-distance 60%, center 50% 50%, radius 80%,
+    rgba(203, 108, 230, 0.7), rgba(140, 82, 255, 0.5));
+}
+
+.submit-button:pressed {
+    -fx-background-color: radial-gradient(
+            focus-angle 240deg, focus-distance 60%, center 50% 50%, radius 80%,
+    rgba(203, 108, 230, 0.9), rgba(140, 82, 255, 0.8));
+}
+
+.date-picker {
+    -fx-font-size: 20px;
+}

@@ -1,52 +1,104 @@
+import org.springframework.boot.gradle.tasks.bundling.BootJar
+
 plugins {
-	java
-	id("org.springframework.boot") version "3.3.4"
-	id("io.spring.dependency-management") version "1.1.6"
-	id("org.openjfx.javafxplugin") version "0.0.13"
+    java
+    id("org.springframework.boot") version "3.3.4"
+    id("io.spring.dependency-management") version "1.1.6"
+    id("org.openjfx.javafxplugin") version "0.0.13"
 }
 
-group = "com.flintcore"
-version = "0.0.1-SNAPSHOT"
+group = "org.flintcore"
+version = "0.0.2"
 
 java {
-	toolchain {
-		languageVersion = JavaLanguageVersion.of(17)
-	}
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
 }
 
-configurations {
-	compileOnly {
-		extendsFrom(configurations.annotationProcessor.get())
-	}
-}
-
-val javafxVersion = "22"
+val projectLibs = libs
+val javafxVersion = libs.versions.javafx.get()
 
 javafx {
-	version = javafxVersion
-	modules = listOf("javafx.controls", "javafx.fxml")
+    version = javafxVersion
+    modules = listOf("javafx.controls", "javafx.fxml")
 }
 
-repositories {
-	mavenCentral()
-	mavenLocal()
+allprojects {
+    apply(plugin = "java")
+    apply(plugin = "org.springframework.boot")
+    apply(plugin = "io.spring.dependency-management")
+
+    configurations {
+        compileOnly {
+            extendsFrom(configurations.annotationProcessor.get())
+        }
+    }
+
+    repositories {
+        mavenLocal()
+        mavenCentral()
+    }
+
+    dependencies {
+        project(":utilities").takeIf { it.name != project.name }?.let {
+            println("added into ${project.name}")
+            implementation(it)
+        }
+
+        implementation(projectLibs.data.utils)
+        implementation(projectLibs.apache.commons.text)
+
+        compileOnly(projectLibs.lombok)
+        annotationProcessor(projectLibs.lombok)
+
+        implementation(projectLibs.spring.boot.starter)
+    }
+
+    tasks.withType<Test> {
+        useJUnitPlatform()
+    }
+}
+
+subprojects {
+    apply(plugin = "java-library")
+    apply(plugin = "org.springframework.boot")
+    apply(plugin = "io.spring.dependency-management")
+
+    dependencies {
+        testImplementation(platform(projectLibs.junit.bom))
+        testImplementation(projectLibs.junit.jupiter)
+        testImplementation(projectLibs.spring.boot.starter.test)
+    }
+
+    tasks.test {
+        useJUnitPlatform()
+    }
+
+    tasks.getByName<Jar>("jar") {
+        enabled = true
+    }
+
+    tasks.getByName<BootJar>("bootJar") {
+        enabled = false
+    }
 }
 
 dependencies {
-	implementation("com.flintCore:data-utils:1.2.2")
+//    my modules
+    implementation(project(":models"))
+    implementation(project(":file-handler"))
+    implementation(project(":excels-handler"))
+    implementation(project(":managers"))
+    implementation(project(":tasks-schedules"))
 
-	implementation("org.openjfx:javafx-controls:$javafxVersion")
-	implementation("org.openjfx:javafx-fxml:$javafxVersion")
+    implementation(libs.javafx.controls)
+    implementation(libs.javafx.fxml)
 
-	compileOnly("org.projectlombok:lombok")
-	annotationProcessor("org.projectlombok:lombok")
+    implementation(platform(libs.excelib.bom))
+    configureImplementationExcelib(*ExcelibModules.values())
 
-	implementation("org.springframework.boot:spring-boot-starter")
-	developmentOnly("org.springframework.boot:spring-boot-devtools")
-	testImplementation("org.springframework.boot:spring-boot-starter-test")
-	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
-}
-
-tasks.withType<Test> {
-	useJUnitPlatform()
+    developmentOnly(libs.spring.boot.devtools)
+    testImplementation(libs.spring.boot.starter.test)
+    testRuntimeOnly(libs.junit.platform.launcher)
 }
