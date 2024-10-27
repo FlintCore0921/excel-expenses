@@ -171,7 +171,10 @@ public abstract class FileFxService<T> {
 
     @PreDestroy
     protected void onClose() {
-        this.subscriptionManager.close();
-        Platform.runLater(this.storeTaskService::restart);
+
+        Platform.runLater(() -> {
+            this.subscriptionManager.close();
+            this.storeTaskService.restart();
+        });
     }
 }

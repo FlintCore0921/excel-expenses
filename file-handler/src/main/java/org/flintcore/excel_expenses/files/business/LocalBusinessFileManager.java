@@ -17,6 +17,6 @@ public class LocalBusinessFileManager extends FileManager<LocalBusiness> {
 
     @Override
     protected String[] getFilePath() {
-        return ArrayUtils.add(BUSINESS_FILE_PATH, "records");
+        return ArrayUtils.add(BUSINESS_FILE_PATH, "local_record.txt");
     }
 }

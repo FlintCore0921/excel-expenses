@@ -1,6 +1,7 @@
 package org.flintcore.excel_expenses.services.business;
 
 import data.utils.NullableUtils;
+import javafx.beans.property.ReadOnlyListWrapper;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.util.Subscription;
@@ -39,7 +40,7 @@ public class LocalBusinessFileFXService extends FileFxService<LocalBusiness> {
 
     public CompletableFuture<ObservableList<LocalBusiness>> getDataList() {
         NullableUtils.executeIsNull(this.dataSetList, this::requestData);
-        return CompletableFuture.completedFuture(this.readOnlyListWrapper);
+        return CompletableFuture.completedFuture(this.readOnlyListWrapper.getReadOnlyProperty());
     }
 
     /**
@@ -63,14 +64,16 @@ public class LocalBusinessFileFXService extends FileFxService<LocalBusiness> {
     }
 
 
-
     protected void initObservableList() {
         if (Objects.nonNull(this.dataSetList)) return;
 
         this.dataSetList = FXCollections.observableSet();
 
+        this.readOnlyListWrapper = new ReadOnlyListWrapper<>(this, null);
+        this.readOnlyListWrapper.set(FXCollections.observableArrayList());
+
         this.localBusinessSaveTask.setLocalBusinessSupplier(
-                () -> SerialListHolder.from(this.readOnlyListWrapper)
+                () -> SerialListHolder.from(this.readOnlyListWrapper.getReadOnlyProperty())
         );
 
         setupOnLoadListeners();
