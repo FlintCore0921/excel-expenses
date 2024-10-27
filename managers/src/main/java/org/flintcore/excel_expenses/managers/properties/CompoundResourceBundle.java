@@ -67,7 +67,8 @@ public class CompoundResourceBundle extends ResourceBundle {
     @Getter
     public enum Bundles {
         GENERAL("fxBundles/messages/general_messages"),
-        EXPENSE_CREATE_FORM("fxBundles/messages/expenses_create_form");
+        EXPENSE_CREATE_FORM("fxBundles/messages/expenses_create_form"),
+        LOCAL_MESSAGES("fxBundles/messages/local_messages");
 
         private final String location;
 

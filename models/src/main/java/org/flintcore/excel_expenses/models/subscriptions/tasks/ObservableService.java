@@ -55,17 +55,21 @@ public abstract class ObservableService<T> extends Service<T>
     protected void setupSubscriptionsHandler() {
         if (Objects.nonNull(getOnScheduled())) return;
 
-        EventHandler<WorkerStateEvent> eventListenerHandler = e -> NullableUtils.executeNonNull(this.events,
-                subs -> NullableUtils.executeNonNull(subs.get(e.getEventType()),
-                        l -> l.iterator().forEachRemaining(Runnable::run)
-                )
-        );
+        EventHandler<WorkerStateEvent> eventListenerHandler = callSubscriptionsHandler();
 
         setOnSucceeded(eventListenerHandler);
         setOnFailed(eventListenerHandler);
         setOnScheduled(eventListenerHandler);
         setOnCancelled(eventListenerHandler);
         setOnRunning(eventListenerHandler);
+    }
+
+    protected EventHandler<WorkerStateEvent> callSubscriptionsHandler() {
+        return e -> NullableUtils.executeNonNull(this.events,
+                subs -> NullableUtils.executeNonNull(subs.get(e.getEventType()),
+                        l -> l.iterator().forEachRemaining(Runnable::run)
+                )
+        );
     }
 
     protected void initSubscriptionsHolder() {

@@ -57,7 +57,7 @@ public class RegisterLocalBusinessOnFileTask extends ObservableTask<Void> {
             validateBusinessContent(localBusiness);
 
             Future<Boolean> wasBusinessAdded = this.localBusinessFileService
-                    .registerBusiness(localBusiness);
+                    .register(localBusiness);
 
             if (!wasBusinessAdded.get()) {
                 throw new RuntimeException("Business already exists");

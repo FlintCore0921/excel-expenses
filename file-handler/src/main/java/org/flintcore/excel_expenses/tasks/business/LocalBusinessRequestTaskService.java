@@ -27,12 +27,11 @@ public class LocalBusinessRequestTaskService
         extends ObservableService<List<LocalBusiness>> {
 
     private final LocalBusinessFileManager localBusinessFileManager;
-    private Map<EventType<WorkerStateEvent>, Set<Runnable>> subscriptions;
 
     public Subscription addSubscription(EventType<WorkerStateEvent> type, Runnable action) {
         initSubscriptionsHolder();
 
-        Set<Runnable> subscriptionsIn = this.subscriptions
+        Set<Runnable> subscriptionsIn = this.events
                 .computeIfAbsent(type, this::buildSubscriptionHolder);
         subscriptionsIn.add(action);
 
@@ -43,7 +42,7 @@ public class LocalBusinessRequestTaskService
     public void addOneTimeSubscription(EventType<WorkerStateEvent> type, Runnable action) {
         this.addSubscription(type, () -> {
             action.run();
-            this.subscriptions.get(type).remove(action);
+            this.events.get(type).remove(action);
         });
     }
 
@@ -51,14 +50,6 @@ public class LocalBusinessRequestTaskService
     @PostConstruct
     protected void setupListeners() {
         super.setupListeners();
-    }
-
-    private EventHandler<WorkerStateEvent> callSubscriptionsHandler() {
-        return e -> NullableUtils.executeNonNull(this.subscriptions,
-                subs -> NullableUtils.executeNonNull(subs.get(e.getEventType()),
-                        l -> l.iterator().forEachRemaining(Runnable::run)
-                )
-        );
     }
 
     @Override
@@ -74,6 +65,6 @@ public class LocalBusinessRequestTaskService
     @Override
     @PreDestroy
     public void close() {
-        NullableUtils.executeNonNull(this.subscriptions, Map::clear);
+        NullableUtils.executeNonNull(this.events, Map::clear);
     }
 }
