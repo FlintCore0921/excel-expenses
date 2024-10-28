@@ -1,10 +1,9 @@
 package org.flintcore.excel_expenses.serializable;
 
-import org.flintcore.excel_expenses.files.extensions.ESerializableExtensions;
+import org.flintcore.excel_expenses.files.extensions.SerializableExtensionUtils;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
-import java.util.Arrays;
 import java.util.Optional;
 
 @Component
@@ -16,9 +15,7 @@ public class SerializableFileFinder {
     public Optional<File> getSerializeFile(String... paths) {
         String fullPath = String.join(File.separator, paths);
 
-        if (Arrays.stream(ESerializableExtensions.values())
-                .noneMatch(ext ->  fullPath.endsWith(ext.suffixExtension()))
-        ) {
+        if (!SerializableExtensionUtils.containsSerializableFilePath(fullPath)) {
             return Optional.empty();
         }
 

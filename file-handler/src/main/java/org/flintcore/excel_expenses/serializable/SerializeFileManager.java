@@ -1,6 +1,8 @@
 package org.flintcore.excel_expenses.serializable;
 
 import data.utils.NullableUtils;
+import org.flintcore.excel_expenses.files.extensions.ESerializableExtension;
+import org.flintcore.excel_expenses.files.paths.FilePathHolder;
 import org.flintcore.excel_expenses.models.lists.SerialListHolder;
 
 import java.io.Serializable;
@@ -11,6 +13,9 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public abstract class SerializeFileManager<T extends Serializable> {
+    protected final ESerializableExtension DEFAULT_SERIAL_EXTENSION =
+            ESerializableExtension.getDefault();
+
     protected final ReentrantReadWriteLock lock;
     protected final Lock writeLock;
     protected final Lock readLock;
@@ -55,5 +60,5 @@ public abstract class SerializeFileManager<T extends Serializable> {
         return dataList;
     }
 
-    protected abstract String[] getFilePath();
+    protected abstract FilePathHolder getFilePath();
 }

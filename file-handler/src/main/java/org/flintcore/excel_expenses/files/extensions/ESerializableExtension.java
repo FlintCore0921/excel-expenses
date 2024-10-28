@@ -1,13 +1,13 @@
 package org.flintcore.excel_expenses.files.extensions;
 
-public enum ESerializableExtensions {
+public enum ESerializableExtension {
     DAT, SER;
 
     public String suffixExtension() {
         return "." + this.name().toLowerCase();
     }
 
-    public static ESerializableExtensions getDefault() {
-        return values()[0];
+    public static ESerializableExtension getDefault() {
+        return DAT;
     }
 }

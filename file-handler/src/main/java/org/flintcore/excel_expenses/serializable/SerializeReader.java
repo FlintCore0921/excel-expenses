@@ -2,6 +2,7 @@ package org.flintcore.excel_expenses.serializable;
 
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import org.flintcore.excel_expenses.files.paths.FilePathHolder;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
@@ -19,11 +20,10 @@ public class SerializeReader {
     private final SerializableFileCreator serializableFileCreator;
     private final SerializableFileFinder serializableFileFinder;
 
-    @SuppressWarnings("unchecked")
-    public <T extends Serializable> T read(@NonNull String[] fileName) {
+    public <T extends Serializable> T read(@NonNull FilePathHolder filePath) {
         AtomicReference<T> resultData = new AtomicReference<>();
 
-        Optional<File> serializeFile = serializableFileFinder.getSerializeFile(fileName);
+        Optional<File> serializeFile = serializableFileFinder.getSerializeFile(filePath.fullPath());
 
         serializeFile.ifPresent(readFileConsumer(resultData));
 
@@ -46,6 +46,7 @@ public class SerializeReader {
                     .createSerializeFile(fileName);
 
             set.accept(serializeFile);
-        } catch (FileAlreadyExistsException ignored) {}
+        } catch (FileAlreadyExistsException ignored) {
+        }
     }
 }

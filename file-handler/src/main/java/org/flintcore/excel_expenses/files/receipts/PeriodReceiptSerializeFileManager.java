@@ -3,9 +3,10 @@ package org.flintcore.excel_expenses.files.receipts;
 import lombok.Setter;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.ObjectUtils;
+import org.flintcore.excel_expenses.files.paths.FilePathHolder;
+import org.flintcore.excel_expenses.models.receipts.Receipt;
 import org.flintcore.excel_expenses.serializable.SerializeReader;
 import org.flintcore.excel_expenses.serializable.SerializeWriter;
-import org.flintcore.excel_expenses.models.receipts.Receipt;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
@@ -29,11 +30,12 @@ public class PeriodReceiptSerializeFileManager extends ReceiptSerializeFileManag
     }
 
     @Override
-    protected String[] getFilePath() {
+    protected FilePathHolder getFilePath() {
         Month currentMonth = (onMonth = ObjectUtils.defaultIfNull(onMonth, LocalDate.now().getMonth()));
         int currentYear = onYear >= 0 ? onYear : (onYear = LocalDate.now().getYear());
 
         String fileName = "receipts_%s_%d".formatted(currentMonth, currentYear);
-        return ArrayUtils.add(RECEIPTS_PATH, fileName);
+        String[] filePath = ArrayUtils.add(RECEIPTS_PATH, fileName);
+        return new FilePathHolder(filePath, DEFAULT_SERIAL_EXTENSION);
     }
 }

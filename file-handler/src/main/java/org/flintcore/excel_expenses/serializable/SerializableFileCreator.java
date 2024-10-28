@@ -1,42 +1,70 @@
 package org.flintcore.excel_expenses.serializable;
 
-import org.flintcore.excel_expenses.files.extensions.ESerializableExtensions;
+import lombok.extern.log4j.Log4j2;
+import org.flintcore.excel_expenses.files.extensions.ESerializableExtension;
+import org.flintcore.excel_expenses.files.extensions.SerializableExtensionUtils;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileAlreadyExistsException;
-import java.util.Arrays;
+import java.nio.file.Files;
+import java.nio.file.InvalidPathException;
+import java.nio.file.Path;
 
 @Component
+@Log4j2
 public class SerializableFileCreator {
 
     /**
      * Create a File to store or use Serializable objects.
+     * <p>If default path does not end with any {@link ESerializableExtension serial extension},
+     * it will add the {@link ESerializableExtension#getDefault() default} extension.</p>
+     * <p>If contains any other path it won't override the file extension.</p>
      */
     public File createSerializeFile(String... paths) throws FileAlreadyExistsException {
-        final String fullPath = String.join(File.separator, paths);
+        String fullPath = String.join(File.separator, paths);
 
-        String finalFullPath = fullPath;
-        if (Arrays.stream(ESerializableExtensions.values())
-                .noneMatch(ext -> fullPath.endsWith(ext.suffixExtension()))) {
-            finalFullPath += ESerializableExtensions.DAT.suffixExtension();
+        if (!SerializableExtensionUtils.containsSerializableFilePath(fullPath)) {
+            fullPath += ESerializableExtension.getDefault().suffixExtension();
         }
 
-        File file = new File(finalFullPath);
+        File file = new File(fullPath);
 
-        if (file.exists()) {
-            throw new FileAlreadyExistsException(fullPath);
-        }
-
-        try {
-            if (!file.getParentFile().mkdirs() || !file.createNewFile()) {
-                throw new IOException();
-            }
-        } catch (IOException e) {
-            return null;
-        }
+        createFileAndPackage(file);
 
         return file;
+    }
+
+    public void createFileAndPackage(final File file) {
+        try {
+
+            // Create parent directories if they don't exist
+            Path parentPath = Path.of(file.getParent());
+            try {
+                Files.createDirectories(parentPath);
+            } catch (IOException e) {
+                log.error("Failed to create directories: {}", e.getMessage());
+            }
+
+
+            // Check if file already exists
+            Path filePath = Path.of(file.getPath());
+            if (Files.exists(filePath)) {
+                log.info("File already exists: {}", filePath);
+            }
+
+            // Create the file
+            try {
+                Files.createFile(filePath);
+                log.info("Created file: {}", filePath);
+            } catch (IOException e) {
+                log.error("Failed to create file: {}", e.getMessage());
+            }
+        } catch (InvalidPathException e) {
+            log.error("Invalid path provided: {}", e.getMessage());
+        } catch (SecurityException e) {
+            log.error("Security violation: {}", e.getMessage());
+        }
     }
 }
