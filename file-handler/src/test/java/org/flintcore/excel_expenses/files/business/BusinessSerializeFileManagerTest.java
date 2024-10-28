@@ -1,9 +1,9 @@
 package org.flintcore.excel_expenses.files.business;
 
-import org.flintcore.excel_expenses.files.SerializableFileCreator;
-import org.flintcore.excel_expenses.files.SerializableFileFinder;
-import org.flintcore.excel_expenses.files.SerializeReader;
-import org.flintcore.excel_expenses.files.SerializeWriter;
+import org.flintcore.excel_expenses.serializable.SerializableFileCreator;
+import org.flintcore.excel_expenses.serializable.SerializableFileFinder;
+import org.flintcore.excel_expenses.serializable.SerializeReader;
+import org.flintcore.excel_expenses.serializable.SerializeWriter;
 import org.flintcore.excel_expenses.models.expenses.LocalBusiness;
 import org.flintcore.excel_expenses.models.lists.SerialListHolder;
 import org.junit.jupiter.api.Test;
@@ -18,16 +18,16 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest(
         classes = {
-                LocalBusinessFileManager.class,
+                LocalBusinessSerializeFileManager.class,
                 SerializeWriter.class,
                 SerializableFileCreator.class,
                 SerializableFileFinder.class,
                 SerializeReader.class
         }
 )
-class BusinessFileManagerTest {
+class BusinessSerializeFileManagerTest {
     @Autowired
-    LocalBusinessFileManager localBusinessFileManager;
+    LocalBusinessSerializeFileManager localBusinessFileManager;
 
     @Test
     void shouldMarkCorrectPath() {

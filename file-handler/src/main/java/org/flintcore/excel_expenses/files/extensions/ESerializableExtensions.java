@@ -1,4 +1,4 @@
-package org.flintcore.excel_expenses.files;
+package org.flintcore.excel_expenses.files.extensions;
 
 public enum ESerializableExtensions {
     DAT, SER;

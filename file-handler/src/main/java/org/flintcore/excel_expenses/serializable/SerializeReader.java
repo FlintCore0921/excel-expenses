@@ -1,4 +1,4 @@
-package org.flintcore.excel_expenses.files;
+package org.flintcore.excel_expenses.serializable;
 
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;

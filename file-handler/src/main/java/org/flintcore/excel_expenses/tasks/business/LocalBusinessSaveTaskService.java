@@ -8,7 +8,7 @@ import javafx.concurrent.WorkerStateEvent;
 import javafx.event.EventType;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
-import org.flintcore.excel_expenses.files.business.LocalBusinessFileManager;
+import org.flintcore.excel_expenses.files.business.LocalBusinessSerializeFileManager;
 import org.flintcore.excel_expenses.models.expenses.LocalBusiness;
 import org.flintcore.excel_expenses.models.lists.SerialListHolder;
 import org.flintcore.excel_expenses.models.subscriptions.tasks.ObservableService;
@@ -21,7 +21,7 @@ import java.util.function.Supplier;
 @RequiredArgsConstructor
 public class LocalBusinessSaveTaskService extends ObservableService<Void> {
 
-    private final LocalBusinessFileManager localBusinessFileManager;
+    private final LocalBusinessSerializeFileManager localBusinessFileManager;
 
     @Setter
     private Supplier<SerialListHolder<LocalBusiness>> localBusinessSupplier;

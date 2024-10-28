@@ -1,5 +1,6 @@
-package org.flintcore.excel_expenses.files;
+package org.flintcore.excel_expenses.serializable;
 
+import org.flintcore.excel_expenses.files.extensions.ESerializableExtensions;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
@@ -14,15 +15,15 @@ public class SerializableFileCreator {
      * Create a File to store or use Serializable objects.
      */
     public File createSerializeFile(String... paths) throws FileAlreadyExistsException {
-        String fullPath = String.join(File.separator, paths);
+        final String fullPath = String.join(File.separator, paths);
 
         String finalFullPath = fullPath;
         if (Arrays.stream(ESerializableExtensions.values())
-                .anyMatch(ext -> finalFullPath.endsWith(ext.suffixExtension()))) {
-            fullPath += ESerializableExtensions.DAT.suffixExtension();
+                .noneMatch(ext -> fullPath.endsWith(ext.suffixExtension()))) {
+            finalFullPath += ESerializableExtensions.DAT.suffixExtension();
         }
 
-        File file = new File(fullPath);
+        File file = new File(finalFullPath);
 
         if (file.exists()) {
             throw new FileAlreadyExistsException(fullPath);

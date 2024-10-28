@@ -7,8 +7,8 @@ import javafx.concurrent.Task;
 import javafx.concurrent.WorkerStateEvent;
 import javafx.event.EventType;
 import lombok.Setter;
-import org.flintcore.excel_expenses.files.receipts.PeriodReceiptFileManager;
-import org.flintcore.excel_expenses.files.receipts.ReceiptFileManager;
+import org.flintcore.excel_expenses.files.receipts.PeriodReceiptSerializeFileManager;
+import org.flintcore.excel_expenses.files.receipts.ReceiptSerializeFileManager;
 import org.flintcore.excel_expenses.models.lists.SerialListHolder;
 import org.flintcore.excel_expenses.models.receipts.Receipt;
 import org.flintcore.excel_expenses.models.subscriptions.tasks.ObservableService;
@@ -20,12 +20,12 @@ import java.util.function.Supplier;
 @Component
 public class ReceiptSaveTaskService extends ObservableService<Void> {
 
-    private final ReceiptFileManager<Receipt> receiptFileManager;
+    private final ReceiptSerializeFileManager<Receipt> receiptFileManager;
 
     @Setter
     private Supplier<SerialListHolder<Receipt>> localBusinessSupplier;
 
-    public ReceiptSaveTaskService(PeriodReceiptFileManager receiptFileManager) {
+    public ReceiptSaveTaskService(PeriodReceiptSerializeFileManager receiptFileManager) {
         this.receiptFileManager = receiptFileManager;
     }
 

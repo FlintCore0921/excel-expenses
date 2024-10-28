@@ -1,4 +1,4 @@
-package org.flintcore.excel_expenses.files;
+package org.flintcore.excel_expenses.serializable;
 
 import data.utils.NullableUtils;
 import org.flintcore.excel_expenses.models.lists.SerialListHolder;
@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-public abstract class FileManager<T extends Serializable> {
+public abstract class SerializeFileManager<T extends Serializable> {
     protected final ReentrantReadWriteLock lock;
     protected final Lock writeLock;
     protected final Lock readLock;
@@ -19,7 +19,7 @@ public abstract class FileManager<T extends Serializable> {
     protected final SerializeWriter serializeWriter;
     protected final SerializeReader serializeReader;
 
-    public FileManager(
+    public SerializeFileManager(
             SerializeWriter serializeWriter,
             SerializeReader serializeReader) {
         this.serializeWriter = serializeWriter;

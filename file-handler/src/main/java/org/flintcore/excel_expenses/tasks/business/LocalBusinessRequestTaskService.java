@@ -5,12 +5,11 @@ import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import javafx.concurrent.Task;
 import javafx.concurrent.WorkerStateEvent;
-import javafx.event.EventHandler;
 import javafx.event.EventType;
 import javafx.util.Subscription;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import org.flintcore.excel_expenses.files.business.LocalBusinessFileManager;
+import org.flintcore.excel_expenses.files.business.LocalBusinessSerializeFileManager;
 import org.flintcore.excel_expenses.models.expenses.LocalBusiness;
 import org.flintcore.excel_expenses.models.subscriptions.tasks.ObservableService;
 import org.springframework.stereotype.Component;
@@ -18,7 +17,6 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 
 @Component
 @RequiredArgsConstructor
@@ -26,7 +24,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class LocalBusinessRequestTaskService
         extends ObservableService<List<LocalBusiness>> {
 
-    private final LocalBusinessFileManager localBusinessFileManager;
+    private final LocalBusinessSerializeFileManager localBusinessFileManager;
 
     public Subscription addSubscription(EventType<WorkerStateEvent> type, Runnable action) {
         initSubscriptionsHolder();

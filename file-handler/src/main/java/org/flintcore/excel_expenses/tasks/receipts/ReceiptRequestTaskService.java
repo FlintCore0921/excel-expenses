@@ -7,8 +7,8 @@ import javafx.concurrent.Task;
 import javafx.concurrent.WorkerStateEvent;
 import javafx.event.EventType;
 import lombok.extern.log4j.Log4j2;
-import org.flintcore.excel_expenses.files.receipts.PeriodReceiptFileManager;
-import org.flintcore.excel_expenses.files.receipts.ReceiptFileManager;
+import org.flintcore.excel_expenses.files.receipts.PeriodReceiptSerializeFileManager;
+import org.flintcore.excel_expenses.files.receipts.ReceiptSerializeFileManager;
 import org.flintcore.excel_expenses.models.receipts.Receipt;
 import org.flintcore.excel_expenses.models.subscriptions.tasks.ObservableService;
 import org.springframework.stereotype.Component;
@@ -20,9 +20,9 @@ import java.util.Map;
 @Log4j2
 public class ReceiptRequestTaskService extends ObservableService<List<Receipt>> {
 
-    private final ReceiptFileManager<Receipt> receiptFileManager;
+    private final ReceiptSerializeFileManager<Receipt> receiptFileManager;
 
-    public ReceiptRequestTaskService(PeriodReceiptFileManager receiptFileManager) {
+    public ReceiptRequestTaskService(PeriodReceiptSerializeFileManager receiptFileManager) {
         this.receiptFileManager = receiptFileManager;
     }
 
