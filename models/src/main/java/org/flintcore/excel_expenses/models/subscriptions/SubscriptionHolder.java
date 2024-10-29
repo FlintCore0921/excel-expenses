@@ -38,9 +38,9 @@ public class SubscriptionHolder implements Closeable {
      * Clear all the subscriptions held by this class.
      */
     public void close() {
-        NullableUtils.executeNonNull(this.subscriptions, subs -> {
-            subs.keySet().iterator().forEachRemaining(this::close);
-        });
+        NullableUtils.executeNonNull(this.subscriptions,
+                subs -> subs.keySet().iterator().forEachRemaining(this::close)
+        );
     }
 
     public void close(Object key) {

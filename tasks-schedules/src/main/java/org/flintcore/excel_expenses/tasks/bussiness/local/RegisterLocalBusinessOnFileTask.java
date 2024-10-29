@@ -4,12 +4,11 @@ import data.utils.NullableUtils;
 import javafx.concurrent.WorkerStateEvent;
 import javafx.event.EventType;
 import lombok.Setter;
+import lombok.extern.log4j.Log4j2;
 import org.flintcore.excel_expenses.managers.validators.LocalBusinessValidator;
 import org.flintcore.excel_expenses.models.expenses.LocalBusiness;
 import org.flintcore.excel_expenses.models.subscriptions.tasks.ObservableTask;
-import org.flintcore.excel_expenses.services.business.LocalBusinessFileFXService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.flintcore.excel_expenses.services.business.LocalBusinessFileScheduledFXService;
 
 import java.util.Map;
 import java.util.concurrent.Future;
@@ -17,8 +16,9 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
+@Log4j2
 public class RegisterLocalBusinessOnFileTask extends ObservableTask<Void> {
-    private final LocalBusinessFileFXService localBusinessFileService;
+    private final LocalBusinessFileScheduledFXService localBusinessFileService;
     private final LocalBusinessValidator localBusinessValidator;
     private final Supplier<String> localNameSupplier;
     private final Supplier<String> localRNCSupplier;
@@ -29,7 +29,7 @@ public class RegisterLocalBusinessOnFileTask extends ObservableTask<Void> {
     private Runnable onDone;
 
     public RegisterLocalBusinessOnFileTask(
-            LocalBusinessFileFXService localBusinessFileService,
+            LocalBusinessFileScheduledFXService localBusinessFileService,
             LocalBusinessValidator localBusinessValidator,
             Supplier<String> localNameSupplier,
             Supplier<String> localRNCSupplier
@@ -74,7 +74,7 @@ public class RegisterLocalBusinessOnFileTask extends ObservableTask<Void> {
     public void addOneTimeSubscription(EventType<WorkerStateEvent> type, Runnable action) {
         this.addSubscription(type, () -> {
             action.run();
-            this.events.get(type).remove(action);
+            this.getEventListenerHolder().get(type).remove(action);
         });
     }
 
@@ -83,22 +83,17 @@ public class RegisterLocalBusinessOnFileTask extends ObservableTask<Void> {
         NullableUtils.executeNonNull(this.events, Map::clear);
     }
 
-    @Override
-    protected void done() {
-        NullableUtils.executeNonNull(this.onDone);
-    }
-
     private void validateProvidedValues(String localName, String localRNC) {
         if (Stream.of(localName, localRNC).anyMatch(String::isBlank)) {
-            getLogger().error("Error at moment to check fields.");
-            throw new NullPointerException("Fields required.");
+            log.error("Error at moment to check fields for local business.");
+            throw new NullPointerException("Fields required for local business.");
         }
     }
 
     private void validateBusinessContent(LocalBusiness localBusiness) {
         if (!localBusinessValidator.validateContent(localBusiness)) {
-            getLogger().error("Error at moment to validate data for building.");
-            throw new IllegalArgumentException("Invalid format of the data from Local business");
+            log.error("Error at moment to validate data for building local business.");
+            throw new IllegalArgumentException("Invalid format of the data from Local business.");
         }
     }
 
@@ -106,7 +101,4 @@ public class RegisterLocalBusinessOnFileTask extends ObservableTask<Void> {
         NullableUtils.executeNonNull(this.errorConsumer, c -> c.accept(e));
     }
 
-    private Logger getLogger() {
-        return LoggerFactory.getLogger(this.getClass());
-    }
 }

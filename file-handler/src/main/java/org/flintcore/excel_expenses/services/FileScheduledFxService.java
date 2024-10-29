@@ -10,24 +10,25 @@ import javafx.collections.ObservableSet;
 import javafx.concurrent.WorkerStateEvent;
 import javafx.event.EventType;
 import javafx.util.Subscription;
+import lombok.extern.log4j.Log4j2;
 import org.flintcore.excel_expenses.managers.timers.ApplicationScheduler;
 import org.flintcore.excel_expenses.models.events.TaskFxEvent;
 import org.flintcore.excel_expenses.models.subscriptions.SubscriptionHolder;
+import org.flintcore.excel_expenses.models.subscriptions.tasks.ObservableScheduledService;
 import org.flintcore.excel_expenses.models.subscriptions.tasks.ObservableService;
 import org.springframework.context.annotation.Lazy;
 
-import java.time.Duration;
 import java.util.List;
-import java.util.TimerTask;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
 
-public abstract class FileFxService<T> {
+@Log4j2
+public abstract class FileScheduledFxService<T> {
     @Lazy
     protected final ObservableService<List<T>> requestTaskService;
     @Lazy
-    protected final ObservableService<Void> storeTaskService;
+    protected final ObservableScheduledService<Void> storeTaskService;
     @Lazy
     protected final SubscriptionHolder subscriptionManager;
     @Lazy
@@ -37,14 +38,22 @@ public abstract class FileFxService<T> {
     protected ReadOnlyListWrapper<T> readOnlyListWrapper;
 
     protected AtomicBoolean requiresRequest;
-    protected AtomicBoolean wasStoreRequestStarted;
 
-    // For logging and messaging
+    public FileScheduledFxService(
+            ObservableService<List<T>> requestTaskService,
+            ObservableScheduledService<Void> storeTaskService,
+            SubscriptionHolder subscriptionManager,
+            ApplicationScheduler appScheduler
+    ) {
+        this.requestTaskService = requestTaskService;
+        this.storeTaskService = storeTaskService;
+        this.subscriptionManager = subscriptionManager;
+        this.appScheduler = appScheduler;
+    }
 
     @PostConstruct
     private void setAtomics() {
         this.requiresRequest = new AtomicBoolean(true);
-        this.wasStoreRequestStarted = new AtomicBoolean(false);
     }
 
     public ReadOnlyBooleanProperty requestingProperty() {
@@ -53,18 +62,6 @@ public abstract class FileFxService<T> {
 
     public ReadOnlyBooleanProperty storingProperty() {
         return this.requestTaskService.runningProperty();
-    }
-
-    public FileFxService(
-            ObservableService<List<T>> requestTaskService,
-            ObservableService<Void> storeTaskService,
-            SubscriptionHolder subscriptionManager,
-            ApplicationScheduler appScheduler
-    ) {
-        this.requestTaskService = requestTaskService;
-        this.storeTaskService = storeTaskService;
-        this.subscriptionManager = subscriptionManager;
-        this.appScheduler = appScheduler;
     }
 
     /**
@@ -83,24 +80,10 @@ public abstract class FileFxService<T> {
     public void scheduleStoreData() {
         // Checks if value false, then set new value and proceed in case true.
         // otherwise ends method call.
-        if (!this.wasStoreRequestStarted.compareAndSet(false, true)) return;
-
-        TimerTask storeTask = new TimerTask() {
-
-            @Override
-            public void run() {
-                if (!storeTaskService.isRunning()) {
-                    // Update the request flag
-                    requiresRequest.set(true);
-                    storeTaskService.restart();
-                }
-            }
-        };
-
-        Subscription scheduled = this.appScheduler.schedule(storeTask, Duration.ofMinutes(10))
-                .and(() -> this.wasStoreRequestStarted.set(false));
-
-        this.subscriptionManager.appendSubscriptionOn(storeTaskService, scheduled);
+        if (this.storeTaskService.getPeriod() != ObservableScheduledService.DEFAULT_RANGE_PERIOD) {
+            this.storeTaskService.setPeriod(ObservableScheduledService.DEFAULT_RANGE_PERIOD);
+        }
+        this.storeTaskService.restart();
     }
 
 
@@ -160,12 +143,14 @@ public abstract class FileFxService<T> {
     protected CompletableFuture<Boolean> prepareBooleanFutureForRequest() {
         CompletableFuture<Boolean> futureResponse = new CompletableFuture<>();
 
-        if (this.requiresRequest.get()) {
-            this.requestData();
+        if (!this.requiresRequest.get()) {
+            futureResponse.complete(true);
+        } else {
             this.listenRequestTaskOnce(TaskFxEvent.ALL_WORKER_STATE_DONE,
                     () -> futureResponse.complete(true)
             );
         }
+        this.requestData();
 
         return futureResponse;
     }
@@ -181,7 +166,6 @@ public abstract class FileFxService<T> {
 
     @PreDestroy
     protected void onClose() {
-
         Platform.runLater(() -> {
             this.subscriptionManager.close();
             this.storeTaskService.restart();

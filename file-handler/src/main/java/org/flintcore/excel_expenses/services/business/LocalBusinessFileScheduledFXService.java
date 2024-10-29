@@ -11,7 +11,7 @@ import org.flintcore.excel_expenses.models.events.TaskFxEvent;
 import org.flintcore.excel_expenses.models.expenses.LocalBusiness;
 import org.flintcore.excel_expenses.models.lists.SerialListHolder;
 import org.flintcore.excel_expenses.models.subscriptions.SubscriptionHolder;
-import org.flintcore.excel_expenses.services.FileFxService;
+import org.flintcore.excel_expenses.services.FileScheduledFxService;
 import org.flintcore.excel_expenses.tasks.business.LocalBusinessRequestTaskService;
 import org.flintcore.excel_expenses.tasks.business.LocalBusinessSaveTaskService;
 import org.springframework.stereotype.Service;
@@ -21,14 +21,14 @@ import java.util.concurrent.CompletableFuture;
 
 @Log4j2
 @Service
-public class LocalBusinessFileFXService extends FileFxService<LocalBusiness> {
-    // Just the same as {@link #storeTaskService} but as original impl
+public class LocalBusinessFileScheduledFXService extends FileScheduledFxService<LocalBusiness> {
+    /** Just the same as {@link #storeTaskService} but as original impl type. */
     private final LocalBusinessSaveTaskService localBusinessSaveTask;
 
     // For logging and messaging
     private LocalBusiness businessRunningMessage, businessFailedMessage;
 
-    public LocalBusinessFileFXService(
+    public LocalBusinessFileScheduledFXService(
             SubscriptionHolder subscriptionManager,
             LocalBusinessRequestTaskService localBusinessRequestTask,
             LocalBusinessSaveTaskService localBusinessSaveTask,

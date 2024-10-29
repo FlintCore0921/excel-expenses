@@ -1,7 +1,6 @@
 package org.flintcore.excel_expenses.tasks.business;
 
 import data.utils.NullableUtils;
-import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import javafx.concurrent.Task;
 import javafx.concurrent.WorkerStateEvent;
@@ -21,15 +20,13 @@ import java.util.Set;
 @Component
 @RequiredArgsConstructor
 @Log4j2
-public class LocalBusinessRequestTaskService
-        extends ObservableService<List<LocalBusiness>> {
+public class LocalBusinessRequestTaskService extends ObservableService<List<LocalBusiness>> {
 
     private final LocalBusinessSerializeFileManager localBusinessFileManager;
 
     public Subscription addSubscription(EventType<WorkerStateEvent> type, Runnable action) {
-        initSubscriptionsHolder();
 
-        Set<Runnable> subscriptionsIn = this.events
+        Set<Runnable> subscriptionsIn = this.getEventListenerHolder()
                 .computeIfAbsent(type, this::buildSubscriptionHolder);
         subscriptionsIn.add(action);
 
@@ -40,14 +37,8 @@ public class LocalBusinessRequestTaskService
     public void addOneTimeSubscription(EventType<WorkerStateEvent> type, Runnable action) {
         this.addSubscription(type, () -> {
             action.run();
-            this.events.get(type).remove(action);
+            this.getEventListenerHolder().get(type).remove(action);
         });
-    }
-
-    @Override
-    @PostConstruct
-    protected void setupListeners() {
-        super.setupListeners();
     }
 
     @Override

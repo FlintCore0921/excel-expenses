@@ -2,7 +2,7 @@ package org.flintcore.excel_expenses.serializable;
 
 import lombok.extern.log4j.Log4j2;
 import org.flintcore.excel_expenses.files.extensions.ESerializableExtension;
-import org.flintcore.excel_expenses.files.extensions.SerializableExtensionUtils;
+import org.flintcore.excel_expenses.files.paths.FilePathHolder;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
@@ -22,23 +22,12 @@ public class SerializableFileCreator {
      * it will add the {@link ESerializableExtension#getDefault() default} extension.</p>
      * <p>If contains any other path it won't override the file extension.</p>
      */
-    public File createSerializeFile(String... paths) throws FileAlreadyExistsException {
-        String fullPath = String.join(File.separator, paths);
-
-        if (!SerializableExtensionUtils.containsSerializableFilePath(fullPath)) {
-            fullPath += ESerializableExtension.getDefault().suffixExtension();
-        }
-
-        File file = new File(fullPath);
-
-        createFileAndPackage(file);
-
-        return file;
+    public File createSerializeFile(FilePathHolder fileHolder) throws FileAlreadyExistsException {
+        return new File(fileHolder.asFullStringPath());
     }
 
     public void createFileAndPackage(final File file) {
         try {
-
             // Create parent directories if they don't exist
             Path parentPath = Path.of(file.getParent());
             try {

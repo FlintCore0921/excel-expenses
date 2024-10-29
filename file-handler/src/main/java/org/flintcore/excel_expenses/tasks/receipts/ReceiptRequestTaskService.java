@@ -1,7 +1,6 @@
 package org.flintcore.excel_expenses.tasks.receipts;
 
 import data.utils.NullableUtils;
-import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import javafx.concurrent.Task;
 import javafx.concurrent.WorkerStateEvent;
@@ -30,14 +29,8 @@ public class ReceiptRequestTaskService extends ObservableService<List<Receipt>> 
     public void addOneTimeSubscription(EventType<WorkerStateEvent> type, Runnable action) {
         this.addSubscription(type, () -> {
             action.run();
-            this.events.get(type).remove(action);
+            this.getEventListenerHolder().get(type).remove(action);
         });
-    }
-
-    @Override
-    @PostConstruct
-    protected void setupListeners() {
-        super.setupListeners();
     }
 
     @Override

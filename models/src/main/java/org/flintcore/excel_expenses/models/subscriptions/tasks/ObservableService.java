@@ -8,6 +8,7 @@ import javafx.event.EventType;
 import javafx.util.Subscription;
 import lombok.RequiredArgsConstructor;
 import org.flintcore.excel_expenses.models.subscriptions.events.IEventSubscriptionHolder;
+import org.flintcore.utilities.iterations.EventIterationUtils;
 
 import java.util.Map;
 import java.util.Objects;
@@ -19,6 +20,9 @@ import java.util.concurrent.CopyOnWriteArraySet;
 public abstract class ObservableService<T> extends Service<T>
         implements IEventSubscriptionHolder<WorkerStateEvent, Runnable> {
 
+    /**
+     * Use {@link #getEventListenerHolder()} to avoid and ensure field not empty.
+     */
     protected Map<EventType<WorkerStateEvent>, Set<Runnable>> events;
 
     @Override
@@ -27,7 +31,11 @@ public abstract class ObservableService<T> extends Service<T>
     }
 
     protected Map<EventType<WorkerStateEvent>, Set<Runnable>> getEventListenerHolder() {
-        NullableUtils.executeIsNull(this.events, () -> this.events = new ConcurrentHashMap<>());
+        NullableUtils.executeIsNull(this.events, () -> {
+            this.events = new ConcurrentHashMap<>();
+            this.setupSubscriptionsHandler();
+        });
+
         return events;
     }
 
@@ -48,32 +56,14 @@ public abstract class ObservableService<T> extends Service<T>
         return new CopyOnWriteArraySet<>();
     }
 
-    protected void setupListeners() {
-        setupSubscriptionsHandler();
-    }
-
     protected void setupSubscriptionsHandler() {
-        if (Objects.nonNull(getOnScheduled())) return;
-
-        EventHandler<WorkerStateEvent> eventListenerHandler = callSubscriptionsHandler();
+        EventHandler<WorkerStateEvent> eventListenerHandler = EventIterationUtils
+                .onHandleRunnableEvents(this.events);
 
         setOnSucceeded(eventListenerHandler);
         setOnFailed(eventListenerHandler);
         setOnScheduled(eventListenerHandler);
         setOnCancelled(eventListenerHandler);
         setOnRunning(eventListenerHandler);
-    }
-
-    protected EventHandler<WorkerStateEvent> callSubscriptionsHandler() {
-        return e -> NullableUtils.executeNonNull(this.events,
-                subs -> NullableUtils.executeNonNull(subs.get(e.getEventType()),
-                        l -> l.iterator().forEachRemaining(Runnable::run)
-                )
-        );
-    }
-
-    protected void initSubscriptionsHolder() {
-        NullableUtils.executeIsNull(this.events,
-                () -> this.events = new ConcurrentHashMap<>());
     }
 }

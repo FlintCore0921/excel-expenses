@@ -1,6 +1,7 @@
 package org.flintcore.excel_expenses.controllers;
 
 import javafx.animation.PauseTransition;
+import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
 import javafx.fxml.FXML;
@@ -15,7 +16,7 @@ import org.flintcore.excel_expenses.managers.validators.LocalBusinessValidator;
 import org.flintcore.excel_expenses.models.alerts.ObservableTaskAlert;
 import org.flintcore.excel_expenses.models.events.TaskFxEvent;
 import org.flintcore.excel_expenses.models.subscriptions.tasks.ObservableTask;
-import org.flintcore.excel_expenses.services.business.LocalBusinessFileFXService;
+import org.flintcore.excel_expenses.services.business.LocalBusinessFileScheduledFXService;
 import org.flintcore.excel_expenses.tasks.bussiness.local.RegisterLocalBusinessOnFileTask;
 import org.flintcore.utilities.fx.BindingsUtils;
 import org.springframework.context.annotation.Lazy;
@@ -26,6 +27,7 @@ import java.net.URL;
 import java.util.List;
 import java.util.Objects;
 import java.util.ResourceBundle;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
 
 @Component
@@ -33,7 +35,7 @@ import java.util.stream.Stream;
 public class LocalBusinessCreateFormController implements Initializable {
     private final ApplicationRouter appRouter;
     @Lazy
-    private final LocalBusinessFileFXService localBusinessFileService;
+    private final LocalBusinessFileScheduledFXService localBusinessFileService;
     @Lazy
     private final LocalBusinessValidator localBusinessValidator;
 
@@ -42,7 +44,7 @@ public class LocalBusinessCreateFormController implements Initializable {
 
     private ObservableTask<Void> registerTask;
 
-    public LocalBusinessCreateFormController(ApplicationRouter appRouter, LocalBusinessFileFXService localBusinessFileService, LocalBusinessValidator localBusinessValidator) {
+    public LocalBusinessCreateFormController(ApplicationRouter appRouter, LocalBusinessFileScheduledFXService localBusinessFileService, LocalBusinessValidator localBusinessValidator) {
         this.appRouter = appRouter;
         this.localBusinessFileService = localBusinessFileService;
         this.localBusinessValidator = localBusinessValidator;
@@ -99,7 +101,10 @@ public class LocalBusinessCreateFormController implements Initializable {
     }
 
     private void requestRegisterLocalBusinessTask() {
-        registerTask = new RegisterLocalBusinessOnFileTask(this.localBusinessFileService, this.localBusinessValidator, this.localNameTxt::getText, this.localRNCTxt::getText);
+        registerTask = new RegisterLocalBusinessOnFileTask(
+                this.localBusinessFileService, this.localBusinessValidator,
+                this.localNameTxt::getText, this.localRNCTxt::getText
+        );
 
         ObservableTaskAlert<Void> taskAlert = new ObservableTaskAlert<>(registerTask);
         taskAlert.setContentText("Saving...");
@@ -108,7 +113,7 @@ public class LocalBusinessCreateFormController implements Initializable {
         taskAlert.setOnCompleted(alert -> {
             alert.setTitle(this.bundles.getString("messages.task-completed"));
             alert.setContentText(this.bundles.getString("local.message.save-success"));
-            alert.getButtonTypes().setAll(ButtonType.OK);
+             alert.getButtonTypes().setAll(ButtonType.OK);
 
             PauseTransition onTimeout = new PauseTransition(Duration.seconds(6));
             onTimeout.setOnFinished(__0 -> alert.close());
@@ -122,7 +127,7 @@ public class LocalBusinessCreateFormController implements Initializable {
             this.registerTask = null;
         });
 
-        new Thread(registerTask).start();
+        CompletableFuture.runAsync(registerTask, Platform::runLater);
     }
 
     @FXML

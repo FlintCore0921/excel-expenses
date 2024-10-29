@@ -1,24 +1,25 @@
 package org.flintcore.excel_expenses.tasks.receipts;
 
 import data.utils.NullableUtils;
-import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import javafx.concurrent.Task;
 import javafx.concurrent.WorkerStateEvent;
 import javafx.event.EventType;
 import lombok.Setter;
+import lombok.extern.log4j.Log4j2;
 import org.flintcore.excel_expenses.files.receipts.PeriodReceiptSerializeFileManager;
 import org.flintcore.excel_expenses.files.receipts.ReceiptSerializeFileManager;
 import org.flintcore.excel_expenses.models.lists.SerialListHolder;
 import org.flintcore.excel_expenses.models.receipts.Receipt;
-import org.flintcore.excel_expenses.models.subscriptions.tasks.ObservableService;
+import org.flintcore.excel_expenses.models.subscriptions.tasks.ObservableScheduledService;
 import org.springframework.stereotype.Component;
 
 import java.util.Map;
 import java.util.function.Supplier;
 
+@Log4j2
 @Component
-public class ReceiptSaveTaskService extends ObservableService<Void> {
+public class ReceiptSaveTaskService extends ObservableScheduledService<Void> {
 
     private final ReceiptSerializeFileManager<Receipt> receiptFileManager;
 
@@ -33,7 +34,7 @@ public class ReceiptSaveTaskService extends ObservableService<Void> {
     public void addOneTimeSubscription(EventType<WorkerStateEvent> type, Runnable action) {
         this.addSubscription(type, () -> {
             action.run();
-            this.events.get(type).remove(action);
+            this.getEventListenerHolder().get(type).remove(action);
         });
     }
 
@@ -48,13 +49,6 @@ public class ReceiptSaveTaskService extends ObservableService<Void> {
                 return null;
             }
         };
-    }
-
-
-    @Override
-    @PostConstruct
-    protected void setupListeners() {
-        super.setupListeners();
     }
 
     @Override

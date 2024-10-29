@@ -23,7 +23,7 @@ public class SerializeReader {
     public <T extends Serializable> T read(@NonNull FilePathHolder filePath) {
         AtomicReference<T> resultData = new AtomicReference<>();
 
-        Optional<File> serializeFile = serializableFileFinder.getSerializeFile(filePath.fullPath());
+        Optional<File> serializeFile = serializableFileFinder.getSerializeFile(filePath);
 
         serializeFile.ifPresent(readFileConsumer(resultData));
 
@@ -40,7 +40,7 @@ public class SerializeReader {
         };
     }
 
-    private void createNewFileFrom(@NonNull String[] fileName, Consumer<File> set) {
+    private void createNewFileFrom(@NonNull FilePathHolder fileName, Consumer<File> set) {
         try {
             File serializeFile = this.serializableFileCreator
                     .createSerializeFile(fileName);

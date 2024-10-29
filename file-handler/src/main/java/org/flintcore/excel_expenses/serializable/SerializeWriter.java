@@ -9,7 +9,6 @@ import org.springframework.stereotype.Component;
 
 import java.io.*;
 import java.nio.file.FileAlreadyExistsException;
-import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
@@ -25,15 +24,13 @@ public class SerializeWriter {
     public <T extends Serializable> void writeIn(@NonNull FilePathHolder pathHolder, T data) {
         AtomicReference<File> fileResource = new AtomicReference<>();
 
-        String[] fullPath = pathHolder.fullPath();
-        serializableFileFinder.getSerializeFile(fullPath)
-                .ifPresentOrElse(
-                        fileResource::set,
-                        () -> createNewFileFrom(fullPath, fileResource::set)
+        serializableFileFinder.getSerializeFile(pathHolder)
+                .ifPresentOrElse(fileResource::set,
+                        () -> createNewFileFrom(pathHolder, fileResource::set)
                 );
 
         if (fileResource.get() == null) {
-            String path = Arrays.toString(pathHolder.fullPath());
+            String path = pathHolder.asFullStringPath();
             log.warn("Unable to read file in path: {}", path);
             return;
         }
@@ -44,12 +41,12 @@ public class SerializeWriter {
         }
     }
 
-    private void createNewFileFrom(@NonNull String[] fileName, Consumer<File> set) {
+    private void createNewFileFrom(@NonNull FilePathHolder fileName, Consumer<File> setter) {
         try {
             File serializeFile = this.serializableFileCreator
                     .createSerializeFile(fileName);
 
-            set.accept(serializeFile);
+            setter.accept(serializeFile);
         } catch (FileAlreadyExistsException ignored) {
         }
     }

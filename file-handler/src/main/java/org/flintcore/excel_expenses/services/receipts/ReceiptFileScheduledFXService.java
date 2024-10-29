@@ -10,7 +10,7 @@ import org.flintcore.excel_expenses.managers.timers.ApplicationScheduler;
 import org.flintcore.excel_expenses.models.lists.SerialListHolder;
 import org.flintcore.excel_expenses.models.receipts.Receipt;
 import org.flintcore.excel_expenses.models.subscriptions.SubscriptionHolder;
-import org.flintcore.excel_expenses.services.FileFxService;
+import org.flintcore.excel_expenses.services.FileScheduledFxService;
 import org.flintcore.excel_expenses.tasks.receipts.ReceiptRequestTaskService;
 import org.flintcore.excel_expenses.tasks.receipts.ReceiptSaveTaskService;
 import org.springframework.stereotype.Component;
@@ -19,10 +19,11 @@ import java.util.concurrent.CompletableFuture;
 
 @Component
 @Log4j2
-public class ReceiptFileFXService extends FileFxService<Receipt> {
+public class ReceiptFileScheduledFXService extends FileScheduledFxService<Receipt> {
+    /** Just the same as {@link #storeTaskService} but as original impl type. */
     private final ReceiptSaveTaskService saveTaskService;
 
-    public ReceiptFileFXService(
+    public ReceiptFileScheduledFXService(
             ReceiptSaveTaskService saveTaskService,
             ReceiptRequestTaskService requestTaskService,
             SubscriptionHolder subscriptionManager,

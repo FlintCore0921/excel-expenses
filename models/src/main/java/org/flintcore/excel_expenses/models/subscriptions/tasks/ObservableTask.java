@@ -8,8 +8,10 @@ import javafx.event.EventType;
 import javafx.util.Subscription;
 import lombok.RequiredArgsConstructor;
 import org.flintcore.excel_expenses.models.subscriptions.events.IEventSubscriptionHolder;
+import org.flintcore.utilities.iterations.EventIterationUtils;
 
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
@@ -18,6 +20,9 @@ import java.util.concurrent.CopyOnWriteArraySet;
 public abstract class ObservableTask<T> extends Task<T>
         implements IEventSubscriptionHolder<WorkerStateEvent, Runnable> {
 
+    /**
+     * Use {@link #getEventListenerHolder} to avoid and ensure field not empty.
+     */
     protected Map<EventType<WorkerStateEvent>, Set<Runnable>> events;
 
     @Override
@@ -25,39 +30,41 @@ public abstract class ObservableTask<T> extends Task<T>
         return this.listenSubscription(type, action);
     }
 
-    protected Map<EventType<WorkerStateEvent>, Set<Runnable>> getEventListenerHolder() {
-        NullableUtils.executeIsNull(this.events, () -> this.events = new ConcurrentHashMap<>());
-        return events;
-    }
-
     protected Subscription listenSubscription(EventType<WorkerStateEvent> type, Runnable action) {
-        try {
-            Set<Runnable> subscriptions = getEventListenerHolder()
-                    .computeIfAbsent(type, this::buildSubscriptionHolder);
+        Set<Runnable> subscriptions = getEventListenerHolder()
+                .computeIfAbsent(type, this::buildSubscriptionHolder);
 
-            subscriptions.add(action);
+        subscriptions.add(action);
 
-            return () -> subscriptions.remove(action);
-        } finally {
-            this.callSubscriptionsHandler();
-        }
+        return () -> subscriptions.remove(action);
     }
 
-    protected Set<Runnable> buildSubscriptionHolder(EventType<WorkerStateEvent> __) {
-        return new CopyOnWriteArraySet<>();
-    }
+    protected void setupSubscriptionsHandler() {
+        if (Objects.nonNull(getOnScheduled())) return;
 
-    protected void callSubscriptionsHandler() {
-        EventHandler<WorkerStateEvent> eventListenerHandler = e -> NullableUtils.executeNonNull(this.events,
-                subs -> NullableUtils.executeNonNull(subs.get(e.getEventType()),
-                        l -> l.iterator().forEachRemaining(Runnable::run)
-                )
-        );
+        EventHandler<WorkerStateEvent> eventListenerHandler = EventIterationUtils
+                .onHandleRunnableEvents(this.events);
 
         setOnSucceeded(eventListenerHandler);
         setOnFailed(eventListenerHandler);
         setOnScheduled(eventListenerHandler);
         setOnCancelled(eventListenerHandler);
         setOnRunning(eventListenerHandler);
+    }
+
+    protected Map<EventType<WorkerStateEvent>, Set<Runnable>> getEventListenerHolder() {
+        initSubscriptionsHolder();
+        return events;
+    }
+
+    protected void initSubscriptionsHolder() {
+        NullableUtils.executeIsNull(this.events, () -> {
+            this.events = new ConcurrentHashMap<>();
+            setupSubscriptionsHandler();
+        });
+    }
+
+    protected Set<Runnable> buildSubscriptionHolder(EventType<WorkerStateEvent> __) {
+        return new CopyOnWriteArraySet<>();
     }
 }
