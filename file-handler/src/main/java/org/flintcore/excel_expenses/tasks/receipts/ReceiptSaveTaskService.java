@@ -11,7 +11,7 @@ import org.flintcore.excel_expenses.files.receipts.PeriodReceiptSerializeFileMan
 import org.flintcore.excel_expenses.files.receipts.ReceiptSerializeFileManager;
 import org.flintcore.excel_expenses.models.lists.SerialListHolder;
 import org.flintcore.excel_expenses.models.receipts.Receipt;
-import org.flintcore.excel_expenses.models.subscriptions.tasks.ObservableScheduledService;
+import org.flintcore.excel_expenses.models.subscriptions.tasks.ObservableFXScheduledService;
 import org.springframework.stereotype.Component;
 
 import java.util.Map;
@@ -19,7 +19,7 @@ import java.util.function.Supplier;
 
 @Log4j2
 @Component
-public class ReceiptSaveTaskService extends ObservableScheduledService<Void> {
+public class ReceiptSaveTaskService extends ObservableFXScheduledService<Void> {
 
     private final ReceiptSerializeFileManager<Receipt> receiptFileManager;
 

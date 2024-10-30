@@ -70,15 +70,11 @@ public class ReceiptFileScheduledFXService extends FileScheduledFxService<Receip
 
     @Override
     public CompletableFuture<Boolean> register(Receipt item) {
-        return composeWith(prepareBooleanFutureForRequest(),
-                () -> this.dataSetList.add(item)
-        );
+        return null;
     }
 
     @Override
     public CompletableFuture<Boolean> delete(Receipt item) {
-        return composeWith(prepareBooleanFutureForRequest(),
-                () -> this.dataSetList.remove(item)
-        );
+        return null;
     }
 }

@@ -15,10 +15,11 @@ public interface ISubscriptionHolder<T, R> extends Closeable {
                 .orElseThrow();
     }
 
-     Subscription addSubscription(T type, R action);
-    void addOneTimeSubscription(T type, R action);
     default void addOneTimeSubscription(@NonNull List<T> types, R action) {
         types.forEach(e -> addOneTimeSubscription(e, action));
     }
+
+    Subscription addSubscription(T type, R action);
+    void addOneTimeSubscription(T type, R action);
 }
 

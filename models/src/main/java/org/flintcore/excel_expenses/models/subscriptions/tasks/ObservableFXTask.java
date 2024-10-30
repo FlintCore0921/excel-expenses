@@ -6,7 +6,6 @@ import javafx.concurrent.WorkerStateEvent;
 import javafx.event.EventHandler;
 import javafx.event.EventType;
 import javafx.util.Subscription;
-import lombok.RequiredArgsConstructor;
 import org.flintcore.excel_expenses.models.subscriptions.events.IEventSubscriptionHolder;
 import org.flintcore.utilities.iterations.EventIterationUtils;
 
@@ -16,8 +15,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 
-@RequiredArgsConstructor
-public abstract class ObservableTask<T> extends Task<T>
+public abstract class ObservableFXTask<T> extends Task<T>
         implements IEventSubscriptionHolder<WorkerStateEvent, Runnable> {
 
     /**

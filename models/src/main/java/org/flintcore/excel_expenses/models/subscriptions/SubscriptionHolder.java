@@ -48,15 +48,14 @@ public class SubscriptionHolder implements Closeable {
     }
 
     private void stopSubscriptionsOn(Object key) {
-        NullableUtils.executeNonNull(this.subscriptions.remove(key),
-                subsHolder -> {
-                    Iterator<Subscription> iterator = subsHolder.iterator();
-                    while (iterator.hasNext()) {
-                        Subscription subscription = iterator.next();
-                        subscription.unsubscribe();
-                        iterator.remove();
-                    }
-                });
+        NullableUtils.executeNonNull(this.subscriptions.remove(key), subsHolder -> {
+            Iterator<Subscription> iterator = subsHolder.iterator();
+            while (iterator.hasNext()) {
+                Subscription subscription = iterator.next();
+                subscription.unsubscribe();
+                iterator.remove();
+            }
+        });
     }
 
     private void initSubscriptions() {

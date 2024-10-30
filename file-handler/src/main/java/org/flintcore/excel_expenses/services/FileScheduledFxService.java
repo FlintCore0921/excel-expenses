@@ -14,21 +14,22 @@ import lombok.extern.log4j.Log4j2;
 import org.flintcore.excel_expenses.managers.timers.ApplicationScheduler;
 import org.flintcore.excel_expenses.models.events.TaskFxEvent;
 import org.flintcore.excel_expenses.models.subscriptions.SubscriptionHolder;
-import org.flintcore.excel_expenses.models.subscriptions.tasks.ObservableScheduledService;
-import org.flintcore.excel_expenses.models.subscriptions.tasks.ObservableService;
+import org.flintcore.excel_expenses.models.subscriptions.tasks.ObservableFXScheduledService;
+import org.flintcore.excel_expenses.models.subscriptions.tasks.ObservableFXService;
 import org.springframework.context.annotation.Lazy;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
 
 @Log4j2
 public abstract class FileScheduledFxService<T> {
     @Lazy
-    protected final ObservableService<List<T>> requestTaskService;
+    protected final ObservableFXService<List<T>> requestTaskService;
     @Lazy
-    protected final ObservableScheduledService<Void> storeTaskService;
+    protected final ObservableFXScheduledService<Void> storeTaskService;
     @Lazy
     protected final SubscriptionHolder subscriptionManager;
     @Lazy
@@ -40,8 +41,8 @@ public abstract class FileScheduledFxService<T> {
     protected AtomicBoolean requiresRequest;
 
     public FileScheduledFxService(
-            ObservableService<List<T>> requestTaskService,
-            ObservableScheduledService<Void> storeTaskService,
+            ObservableFXService<List<T>> requestTaskService,
+            ObservableFXScheduledService<Void> storeTaskService,
             SubscriptionHolder subscriptionManager,
             ApplicationScheduler appScheduler
     ) {
@@ -68,21 +69,21 @@ public abstract class FileScheduledFxService<T> {
      * Trigger the tasks to get the data.
      */
     public void requestData() {
-        initObservableList();
-        if (!this.requestTaskService.isRunning() && requiresRequest.get()) {
-            this.requestTaskService.restart();
-        }
+        Platform.runLater(() -> {
+            initObservableList();
+            if (!this.requestTaskService.isRunning() || requiresRequest.get()) {
+                this.requestTaskService.restart();
+            }
+        });
     }
 
     /**
      * Trigger the tasks to schedule store current data.
      */
-    public void scheduleStoreData() {
+    public void requestStoreData() {
         // Checks if value false, then set new value and proceed in case true.
         // otherwise ends method call.
-        if (this.storeTaskService.getPeriod() != ObservableScheduledService.DEFAULT_RANGE_PERIOD) {
-            this.storeTaskService.setPeriod(ObservableScheduledService.DEFAULT_RANGE_PERIOD);
-        }
+        this.storeTaskService.setPeriod(ObservableFXScheduledService.DEFAULT_RANGE_PERIOD);
         this.storeTaskService.restart();
     }
 
@@ -98,11 +99,33 @@ public abstract class FileScheduledFxService<T> {
     protected void setupOnLoadListeners() {
     }
 
+    /**
+     * Trigger to listen when
+     */
+    protected void setupOnReadListeners() {
+        Subscription onSucceeded = this.listenStoreTask(TaskFxEvent.WORKER_STATE_SUCCEEDED,
+                () -> this.requiresRequest.set(true));
+
+        this.subscriptionManager.appendSubscriptionOn(this.storeTaskService, onSucceeded);
+    }
+
     protected abstract void initObservableList();
 
-    public abstract CompletableFuture<Boolean> register(T business);
+    public CompletableFuture<Boolean> register(T item) {
+//      TODO  Test do not fail on not related FX thread
+        return composeWith(
+                prepareBooleanFutureForRequest(),
+                () -> this.dataSetList.add(item)
+        );
+    }
 
-    public abstract CompletableFuture<Boolean> delete(T business);
+    public CompletableFuture<Boolean> delete(T item) {
+//      TODO  Test do not fail on not related FX thread
+        return composeWith(
+                prepareBooleanFutureForRequest(),
+                () -> this.dataSetList.remove(item)
+        );
+    }
 
     // On listen, subscriptions
 
@@ -158,17 +181,20 @@ public abstract class FileScheduledFxService<T> {
     protected CompletableFuture<Boolean> composeWith(
             CompletableFuture<Boolean> future, Supplier<Boolean> response
     ) {
+        return composeWith(future, response, Platform::runLater);
+    }
+
+    protected CompletableFuture<Boolean> composeWith(
+            CompletableFuture<Boolean> future, Supplier<Boolean> response, Executor exc
+    ) {
         return future.thenComposeAsync(
                 __ -> CompletableFuture.completedFuture(response.get()),
-                Platform::runLater
+                exc
         );
     }
 
     @PreDestroy
     protected void onClose() {
-        Platform.runLater(() -> {
-            this.subscriptionManager.close();
-            this.storeTaskService.restart();
-        });
+        this.subscriptionManager.close();
     }
 }

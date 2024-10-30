@@ -13,7 +13,7 @@ import javafx.util.Subscription;
 import org.flintcore.excel_expenses.managers.timers.ApplicationScheduler;
 import org.flintcore.excel_expenses.models.events.TaskFxEvent;
 import org.flintcore.excel_expenses.models.subscriptions.SubscriptionHolder;
-import org.flintcore.excel_expenses.models.subscriptions.tasks.ObservableService;
+import org.flintcore.excel_expenses.models.subscriptions.tasks.ObservableFXService;
 import org.springframework.context.annotation.Lazy;
 
 import java.time.Duration;
@@ -25,9 +25,9 @@ import java.util.function.Supplier;
 
 public abstract class FileFxService<T> {
     @Lazy
-    protected final ObservableService<List<T>> requestTaskService;
+    protected final ObservableFXService<List<T>> requestTaskService;
     @Lazy
-    protected final ObservableService<Void> storeTaskService;
+    protected final ObservableFXService<Void> storeTaskService;
     @Lazy
     protected final SubscriptionHolder subscriptionManager;
     @Lazy
@@ -56,8 +56,8 @@ public abstract class FileFxService<T> {
     }
 
     public FileFxService(
-            ObservableService<List<T>> requestTaskService,
-            ObservableService<Void> storeTaskService,
+            ObservableFXService<List<T>> requestTaskService,
+            ObservableFXService<Void> storeTaskService,
             SubscriptionHolder subscriptionManager,
             ApplicationScheduler appScheduler
     ) {

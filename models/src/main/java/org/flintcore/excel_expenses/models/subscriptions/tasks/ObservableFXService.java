@@ -1,12 +1,12 @@
 package org.flintcore.excel_expenses.models.subscriptions.tasks;
 
 import data.utils.NullableUtils;
-import javafx.concurrent.ScheduledService;
+import javafx.concurrent.Service;
 import javafx.concurrent.WorkerStateEvent;
 import javafx.event.EventHandler;
 import javafx.event.EventType;
-import javafx.util.Duration;
 import javafx.util.Subscription;
+import lombok.RequiredArgsConstructor;
 import org.flintcore.excel_expenses.models.subscriptions.events.IEventSubscriptionHolder;
 import org.flintcore.utilities.iterations.EventIterationUtils;
 
@@ -15,15 +15,12 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 
-/**
- * Task that can be scheduled in a period of time.
- */
-public abstract class ObservableScheduledService<T> extends ScheduledService<T>
+@RequiredArgsConstructor
+public abstract class ObservableFXService<T> extends Service<T>
         implements IEventSubscriptionHolder<WorkerStateEvent, Runnable> {
 
-    public static final Duration DEFAULT_RANGE_PERIOD = Duration.minutes(5);
     /**
-     * Use {@link #getEventListenerHolder()} to avoid and ensure field not empty.
+     * Use {@link #getEventListenerHolder} to avoid and ensure field not empty.
      */
     protected Map<EventType<WorkerStateEvent>, Set<Runnable>> events;
 
@@ -33,17 +30,25 @@ public abstract class ObservableScheduledService<T> extends ScheduledService<T>
     }
 
     protected Map<EventType<WorkerStateEvent>, Set<Runnable>> getEventListenerHolder() {
-        initSubscriptionsHolder();
+        NullableUtils.executeIsNull(this.events, () -> {
+            this.events = new ConcurrentHashMap<>();
+            this.setupSubscriptionsHandler();
+        });
+
         return events;
     }
 
     protected Subscription listenSubscription(EventType<WorkerStateEvent> type, Runnable action) {
-        Set<Runnable> subscriptions = getEventListenerHolder()
-                .computeIfAbsent(type, this::buildSubscriptionHolder);
+        try {
+            Set<Runnable> subscriptions = getEventListenerHolder()
+                    .computeIfAbsent(type, this::buildSubscriptionHolder);
 
-        subscriptions.add(action);
+            subscriptions.add(action);
 
-        return () -> subscriptions.remove(action);
+            return () -> subscriptions.remove(action);
+        } finally {
+            this.setupSubscriptionsHandler();
+        }
     }
 
     protected Set<Runnable> buildSubscriptionHolder(EventType<WorkerStateEvent> __) {
@@ -59,12 +64,5 @@ public abstract class ObservableScheduledService<T> extends ScheduledService<T>
         setOnScheduled(eventListenerHandler);
         setOnCancelled(eventListenerHandler);
         setOnRunning(eventListenerHandler);
-    }
-
-    protected void initSubscriptionsHolder() {
-        NullableUtils.executeIsNull(this.events, () -> {
-            this.events = new ConcurrentHashMap<>();
-            setupSubscriptionsHandler();
-        });
     }
 }

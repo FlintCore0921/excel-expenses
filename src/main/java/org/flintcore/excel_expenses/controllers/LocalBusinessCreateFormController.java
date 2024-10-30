@@ -1,23 +1,20 @@
 package org.flintcore.excel_expenses.controllers;
 
-import javafx.animation.PauseTransition;
-import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.scene.control.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.TextField;
+import javafx.scene.control.TextInputControl;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.BorderPane;
-import javafx.util.Duration;
 import org.flintcore.excel_expenses.managers.routers.ApplicationRouter;
 import org.flintcore.excel_expenses.managers.rules.ILocalBusinessRules;
-import org.flintcore.excel_expenses.managers.validators.LocalBusinessValidator;
 import org.flintcore.excel_expenses.models.alerts.ObservableTaskAlert;
 import org.flintcore.excel_expenses.models.events.TaskFxEvent;
-import org.flintcore.excel_expenses.models.subscriptions.tasks.ObservableTask;
-import org.flintcore.excel_expenses.services.business.LocalBusinessFileScheduledFXService;
-import org.flintcore.excel_expenses.tasks.bussiness.local.RegisterLocalBusinessOnFileTask;
+import org.flintcore.excel_expenses.tasks.bussiness.local.StoreLocalBusinessService;
 import org.flintcore.utilities.fx.BindingsUtils;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.context.annotation.Scope;
@@ -25,9 +22,7 @@ import org.springframework.stereotype.Component;
 
 import java.net.URL;
 import java.util.List;
-import java.util.Objects;
 import java.util.ResourceBundle;
-import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
 
 @Component
@@ -35,19 +30,15 @@ import java.util.stream.Stream;
 public class LocalBusinessCreateFormController implements Initializable {
     private final ApplicationRouter appRouter;
     @Lazy
-    private final LocalBusinessFileScheduledFXService localBusinessFileService;
-    @Lazy
-    private final LocalBusinessValidator localBusinessValidator;
-
+    private final StoreLocalBusinessService storeBusinessTaskService;
     // Bundles
     private ResourceBundle bundles;
 
-    private ObservableTask<Void> registerTask;
-
-    public LocalBusinessCreateFormController(ApplicationRouter appRouter, LocalBusinessFileScheduledFXService localBusinessFileService, LocalBusinessValidator localBusinessValidator) {
+    public LocalBusinessCreateFormController(
+            ApplicationRouter appRouter,
+            StoreLocalBusinessService storeBusinessTaskService) {
         this.appRouter = appRouter;
-        this.localBusinessFileService = localBusinessFileService;
-        this.localBusinessValidator = localBusinessValidator;
+        this.storeBusinessTaskService = storeBusinessTaskService;
     }
 
     @Override
@@ -93,41 +84,27 @@ public class LocalBusinessCreateFormController implements Initializable {
 
         this.btnSave.disableProperty().bind(disableOnSaveIf);
 
-        this.btnSave.setOnAction(e -> {
-            if (Objects.nonNull(this.registerTask) && this.registerTask.isRunning()) return;
+        this.storeBusinessTaskService.setLocalRNCSupplier(this.localRNCTxt::getText);
+        this.storeBusinessTaskService.setLocalNameSupplier(this.localNameTxt::getText);
 
-            this.requestRegisterLocalBusinessTask();
+        // Clean data in used fields
+        this.storeBusinessTaskService.addSubscription(List.of(TaskFxEvent.WORKER_STATE_SUCCEEDED, TaskFxEvent.WORKER_STATE_FAILED), () -> {
+            List.of(this.localRNCTxt, this.localNameTxt).forEach(TextInputControl::clear);
         });
+
+        this.btnSave.setOnAction(e -> this.requestRegisterLocalBusinessTask());
     }
 
     private void requestRegisterLocalBusinessTask() {
-        registerTask = new RegisterLocalBusinessOnFileTask(
-                this.localBusinessFileService, this.localBusinessValidator,
-                this.localNameTxt::getText, this.localRNCTxt::getText
-        );
+        if (storeBusinessTaskService.isRunning()) return;
 
-        ObservableTaskAlert<Void> taskAlert = new ObservableTaskAlert<>(registerTask);
-        taskAlert.setContentText("Saving...");
+        ObservableTaskAlert taskAlert = new ObservableTaskAlert(this.storeBusinessTaskService::cancel);
 
-        //at moment to complete, Show an alert.
-        taskAlert.setOnCompleted(alert -> {
-            alert.setTitle(this.bundles.getString("messages.task-completed"));
-            alert.setContentText(this.bundles.getString("local.message.save-success"));
-             alert.getButtonTypes().setAll(ButtonType.OK);
+        taskAlert.setTitle(bundles.getString("messages.saving-loading"));
+        taskAlert.bindTaskState(this.storeBusinessTaskService.stateProperty());
+        taskAlert.bindMessage(this.storeBusinessTaskService.messageProperty());
 
-            PauseTransition onTimeout = new PauseTransition(Duration.seconds(6));
-            onTimeout.setOnFinished(__0 -> alert.close());
-
-            onTimeout.play();
-        });
-
-        // Clean data
-        registerTask.addSubscription(TaskFxEvent.ALL_WORKER_STATE_DONE, () -> {
-            List.of(this.localRNCTxt, this.localNameTxt).forEach(TextInputControl::clear);
-            this.registerTask = null;
-        });
-
-        CompletableFuture.runAsync(registerTask, Platform::runLater);
+        this.storeBusinessTaskService.restart();
     }
 
     @FXML

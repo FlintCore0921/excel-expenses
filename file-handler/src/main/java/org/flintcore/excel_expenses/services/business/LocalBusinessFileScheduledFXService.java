@@ -1,6 +1,7 @@
 package org.flintcore.excel_expenses.services.business;
 
 import data.utils.NullableUtils;
+import javafx.application.Platform;
 import javafx.beans.property.ReadOnlyListWrapper;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -22,11 +23,10 @@ import java.util.concurrent.CompletableFuture;
 @Log4j2
 @Service
 public class LocalBusinessFileScheduledFXService extends FileScheduledFxService<LocalBusiness> {
-    /** Just the same as {@link #storeTaskService} but as original impl type. */
+    /**
+     * Just the same as {@link #storeTaskService} but as original impl type.
+     */
     private final LocalBusinessSaveTaskService localBusinessSaveTask;
-
-    // For logging and messaging
-    private LocalBusiness businessRunningMessage, businessFailedMessage;
 
     public LocalBusinessFileScheduledFXService(
             SubscriptionHolder subscriptionManager,
@@ -43,27 +43,6 @@ public class LocalBusinessFileScheduledFXService extends FileScheduledFxService<
         return CompletableFuture.completedFuture(this.readOnlyListWrapper.getReadOnlyProperty());
     }
 
-    /**
-     * Append a new {@link LocalBusiness} into the service.
-     *
-     * @return true is data was added and was not a duplicate. If {@link #requestData()} method has not
-     * been called, so returns false.
-     */
-    public CompletableFuture<Boolean> register(LocalBusiness business) {
-        return composeWith(prepareBooleanFutureForRequest(),
-                () -> this.dataSetList.add(business)
-        );
-    }
-
-    // TODO
-    @Override
-    public CompletableFuture<Boolean> delete(LocalBusiness business) {
-        return composeWith(prepareBooleanFutureForRequest(),
-                () -> this.dataSetList.remove(business)
-        );
-    }
-
-
     protected void initObservableList() {
         if (Objects.nonNull(this.dataSetList)) return;
 
@@ -79,60 +58,25 @@ public class LocalBusinessFileScheduledFXService extends FileScheduledFxService<
         setupOnLoadListeners();
     }
 
-
     protected void setupOnLoadListeners() {
-        // Debug
-        this.subscriptionManager.appendSubscriptionOn(this,
-                this.listenRequestTask(
-                        TaskFxEvent.WORKER_STATE_READY,
-                        () -> log.info("ON Ready called!")
-                )
-        );
-
-        Subscription onReady = this.listenRequestTask(
-                TaskFxEvent.WORKER_STATE_RUNNING,
-                () -> {
-                    this.dataSetList.clear();
-                    this.dataSetList.add(getOnRunningFlag());
-                });
-
         Subscription onSuccess = this.listenRequestTask(
-                TaskFxEvent.WORKER_STATE_SUCCEEDED,
-                () -> {
+                TaskFxEvent.WORKER_STATE_SUCCEEDED, () -> {
                     this.requiresRequest.set(false);
-                    this.dataSetList.clear();
                     this.dataSetList.addAll(
                             this.requestTaskService.getValue()
                     );
                 });
 
-        Subscription onFail = this.listenRequestTask(
-                TaskFxEvent.WORKER_STATE_FAILED,
-                () -> {
-                    this.dataSetList.clear();
-                    this.dataSetList.add(getOnFailedFlag());
-                });
-
-
-        this.subscriptionManager.appendSubscriptionOn(this.storeTaskService, onReady);
-        this.subscriptionManager.appendSubscriptionOn(this.storeTaskService, onSuccess);
-        this.subscriptionManager.appendSubscriptionOn(this.storeTaskService, onFail);
-
-        this.subscriptionManager.appendSubscriptionOn(
-                this.storeTaskService,
-                this.requestTaskService::cancel
-        );
+        this.subscriptionManager.appendSubscriptionOn(this.requestTaskService, onSuccess);
     }
 
-    protected LocalBusiness getOnRunningFlag() {
-        NullableUtils.executeIsNull(this.businessRunningMessage,
-                () -> this.businessRunningMessage = new LocalBusiness("Loading", "Data..."));
-        return this.businessRunningMessage;
-    }
+    @Override
+    protected void setupOnReadListeners() {
+        super.setupOnReadListeners();
 
-    protected LocalBusiness getOnFailedFlag() {
-        NullableUtils.executeIsNull(this.businessFailedMessage,
-                () -> this.businessFailedMessage = new LocalBusiness("", "\rNo Data..."));
-        return this.businessFailedMessage;
+        this.subscriptionManager.appendSubscriptionOn(this.storeTaskService, () -> Platform.runLater(() -> {
+            this.storeTaskService.restart();
+            this.storeTaskService.getLastValue();
+        }));
     }
 }

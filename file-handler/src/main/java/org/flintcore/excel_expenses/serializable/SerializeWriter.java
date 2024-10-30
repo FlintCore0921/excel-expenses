@@ -23,7 +23,7 @@ public class SerializeWriter {
 
     public <T extends Serializable> void writeIn(@NonNull FilePathHolder pathHolder, T data) {
         AtomicReference<File> fileResource = new AtomicReference<>();
-
+        log.info("Saving data...");
         serializableFileFinder.getSerializeFile(pathHolder)
                 .ifPresentOrElse(fileResource::set,
                         () -> createNewFileFrom(pathHolder, fileResource::set)
@@ -35,10 +35,13 @@ public class SerializeWriter {
             return;
         }
 
+        log.info("Saving data...");
         try (ObjectOutputStream objStream = new ObjectOutputStream(new FileOutputStream(fileResource.get()))) {
             objStream.writeObject(data);
         } catch (IOException ignored) {
+            log.info("Failed saving data...");
         }
+
     }
 
     private void createNewFileFrom(@NonNull FilePathHolder fileName, Consumer<File> setter) {
