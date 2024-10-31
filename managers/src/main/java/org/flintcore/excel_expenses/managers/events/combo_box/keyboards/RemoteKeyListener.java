@@ -7,8 +7,8 @@ import javafx.scene.input.KeyEvent;
 import javafx.util.Subscription;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
-import org.flintcore.excel_expenses.models.subscriptions.consumers.ISubscriptionConsumerHandler;
-import org.flintcore.excel_expenses.models.subscriptions.consumers.MultiSubscriptionConsumerHandler;
+import org.flintcore.excel_expenses.managers.subscriptions.consumers.ISubscriptionConsumerHandler;
+import org.flintcore.excel_expenses.managers.subscriptions.consumers.MultiSubscriptionConsumerHandler;
 
 /**
  * Up and Down Movement

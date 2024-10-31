@@ -7,7 +7,6 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import java.io.*;
-import java.nio.file.FileAlreadyExistsException;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
@@ -17,7 +16,6 @@ import java.util.function.Consumer;
 @RequiredArgsConstructor
 public class SerializeReader {
 
-    private final SerializableFileCreator serializableFileCreator;
     private final SerializableFileFinder serializableFileFinder;
 
     public <T extends Serializable> T read(@NonNull FilePathHolder filePath) {
@@ -38,15 +36,5 @@ public class SerializeReader {
             } catch (IOException | ClassNotFoundException ignored) {
             }
         };
-    }
-
-    private void createNewFileFrom(@NonNull FilePathHolder fileName, Consumer<File> set) {
-        try {
-            File serializeFile = this.serializableFileCreator
-                    .createSerializeFile(fileName);
-
-            set.accept(serializeFile);
-        } catch (FileAlreadyExistsException ignored) {
-        }
     }
 }

@@ -1,7 +1,7 @@
-package org.flintcore.excel_expenses.models.subscriptions.consumers;
+package org.flintcore.excel_expenses.managers.subscriptions.consumers;
 
 import javafx.util.Subscription;
-import org.flintcore.excel_expenses.models.subscriptions.ISubscriptionHolder;
+import org.flintcore.excel_expenses.managers.subscriptions.ISubscriptionHolder;
 
 import java.util.function.Consumer;
 

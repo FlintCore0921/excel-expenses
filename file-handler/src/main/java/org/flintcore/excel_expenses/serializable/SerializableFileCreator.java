@@ -11,6 +11,7 @@ import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
+import java.util.Optional;
 
 @Component
 @Log4j2
@@ -22,11 +23,17 @@ public class SerializableFileCreator {
      * it will add the {@link ESerializableExtension#getDefault() default} extension.</p>
      * <p>If contains any other path it won't override the file extension.</p>
      */
-    public File createSerializeFile(FilePathHolder fileHolder) throws FileAlreadyExistsException {
-        return new File(fileHolder.asFullStringPath());
+    public Optional<File> createSerializeFile(FilePathHolder fileHolder) throws FileAlreadyExistsException {
+        File file = new File(fileHolder.asFullStringPath());
+        try {
+            this.createFile(file);
+            return Optional.of(file);
+        } catch (FileAlreadyExistsException e) {
+            return Optional.empty();
+        }
     }
 
-    public void createFileAndPackage(final File file) {
+    public void createFile(final File file) throws FileAlreadyExistsException {
         try {
             // Create parent directories if they don't exist
             Path parentPath = Path.of(file.getParent());
@@ -36,11 +43,11 @@ public class SerializableFileCreator {
                 log.error("Failed to create directories: {}", e.getMessage());
             }
 
-
             // Check if file already exists
             Path filePath = Path.of(file.getPath());
             if (Files.exists(filePath)) {
                 log.info("File already exists: {}", filePath);
+                return;
             }
 
             // Create the file

@@ -12,8 +12,8 @@ import javafx.event.EventType;
 import javafx.util.Subscription;
 import org.flintcore.excel_expenses.managers.timers.ApplicationScheduler;
 import org.flintcore.excel_expenses.models.events.TaskFxEvent;
-import org.flintcore.excel_expenses.models.subscriptions.SubscriptionHolder;
-import org.flintcore.excel_expenses.models.subscriptions.tasks.ObservableFXService;
+import org.flintcore.excel_expenses.managers.subscriptions.SubscriptionHolder;
+import org.flintcore.excel_expenses.managers.subscriptions.tasks.ObservableFXService;
 import org.springframework.context.annotation.Lazy;
 
 import java.time.Duration;

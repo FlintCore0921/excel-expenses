@@ -1,4 +1,4 @@
-package org.flintcore.excel_expenses.models.subscriptions.consumers;
+package org.flintcore.excel_expenses.managers.subscriptions.consumers;
 
 import data.utils.NullableUtils;
 import javafx.util.Subscription;
@@ -6,7 +6,6 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 
 @Component

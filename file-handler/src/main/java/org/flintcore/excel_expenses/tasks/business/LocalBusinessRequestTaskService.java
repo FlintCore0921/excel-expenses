@@ -10,7 +10,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.flintcore.excel_expenses.files.business.LocalBusinessSerializeFileManager;
 import org.flintcore.excel_expenses.models.expenses.LocalBusiness;
-import org.flintcore.excel_expenses.models.subscriptions.tasks.ObservableFXService;
+import org.flintcore.excel_expenses.managers.subscriptions.tasks.ObservableFXService;
 import org.springframework.stereotype.Component;
 
 import java.util.List;

@@ -23,10 +23,10 @@ public class SerializeWriter {
 
     public <T extends Serializable> void writeIn(@NonNull FilePathHolder pathHolder, T data) {
         AtomicReference<File> fileResource = new AtomicReference<>();
-        log.info("Saving data...");
+        log.info("Getting data file...");
         serializableFileFinder.getSerializeFile(pathHolder)
                 .ifPresentOrElse(fileResource::set,
-                        () -> createNewFileFrom(pathHolder, fileResource::set)
+                        () -> requestNewFileFrom(pathHolder, fileResource::set)
                 );
 
         if (fileResource.get() == null) {
@@ -35,7 +35,7 @@ public class SerializeWriter {
             return;
         }
 
-        log.info("Saving data...");
+        log.info("Saving data on file...");
         try (ObjectOutputStream objStream = new ObjectOutputStream(new FileOutputStream(fileResource.get()))) {
             objStream.writeObject(data);
         } catch (IOException ignored) {
@@ -44,12 +44,11 @@ public class SerializeWriter {
 
     }
 
-    private void createNewFileFrom(@NonNull FilePathHolder fileName, Consumer<File> setter) {
+    private void requestNewFileFrom(@NonNull FilePathHolder fileName, Consumer<File> setter) {
         try {
-            File serializeFile = this.serializableFileCreator
-                    .createSerializeFile(fileName);
-
-            setter.accept(serializeFile);
+            this.serializableFileCreator
+                    .createSerializeFile(fileName)
+                    .ifPresent(setter);
         } catch (FileAlreadyExistsException ignored) {
         }
     }

@@ -1,4 +1,4 @@
-package org.flintcore.excel_expenses.models.subscriptions;
+package org.flintcore.excel_expenses.managers.subscriptions;
 
 import data.utils.NullableUtils;
 import javafx.util.Subscription;
@@ -18,8 +18,12 @@ public class SubscriptionHolder implements Closeable {
     public void appendSubscriptionOn(Object key, @NonNull Subscription scheduled) {
         initSubscriptions();
 
-        this.subscriptions.computeIfAbsent(key, e -> Collections.synchronizedSet(new HashSet<>()))
+        this.subscriptions.computeIfAbsent(key, this::buildListenerHolder)
                 .add(scheduled);
+    }
+
+    private Set<Subscription> buildListenerHolder(Object k) {
+        return Collections.synchronizedSet(new HashSet<>());
     }
 
     public void appendSubscriptionOn(Object key, List<Subscription> schedules) {

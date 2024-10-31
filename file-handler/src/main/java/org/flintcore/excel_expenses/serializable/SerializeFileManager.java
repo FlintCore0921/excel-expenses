@@ -54,7 +54,7 @@ public abstract class SerializeFileManager<T extends Serializable> {
         } finally {
             readLock.unlock();
         }
-        NullableUtils.executeIsNull(read, () -> updateDataSet(new SerialListHolder<>(dataList)));
+//        NullableUtils.executeIsNull(read, () -> updateDataSet(new SerialListHolder<>(dataList)));
         NullableUtils.executeNonNull(read, dataList::addAll);
 
         return dataList;

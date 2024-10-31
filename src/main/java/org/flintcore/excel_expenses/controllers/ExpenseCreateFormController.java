@@ -30,7 +30,7 @@ import org.flintcore.excel_expenses.models.expenses.IBusiness;
 import org.flintcore.excel_expenses.models.expenses.LocalBusiness;
 import org.flintcore.excel_expenses.models.properties.formatters.StaticNumericFormatter;
 import org.flintcore.excel_expenses.models.receipts.Receipt;
-import org.flintcore.excel_expenses.models.subscriptions.SubscriptionHolder;
+import org.flintcore.excel_expenses.managers.subscriptions.SubscriptionHolder;
 import org.flintcore.excel_expenses.services.business.LocalBusinessFileScheduledFXService;
 import org.flintcore.utilities.animations.ViewAnimationUtils;
 import org.flintcore.utilities.dates.DateUtils;

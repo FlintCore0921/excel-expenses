@@ -8,7 +8,7 @@ import lombok.Setter;
 import lombok.extern.log4j.Log4j2;
 import org.flintcore.excel_expenses.managers.validators.LocalBusinessValidator;
 import org.flintcore.excel_expenses.models.expenses.LocalBusiness;
-import org.flintcore.excel_expenses.models.subscriptions.tasks.ObservableFXService;
+import org.flintcore.excel_expenses.managers.subscriptions.tasks.ObservableFXService;
 import org.flintcore.excel_expenses.services.business.LocalBusinessFileScheduledFXService;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;

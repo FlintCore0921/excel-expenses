@@ -1,6 +1,5 @@
-package org.flintcore.excel_expenses.models.subscriptions;
+package org.flintcore.excel_expenses.managers.subscriptions;
 
-import javafx.event.Event;
 import javafx.util.Subscription;
 import lombok.NonNull;
 
@@ -8,11 +7,16 @@ import java.io.Closeable;
 import java.util.List;
 
 public interface ISubscriptionHolder<T, R> extends Closeable {
-    default Subscription addSubscription(@NonNull  List<T> types, R action) {
+
+    Subscription DEFAULT_RESPONSE = () -> {};
+
+    default Subscription addSubscription(@NonNull List<T> types, R action) {
+        if (types.isEmpty()) return DEFAULT_RESPONSE;
+
         return types.stream()
                 .map(e -> addSubscription(e, action))
                 .reduce(Subscription::combine)
-                .orElseThrow();
+                .orElse(DEFAULT_RESPONSE);
     }
 
     default void addOneTimeSubscription(@NonNull List<T> types, R action) {
@@ -20,6 +24,7 @@ public interface ISubscriptionHolder<T, R> extends Closeable {
     }
 
     Subscription addSubscription(T type, R action);
+
     void addOneTimeSubscription(T type, R action);
 }
 

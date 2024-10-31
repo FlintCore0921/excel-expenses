@@ -1,4 +1,4 @@
-package org.flintcore.excel_expenses.models.subscriptions.tasks;
+package org.flintcore.excel_expenses.managers.subscriptions.tasks;
 
 import data.utils.NullableUtils;
 import javafx.concurrent.Task;
@@ -6,7 +6,7 @@ import javafx.concurrent.WorkerStateEvent;
 import javafx.event.EventHandler;
 import javafx.event.EventType;
 import javafx.util.Subscription;
-import org.flintcore.excel_expenses.models.subscriptions.events.IEventSubscriptionHolder;
+import org.flintcore.excel_expenses.managers.subscriptions.events.IEventSubscriptionFxHolder;
 import org.flintcore.utilities.iterations.EventIterationUtils;
 
 import java.util.Map;
@@ -16,7 +16,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 
 public abstract class ObservableFXTask<T> extends Task<T>
-        implements IEventSubscriptionHolder<WorkerStateEvent, Runnable> {
+        implements IEventSubscriptionFxHolder<WorkerStateEvent, Runnable> {
 
     /**
      * Use {@link #getEventListenerHolder} to avoid and ensure field not empty.

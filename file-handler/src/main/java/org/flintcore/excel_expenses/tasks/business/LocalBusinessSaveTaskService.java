@@ -11,7 +11,7 @@ import lombok.extern.log4j.Log4j2;
 import org.flintcore.excel_expenses.files.business.LocalBusinessSerializeFileManager;
 import org.flintcore.excel_expenses.models.expenses.LocalBusiness;
 import org.flintcore.excel_expenses.models.lists.SerialListHolder;
-import org.flintcore.excel_expenses.models.subscriptions.tasks.ObservableFXScheduledService;
+import org.flintcore.excel_expenses.managers.subscriptions.tasks.ObservableFXScheduledService;
 import org.springframework.stereotype.Component;
 
 import java.util.Map;
@@ -40,7 +40,7 @@ public class LocalBusinessSaveTaskService extends ObservableFXScheduledService<V
     protected Task<Void> createTask() {
         return new Task<>() {
             @Override
-            protected Void call() throws Exception {
+            protected Void call() {
                 SerialListHolder<LocalBusiness> data = localBusinessSupplier.get();
                 localBusinessFileManager.updateDataSet(data);
                 return null;

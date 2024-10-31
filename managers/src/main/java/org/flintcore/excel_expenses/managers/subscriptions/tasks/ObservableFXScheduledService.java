@@ -1,4 +1,4 @@
-package org.flintcore.excel_expenses.models.subscriptions.tasks;
+package org.flintcore.excel_expenses.managers.subscriptions.tasks;
 
 import data.utils.NullableUtils;
 import javafx.concurrent.ScheduledService;
@@ -7,7 +7,7 @@ import javafx.event.EventHandler;
 import javafx.event.EventType;
 import javafx.util.Duration;
 import javafx.util.Subscription;
-import org.flintcore.excel_expenses.models.subscriptions.events.IEventSubscriptionHolder;
+import org.flintcore.excel_expenses.managers.subscriptions.events.IEventSubscriptionFxHolder;
 import org.flintcore.utilities.iterations.EventIterationUtils;
 
 import java.util.Map;
@@ -19,11 +19,11 @@ import java.util.concurrent.CopyOnWriteArraySet;
  * Task that can be scheduled in a period of time.
  */
 public abstract class ObservableFXScheduledService<T> extends ScheduledService<T>
-        implements IEventSubscriptionHolder<WorkerStateEvent, Runnable> {
+        implements IEventSubscriptionFxHolder<WorkerStateEvent, Runnable> {
 
     public static final Duration DEFAULT_RANGE_PERIOD = Duration.minutes(5);
     /**
-     * Use {@link #getEventListenerHolder()} to avoid and ensure field not empty.
+     * Use {@link #getEventListenerHolder} to avoid and ensure field not empty.
      */
     protected Map<EventType<WorkerStateEvent>, Set<Runnable>> events;
 
@@ -54,11 +54,12 @@ public abstract class ObservableFXScheduledService<T> extends ScheduledService<T
         EventHandler<WorkerStateEvent> eventListenerHandler = EventIterationUtils
                 .onHandleRunnableEvents(this.events);
 
+        setOnReady(eventListenerHandler);
+        setOnScheduled(eventListenerHandler);
+        setOnRunning(eventListenerHandler);
         setOnSucceeded(eventListenerHandler);
         setOnFailed(eventListenerHandler);
-        setOnScheduled(eventListenerHandler);
         setOnCancelled(eventListenerHandler);
-        setOnRunning(eventListenerHandler);
     }
 
     protected void initSubscriptionsHolder() {
