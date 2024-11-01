@@ -1,7 +1,6 @@
 package org.flintcore.excel_expenses.controllers;
 
 import javafx.animation.Transition;
-import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.Node;
@@ -47,33 +46,37 @@ public class MainViewController implements Initializable {
     private final MainNavbarConfiguratorFactory navbarItemFactory;
     private final SidebarController sidebarController;
     private final ShutdownFXApplication shutdownAppHolder;
-    private WindowActionsHolder windowActionsHolder;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        windowActionsHolder = new WindowActionsHolder(btnClose, btnMinimize);
-        windowActionsHolder.setShutdown(shutdownAppHolder);
+        setupWindowsManagementBtn();
 
         setErrorHandlers();
         buildNavbarItems();
 
         Pane content = (Pane) this.bodyPane.getContent();
         this.applicationRouter.setParentContainer(content);
-        Platform.runLater(this.sidebarController.getControllerOf(EMainRoute.HOME)::trigger);
+
+        // Trigger in main view to navigate.
+        this.sidebarController.getControllerOf(EMainRoute.HOME).trigger();
+    }
+
+    private void setupWindowsManagementBtn() {
+        WindowActionsHolder windowActionsHolder = new WindowActionsHolder(btnClose, btnMinimize);
+        windowActionsHolder.setShutdown(shutdownAppHolder);
     }
 
     private void setErrorHandlers() {
         // Set error handler
-        this.applicationRouter.getErrorConsumerHandler()
-                .addErrorConsumer(e -> {
-                    if (e.getClass() != IOException.class) return;
+        this.applicationRouter.getErrorConsumerHandler().addErrorConsumer(e -> {
+            if (e.getClass() != IOException.class) return;
 
-                    Alert alert = new Alert(Alert.AlertType.ERROR);
-                    alert.setContentText("Unable to start application");
-                    alert.showAndWait();
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setContentText("Unable to start application");
+            alert.showAndWait();
 
-                    Platform.exit();
-                });
+            shutdownAppHolder.close();
+        });
     }
 
     private void buildNavbarItems() {

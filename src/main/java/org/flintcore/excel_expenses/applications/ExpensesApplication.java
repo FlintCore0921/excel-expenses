@@ -24,7 +24,6 @@ import java.util.Objects;
 @RequiredArgsConstructor
 public class ExpensesApplication extends Application {
     private ConfigurableApplicationContext springApplicationContext;
-    private ApplicationRouter appRouter;
 
     @Override
     public void init() {
@@ -62,8 +61,7 @@ public class ExpensesApplication extends Application {
 
     private void setListeners(Stage stage) {
         RelocationParam params = new RelocationParam(
-                new Dimension(Integer.MAX_VALUE, 15),
-                stage
+                new Dimension(Integer.MAX_VALUE, 15), stage
         );
         WindowRelocationHandler windowRelocationHandler =
                 new WindowRelocationHandler(params);
