@@ -2,9 +2,11 @@ package org.flintcore.excel_expenses.managers.shutdowns;
 
 import data.utils.NullableUtils;
 import jakarta.annotation.PostConstruct;
+import javafx.animation.PauseTransition;
 import javafx.application.Platform;
 import javafx.scene.control.Alert;
 import javafx.stage.Stage;
+import javafx.util.Duration;
 import javafx.util.Subscription;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -83,10 +85,25 @@ public final class ShutdownFXApplication implements IShutdownHandler<Runnable> {
 
     @Override
     public void close() {
-        if (!this.closeTrigger.compareAndSet(false, true) ||
-                Objects.isNull(subscriptions) || this.subscriptions.isEmpty()) return;
+        if (!Platform.isFxApplicationThread()) {
+            log.warn("Only trigger close inside the FX Thread. Ensure you use it correctly.");
+        }
 
-        this.setupAlert();
+        if (!this.closeTrigger.compareAndSet(false, true)) return;
+
+        final Alert shutdownAlert = setupShutdownAlert();
+
+        PauseTransition waitAfterClose = new PauseTransition(Duration.seconds(1.5));
+
+        waitAfterClose.setOnFinished(event -> {
+            shutdownAlert.close();
+            Platform.exit();
+        });
+
+        if (Objects.isNull(subscriptions) || this.subscriptions.isEmpty()) {
+            waitAfterClose.play();
+            return;
+        }
 
         int totalTasks = this.subscriptions.values().stream()
                 .mapToInt(Collection::size)
@@ -117,31 +134,27 @@ public final class ShutdownFXApplication implements IShutdownHandler<Runnable> {
             } catch (InterruptedException ignored) {
             } finally {
                 tasksExecutor.shutdown();
-                Platform.exit();
+                waitAfterClose.play();
             }
         });
     }
 
-    private void setupAlert() {
-        Runnable runnable = triggerAlertOnScreen();
-
-        if (!Platform.isFxApplicationThread()) Platform.runLater(runnable);
-        else runnable.run();
+    private Alert setupShutdownAlert() {
+        final Alert shutDownAlert = new Alert(Alert.AlertType.INFORMATION);
+        triggerAlertOnScreen(shutDownAlert);
+        return shutDownAlert;
     }
 
-    private Runnable triggerAlertOnScreen() {
-        return () -> {
-            if (Objects.isNull(stage)) {
-                log.warn("Stage panel not provided!");
-                return;
-            }
+    private void triggerAlertOnScreen(Alert shutDownAlert) {
+        if (Objects.isNull(stage)) {
+            log.warn("Stage panel not provided!");
+            return;
+        }
 
-            Alert closeAlert = new Alert(Alert.AlertType.INFORMATION);
-            closeAlert.setTitle(bundles.getString("messages.saving_resources"));
-            closeAlert.setHeaderText(bundles.getString("messages.closing_app"));
+        shutDownAlert.setHeaderText(bundles.getString("messages.closing_app"));
+        shutDownAlert.setTitle(bundles.getString("messages.saving_resources"));
 
-            closeAlert.setOnShown(e -> this.stage.hide());
-            closeAlert.show();
-        };
+        shutDownAlert.setOnShown(e -> this.stage.hide());
+        shutDownAlert.show();
     }
 }

@@ -12,6 +12,7 @@ import java.util.stream.StreamSupport;
 
 @Component
 public class CompoundResourceBundle extends ResourceBundle {
+    @Deprecated
     private static final String PROPERTIES_SUFFIX = ".properties";
 
     private Map<Bundles, ResourceBundle> bundleDictionary;
@@ -72,7 +73,7 @@ public class CompoundResourceBundle extends ResourceBundle {
 
         private final String location;
 
-        static Bundles[] getDefaultBundles() {
+        public static Bundles[] getDefaultBundles() {
             return new Bundles[]{GENERAL};
         }
     }
