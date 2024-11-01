@@ -1,4 +1,4 @@
-package org.flintcore.excel_expenses.tasks.bussiness.local;
+package org.flintcore.excel_expenses.services.business;
 
 import data.utils.NullableUtils;
 import javafx.concurrent.Task;
@@ -6,10 +6,10 @@ import javafx.concurrent.WorkerStateEvent;
 import javafx.event.EventType;
 import lombok.Setter;
 import lombok.extern.log4j.Log4j2;
+import org.flintcore.excel_expenses.managers.subscriptions.tasks.ObservableFXService;
+import org.flintcore.excel_expenses.managers.tasks.business.locals.BuildLocalBusinessTask;
 import org.flintcore.excel_expenses.managers.validators.LocalBusinessValidator;
 import org.flintcore.excel_expenses.models.expenses.LocalBusiness;
-import org.flintcore.excel_expenses.managers.subscriptions.tasks.ObservableFXService;
-import org.flintcore.excel_expenses.services.business.LocalBusinessFileScheduledFXService;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
@@ -22,9 +22,12 @@ import java.util.stream.Stream;
 @Log4j2
 @Component
 @Scope("prototype")
-public class StoreLocalBusinessService extends ObservableFXService<Boolean> {
+public class RegisterLocalBusinessFXService extends ObservableFXService<Boolean> {
+    private static final String BUSINESS_REGISTERED_SUCCESSFULLY = "Local business registered successfully.";
+    private static final String BUSINESS_ALREADY_EXISTS = "The business already exists.";
+
     private final LocalBusinessValidator localBusinessValidator;
-    private final LocalBusinessFileScheduledFXService localBusinessFXService;
+    private final LocalBusinessFileFXService localBusinessFXService;
 
     @Setter
     private Supplier<String> localNameSupplier;
@@ -33,9 +36,10 @@ public class StoreLocalBusinessService extends ObservableFXService<Boolean> {
     @Setter
     private Consumer<Exception> errorConsumer;
 
-    public StoreLocalBusinessService(
-            LocalBusinessFileScheduledFXService localBusinessFXService,
-            LocalBusinessValidator localBusinessValidator) {
+    public RegisterLocalBusinessFXService(
+            LocalBusinessFileFXService localBusinessFXService,
+            LocalBusinessValidator localBusinessValidator
+    ) {
         super();
         this.localBusinessValidator = localBusinessValidator;
         this.localBusinessFXService = localBusinessFXService;
@@ -44,45 +48,38 @@ public class StoreLocalBusinessService extends ObservableFXService<Boolean> {
     @Override
     protected Task<Boolean> createTask() {
         return new Task<>() {
-            public static final String BUILDING_RESULT = "Building result...";
-            public static final String VALIDATING_DATA = "Validating data...";
-
             @Override
             protected Boolean call() throws Exception {
-                LocalBusiness localBusiness;
+                boolean result = false;
 
                 try {
-                    String localName = localNameSupplier.get(),
-                            localRNC = localRNCSupplier.get();
-
-                    updateMessage(VALIDATING_DATA);
-                    validateProvidedValues(localName, localRNC);
-
-                    updateMessage(BUILDING_RESULT);
-                    localBusiness = LocalBusiness.builder()
-                            .name(localName)
-                            .RNC(localRNC)
-                            .build();
-
-                    updateMessage("Last steps...");
-                    validateBusinessContent(localBusiness);
+                    updateMessage("Building Local business...");
+                    LocalBusiness localBusiness = new BuildLocalBusinessTask(
+                            localBusinessValidator,
+                            localNameSupplier,
+                            localRNCSupplier
+                    ).get();
 
                     CompletableFuture<Boolean> registrationResponse = localBusinessFXService
                             .register(localBusiness);
+                    updateMessage("Registering business...");
 
-                    if (registrationResponse.isCompletedExceptionally() || !registrationResponse.get()) {
+                    result = registrationResponse.get();
+
+                    if (registrationResponse.isCompletedExceptionally()) {
                         throw new RuntimeException("Unable to store data.");
                     }
-
-                    updateMessage("Local business created successfully.");
-                    return true;
-
                 } catch (Exception e) {
                     consumeException(e);
                     updateMessage("Fail at build product!");
+                } finally {
+                    String finallyMessage = result ? BUSINESS_REGISTERED_SUCCESSFULLY
+                            : BUSINESS_ALREADY_EXISTS;
+
+                    updateMessage(finallyMessage);
                 }
 
-                return false;
+                return result;
             }
         };
     }

@@ -31,7 +31,7 @@ import org.flintcore.excel_expenses.models.expenses.LocalBusiness;
 import org.flintcore.excel_expenses.models.properties.formatters.StaticNumericFormatter;
 import org.flintcore.excel_expenses.models.receipts.Receipt;
 import org.flintcore.excel_expenses.managers.subscriptions.SubscriptionHolder;
-import org.flintcore.excel_expenses.services.business.LocalBusinessFileScheduledFXService;
+import org.flintcore.excel_expenses.services.business.LocalBusinessFileFXService;
 import org.flintcore.utilities.animations.ViewAnimationUtils;
 import org.flintcore.utilities.dates.DateUtils;
 import org.flintcore.utilities.lists.ObservableListUtils;
@@ -52,7 +52,7 @@ public class ExpenseCreateFormController implements Initializable {
 
     private final ApplicationRouter appRouter;
     private final SubscriptionHolder subscriptionManager;
-    private final LocalBusinessFileScheduledFXService localBusinessService;
+    private final LocalBusinessFileFXService localBusinessService;
 
     // Required builders
     private final ReceiptBuilderService receiptBuilderService;
@@ -68,7 +68,7 @@ public class ExpenseCreateFormController implements Initializable {
     public ExpenseCreateFormController(
             ApplicationRouter appRouter,
             SubscriptionHolder subscriptionManager,
-            LocalBusinessFileScheduledFXService localBusinessService,
+            LocalBusinessFileFXService localBusinessService,
             ReceiptBuilderService receiptBuilderService
     ) {
         this.appRouter = appRouter;

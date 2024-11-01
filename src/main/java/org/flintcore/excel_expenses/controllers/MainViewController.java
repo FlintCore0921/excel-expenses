@@ -1,12 +1,5 @@
 package org.flintcore.excel_expenses.controllers;
 
-import org.flintcore.excel_expenses.managers.factories.navigation.IMenuItemHandler;
-import org.flintcore.excel_expenses.managers.factories.navigation.MainNavbarConfiguratorFactory;
-import org.flintcore.excel_expenses.handlers.WindowActionsHolder;
-import org.flintcore.excel_expenses.managers.routers.IRoute;
-import org.flintcore.excel_expenses.managers.routers.main.EMainRoute;
-import org.flintcore.excel_expenses.managers.routers.ApplicationRouter;
-import org.flintcore.excel_expenses.models.NodeWrapper;
 import javafx.animation.Transition;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
@@ -18,6 +11,14 @@ import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.shape.Circle;
 import lombok.RequiredArgsConstructor;
+import org.flintcore.excel_expenses.handlers.WindowActionsHolder;
+import org.flintcore.excel_expenses.managers.factories.navigation.IMenuItemHandler;
+import org.flintcore.excel_expenses.managers.factories.navigation.MainNavbarConfiguratorFactory;
+import org.flintcore.excel_expenses.managers.routers.ApplicationRouter;
+import org.flintcore.excel_expenses.managers.routers.IRoute;
+import org.flintcore.excel_expenses.managers.routers.main.EMainRoute;
+import org.flintcore.excel_expenses.managers.shutdowns.ShutdownFXApplication;
+import org.flintcore.excel_expenses.models.NodeWrapper;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
@@ -45,10 +46,13 @@ public class MainViewController implements Initializable {
     private final ApplicationRouter applicationRouter;
     private final MainNavbarConfiguratorFactory navbarItemFactory;
     private final SidebarController sidebarController;
+    private final ShutdownFXApplication shutdownAppHolder;
+    private WindowActionsHolder windowActionsHolder;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        new WindowActionsHolder(btnClose, btnMinimize);
+        windowActionsHolder = new WindowActionsHolder(btnClose, btnMinimize);
+        windowActionsHolder.setShutdown(shutdownAppHolder);
 
         setErrorHandlers();
         buildNavbarItems();

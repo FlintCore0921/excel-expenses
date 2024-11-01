@@ -1,5 +1,3 @@
-import org.springframework.boot.gradle.tasks.bundling.BootJar
-
 plugins {
     id("org.openjfx.javafxplugin") version "0.0.13"
 }

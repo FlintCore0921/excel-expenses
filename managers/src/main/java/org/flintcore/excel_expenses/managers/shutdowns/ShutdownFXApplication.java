@@ -1,30 +1,38 @@
-package org.flintcore.excel_expenses.managers.subscriptions;
+package org.flintcore.excel_expenses.managers.shutdowns;
 
 import data.utils.NullableUtils;
 import jakarta.annotation.PostConstruct;
-import jakarta.annotation.PreDestroy;
+import javafx.application.Platform;
+import javafx.scene.control.Alert;
+import javafx.stage.Stage;
 import javafx.util.Subscription;
 import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 import lombok.extern.log4j.Log4j2;
+import org.flintcore.excel_expenses.managers.properties.CompoundResourceBundle;
 import org.springframework.stereotype.Component;
 
-import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
- * Used to call when app or the manager owner is closed.
+ * Subscriptions previously trigger before FX Application called close.
  */
 @Component
 @Log4j2
-public final class ShutdownSubscriptionHolder implements ISubscriptionHolder<Object, Runnable> {
+@RequiredArgsConstructor
+public final class ShutdownFXApplication implements IShutdownHandler<Runnable> {
+    private final CompoundResourceBundle bundles;
+    @Setter
+    private Stage stage;
     private Map<Object, Set<Runnable>> subscriptions;
-    private AtomicBoolean completed;
+    private AtomicBoolean closeTrigger;
 
     @PostConstruct
     private void setAtomics() {
-        this.completed = new AtomicBoolean(false);
+        this.closeTrigger = new AtomicBoolean(false);
     }
 
     @Override
@@ -56,12 +64,12 @@ public final class ShutdownSubscriptionHolder implements ISubscriptionHolder<Obj
             types.forEach(type -> this.subscriptions.get(type).remove(action));
         };
 
-        ISubscriptionHolder.super.addOneTimeSubscription(types, onCall);
+        IShutdownHandler.super.addOneTimeSubscription(types, onCall);
     }
 
     private void initSubscriptions() {
         if (Objects.isNull(subscriptions)) {
-            synchronized (ShutdownSubscriptionHolder.class) {
+            synchronized (ShutdownFXApplication.class) {
                 NullableUtils.executeIsNull(this.subscriptions,
                         () -> this.subscriptions = new ConcurrentHashMap<>()
                 );
@@ -74,10 +82,11 @@ public final class ShutdownSubscriptionHolder implements ISubscriptionHolder<Obj
     }
 
     @Override
-    @PreDestroy
-    public void close() throws IOException {
-        if (!this.completed.compareAndSet(false, true) &&
+    public void close() {
+        if (!this.closeTrigger.compareAndSet(false, true) ||
                 Objects.isNull(subscriptions) || this.subscriptions.isEmpty()) return;
+
+        this.setupAlert();
 
         int totalTasks = this.subscriptions.values().stream()
                 .mapToInt(Collection::size)
@@ -87,15 +96,17 @@ public final class ShutdownSubscriptionHolder implements ISubscriptionHolder<Obj
         ExecutorService tasksExecutor = Executors.newSingleThreadExecutor();
 
         for (Map.Entry<Object, Set<Runnable>> entry : this.subscriptions.entrySet()) {
-            tasksExecutor.submit(() -> {
-                try {
-                    entry.getValue().forEach(Runnable::run);
-                } catch (Exception e) {
-                    log.error("Error with subscription in {}",
-                            entry.getKey().getClass().getSimpleName());
-                    log.error(e.getMessage(), e);
-                } finally {
-                    counterWait.countDown();
+            tasksExecutor.execute(() -> {
+                for (Runnable runnable : entry.getValue()) {
+                    try {
+                        runnable.run();
+                    } catch (Exception e) {
+                        log.error("Error with subscription in {}",
+                                entry.getKey().getClass().getSimpleName());
+                        log.error(e.getMessage(), e);
+                    } finally {
+                        counterWait.countDown();
+                    }
                 }
             });
         }
@@ -106,7 +117,31 @@ public final class ShutdownSubscriptionHolder implements ISubscriptionHolder<Obj
             } catch (InterruptedException ignored) {
             } finally {
                 tasksExecutor.shutdown();
+                Platform.exit();
             }
         });
+    }
+
+    private void setupAlert() {
+        Runnable runnable = triggerAlertOnScreen();
+
+        if (!Platform.isFxApplicationThread()) Platform.runLater(runnable);
+        else runnable.run();
+    }
+
+    private Runnable triggerAlertOnScreen() {
+        return () -> {
+            if (Objects.isNull(stage)) {
+                log.warn("Stage panel not provided!");
+                return;
+            }
+
+            Alert closeAlert = new Alert(Alert.AlertType.INFORMATION);
+            closeAlert.setTitle(bundles.getString("messages.saving_resources"));
+            closeAlert.setHeaderText(bundles.getString("messages.closing_app"));
+
+            closeAlert.setOnShown(e -> this.stage.hide());
+            closeAlert.show();
+        };
     }
 }

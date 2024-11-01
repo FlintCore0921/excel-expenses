@@ -13,7 +13,7 @@ import javafx.concurrent.WorkerStateEvent;
 import javafx.event.EventType;
 import javafx.util.Subscription;
 import lombok.extern.log4j.Log4j2;
-import org.flintcore.excel_expenses.managers.subscriptions.ShutdownSubscriptionHolder;
+import org.flintcore.excel_expenses.managers.shutdowns.ShutdownFXApplication;
 import org.flintcore.excel_expenses.managers.subscriptions.SubscriptionHolder;
 import org.flintcore.excel_expenses.managers.subscriptions.tasks.ObservableFXScheduledService;
 import org.flintcore.excel_expenses.managers.subscriptions.tasks.ObservableFXService;
@@ -40,7 +40,7 @@ public abstract class FileScheduledFxService<T> {
     @Lazy
     protected final ApplicationScheduler appScheduler;
     @Lazy
-    protected final ShutdownSubscriptionHolder shutDownHolder;
+    protected final ShutdownFXApplication shutDownHolder;
 
     protected ObservableSet<T> dataSetList;
     protected ReadOnlyListWrapper<T> readOnlyListWrapper;
@@ -51,7 +51,7 @@ public abstract class FileScheduledFxService<T> {
             ObservableFXService<List<T>> requestTaskService,
             ObservableFXScheduledService<Void> storeTaskService,
             SubscriptionHolder subscriptionManager,
-            ApplicationScheduler appScheduler, ShutdownSubscriptionHolder shutDownHolder
+            ApplicationScheduler appScheduler, ShutdownFXApplication shutDownHolder
     ) {
         this.requestTaskService = requestTaskService;
         this.storeTaskService = storeTaskService;
@@ -184,13 +184,21 @@ public abstract class FileScheduledFxService<T> {
     }
 
     /**
-     * Do not do anything here!
+     * Init on load tasks when triggers.
      */
     protected void setupOnLoadListeners() {
+        Subscription onSuccess = this.listenRequestTask(TaskFxEvent.WORKER_STATE_SUCCEEDED, () -> {
+            this.requiresRequest.set(false);
+            this.dataSetList.addAll(
+                    this.requestTaskService.getValue()
+            );
+        });
+
+        this.subscriptionManager.appendSubscriptionOn(this.requestTaskService, onSuccess);
     }
 
     /**
-     * Trigger to listen when
+     * Trigger to listen when store requests
      */
     protected void setupOnReadListeners() {
         Subscription onSucceeded = this.listenStoreTask(TaskFxEvent.WORKER_STATE_SUCCEEDED,
@@ -200,14 +208,25 @@ public abstract class FileScheduledFxService<T> {
 
         // Shutdown tasks
 
+        setupShutdownActions();
+    }
+
+    private void setupShutdownActions() {
         this.shutDownHolder.addSubscription(this.storeTaskService, () -> {
             CountDownLatch lack = new CountDownLatch(1);
             try {
-                this.storeTaskService.addOneTimeSubscription(TaskFxEvent.ALL_WORKER_STATE_DONE,
-                        lack::countDown
-                );
+                Platform.runLater(() -> {
+                    if (this.storingProperty().get()) {
+                        this.storeTaskService.cancel();
+                    }
 
-                Platform.runLater(this.storeTaskService::restart);
+                    this.storeTaskService.addOneTimeSubscription(TaskFxEvent.ALL_WORKER_STATE_DONE,
+                            lack::countDown
+                    );
+
+                    this.storeTaskService.start();
+                    log.info("Storing data from services...");
+                });
 
                 lack.await();
                 log.info("Data stored from {} service", getClass().getSimpleName());
@@ -217,19 +236,25 @@ public abstract class FileScheduledFxService<T> {
         });
     }
 
-    @SuppressWarnings("unchecked")
     protected void initObservableList() {
         if (Objects.nonNull(this.dataSetList)) return;
 
+        if (!Platform.isFxApplicationThread())
+            Platform.runLater(this::initFields);
+        else this.initFields();
+
+        setupOnLoadListeners();
+        setupOnReadListeners();
+    }
+
+    @SuppressWarnings("unchecked")
+    private void initFields() {
         this.dataSetList = FXCollections.observableSet();
 
         this.readOnlyListWrapper = new ReadOnlyListWrapper<>(this, null);
         this.readOnlyListWrapper.set(FXCollections.observableArrayList());
 
         appendListenerOnReaderProperty();
-
-        setupOnLoadListeners();
-        setupOnReadListeners();
     }
 
     // Read data from main list to wrapper.

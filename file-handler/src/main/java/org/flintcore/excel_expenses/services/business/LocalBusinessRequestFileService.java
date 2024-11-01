@@ -1,32 +1,37 @@
-package org.flintcore.excel_expenses.tasks.business;
+package org.flintcore.excel_expenses.services.business;
 
 import data.utils.NullableUtils;
 import jakarta.annotation.PreDestroy;
 import javafx.concurrent.Task;
 import javafx.concurrent.WorkerStateEvent;
 import javafx.event.EventType;
+import javafx.util.Subscription;
 import lombok.RequiredArgsConstructor;
-import lombok.Setter;
 import lombok.extern.log4j.Log4j2;
 import org.flintcore.excel_expenses.files.business.LocalBusinessSerializeFileManager;
 import org.flintcore.excel_expenses.models.expenses.LocalBusiness;
-import org.flintcore.excel_expenses.models.lists.SerialListHolder;
-import org.flintcore.excel_expenses.managers.subscriptions.tasks.ObservableFXScheduledService;
+import org.flintcore.excel_expenses.managers.subscriptions.tasks.ObservableFXService;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
 import java.util.Map;
-import java.util.function.Supplier;
+import java.util.Set;
 
 @Component
-@Log4j2
 @RequiredArgsConstructor
-public class LocalBusinessSaveTaskService extends ObservableFXScheduledService<Void> {
+@Log4j2
+public class LocalBusinessRequestFileService extends ObservableFXService<List<LocalBusiness>> {
 
     private final LocalBusinessSerializeFileManager localBusinessFileManager;
 
-    @Setter
-    private Supplier<SerialListHolder<LocalBusiness>> localBusinessSupplier;
+    public Subscription addSubscription(EventType<WorkerStateEvent> type, Runnable action) {
 
+        Set<Runnable> subscriptionsIn = this.getEventListenerHolder()
+                .computeIfAbsent(type, this::buildSubscriptionHolder);
+        subscriptionsIn.add(action);
+
+        return () -> subscriptionsIn.remove(action);
+    }
 
     @Override
     public void addOneTimeSubscription(EventType<WorkerStateEvent> type, Runnable action) {
@@ -37,13 +42,11 @@ public class LocalBusinessSaveTaskService extends ObservableFXScheduledService<V
     }
 
     @Override
-    protected Task<Void> createTask() {
+    protected Task<List<LocalBusiness>> createTask() {
         return new Task<>() {
             @Override
-            protected Void call() {
-                SerialListHolder<LocalBusiness> data = localBusinessSupplier.get();
-                localBusinessFileManager.updateDataSet(data);
-                return null;
+            protected List<LocalBusiness> call() /*throws Exception*/ {
+                return localBusinessFileManager.getDataList();
             }
         };
     }

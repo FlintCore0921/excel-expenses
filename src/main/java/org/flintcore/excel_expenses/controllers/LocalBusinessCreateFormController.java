@@ -14,7 +14,7 @@ import org.flintcore.excel_expenses.managers.routers.ApplicationRouter;
 import org.flintcore.excel_expenses.managers.rules.ILocalBusinessRules;
 import org.flintcore.excel_expenses.models.alerts.ObservableTaskAlert;
 import org.flintcore.excel_expenses.models.events.TaskFxEvent;
-import org.flintcore.excel_expenses.tasks.bussiness.local.StoreLocalBusinessService;
+import org.flintcore.excel_expenses.services.business.RegisterLocalBusinessFXService;
 import org.flintcore.utilities.fx.BindingsUtils;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.context.annotation.Scope;
@@ -30,13 +30,14 @@ import java.util.stream.Stream;
 public class LocalBusinessCreateFormController implements Initializable {
     private final ApplicationRouter appRouter;
     @Lazy
-    private final StoreLocalBusinessService storeBusinessTaskService;
+    private final RegisterLocalBusinessFXService storeBusinessTaskService;
     // Bundles
     private ResourceBundle bundles;
 
     public LocalBusinessCreateFormController(
             ApplicationRouter appRouter,
-            StoreLocalBusinessService storeBusinessTaskService) {
+            RegisterLocalBusinessFXService storeBusinessTaskService
+    ) {
         this.appRouter = appRouter;
         this.storeBusinessTaskService = storeBusinessTaskService;
     }
