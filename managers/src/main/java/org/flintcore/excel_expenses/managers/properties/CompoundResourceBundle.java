@@ -12,6 +12,7 @@ import java.util.stream.StreamSupport;
 
 @Component
 public class CompoundResourceBundle extends ResourceBundle {
+    @Deprecated
     private static final String PROPERTIES_SUFFIX = ".properties";
 
     private Map<Bundles, ResourceBundle> bundleDictionary;
@@ -67,11 +68,12 @@ public class CompoundResourceBundle extends ResourceBundle {
     @Getter
     public enum Bundles {
         GENERAL("fxBundles/messages/general_messages"),
-        EXPENSE_CREATE_FORM("fxBundles/messages/expenses_create_form");
+        EXPENSE_CREATE_FORM("fxBundles/messages/expenses_create_form"),
+        LOCAL_MESSAGES("fxBundles/messages/local_messages");
 
         private final String location;
 
-        static Bundles[] getDefaultBundles() {
+        public static Bundles[] getDefaultBundles() {
             return new Bundles[]{GENERAL};
         }
     }

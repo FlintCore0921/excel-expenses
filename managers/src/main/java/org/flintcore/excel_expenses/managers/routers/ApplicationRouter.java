@@ -4,57 +4,53 @@ import data.utils.NullableUtils;
 import jakarta.annotation.PostConstruct;
 import javafx.animation.ParallelTransition;
 import javafx.animation.Transition;
-import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.layout.Pane;
 import javafx.util.Duration;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
+import lombok.extern.log4j.Log4j2;
 import org.flintcore.excel_expenses.managers.exceptions.ErrorConsumerHandler;
 import org.flintcore.excel_expenses.managers.factories.views.RouteTransitionNavigationFactory;
-import org.flintcore.excel_expenses.managers.properties.CompoundResourceBundle;
+import org.flintcore.excel_expenses.managers.routers.builders.FXMLFactory;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
-import java.io.IOException;
-import java.net.URL;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.BiFunction;
 
 @Component
+@Log4j2
 public class ApplicationRouter implements IApplicationRouter<IRoute> {
 
     public static final int ENTER_MILLIS_ANIMATION = 500;
     public static final int EXIT_MILLIS_ANIMATION = 200;
 
     private final RouteManager<IRoute> routeManager;
-    private final ApplicationContext applicationContext;
+    private final FXMLFactory fxmlFactory;
     private final RouteTransitionNavigationFactory transitionFactory;
     @Getter
     private final ErrorConsumerHandler errorConsumerHandler;
 
-    // Bundles
-    private final CompoundResourceBundle bundlerManager;
-
     private BiFunction<Node, @NonNull Node, Transition> onNavigateTransition;
     private BiFunction<Node, @NonNull Node, Transition> onNavigateBackTransition;
 
-    @Getter
     @Setter
     private Pane parentContainer;
 
     public ApplicationRouter(ApplicationContext applicationContext,
                              RouteManager<IRoute> routeManager,
+                             @Qualifier("routeViewFactory") FXMLFactory fxmlFactory,
                              RouteTransitionNavigationFactory transitionFactory,
-                             ErrorConsumerHandler errorConsumerHandler,
-                             CompoundResourceBundle bundlerManager) {
+                             ErrorConsumerHandler errorConsumerHandler) {
         this.routeManager = routeManager;
-        this.applicationContext = applicationContext;
+        this.fxmlFactory = fxmlFactory;
         this.errorConsumerHandler = errorConsumerHandler;
         this.transitionFactory = transitionFactory;
-        this.bundlerManager = bundlerManager;
     }
 
     @PostConstruct
@@ -110,12 +106,10 @@ public class ApplicationRouter implements IApplicationRouter<IRoute> {
      * @apiNote In the {@code onRoutesUpdate} function, is it recommended to configure the initial properties of the view.
      */
     @Override
-    public void navigateTo(
-            IRoute route,
-            @NonNull BiFunction<Node, @NonNull Node, Transition> onRoutesUpdate
+    public void navigateTo(IRoute route,
+                           @NonNull BiFunction<Node, @NonNull Node, Transition> onRoutesUpdate
     ) {
         if (Objects.isNull(this.parentContainer)) {
-            // TODO
             this.errorConsumerHandler.accept(
                     new NullPointerException("Parent view not accessible to proceed")
             );
@@ -131,23 +125,30 @@ public class ApplicationRouter implements IApplicationRouter<IRoute> {
         setView(route, onRoutesUpdate);
     }
 
+    /**
+     * Build the route as a Node view, in case not built just ignore it.
+     */
     private void setView(IRoute route, BiFunction<Node, @NonNull Node, Transition> onRoutesUpdate) {
-        try {
-            FXMLLoader loader = buildFML(route);
-            Node currentNode = loader.load();
-            List<Node> childrenContainer = this.parentContainer.getChildren();
-            Node previousNode = childrenContainer.isEmpty() ? null : childrenContainer.get(0);
+        Optional<Node> nodeBuilt = this.fxmlFactory.buildLoader(route);
 
-            childrenContainer.add(currentNode);
-
-            Transition transition = onRoutesUpdate.apply(previousNode, currentNode);
-            transition.setOnFinished(evt ->
-                    NullableUtils.executeNonNull(previousNode, childrenContainer::remove)
-            );
-            transition.play();
-        } catch (IOException e) {
-            this.errorConsumerHandler.accept(e);
+        if (nodeBuilt.isEmpty()) {
+            log.info("The view was not built");
+            return;
         }
+
+        Node currentNode = nodeBuilt.get();
+        List<Node> childrenContainer = this.parentContainer.getChildren();
+        Node previousNode = childrenContainer.isEmpty() ? null : childrenContainer.get(0);
+
+        log.info("Adding node into the parent pane...");
+        childrenContainer.add(currentNode);
+
+        Transition transition = onRoutesUpdate.apply(previousNode, currentNode);
+        transition.setOnFinished(evt ->
+                NullableUtils.executeNonNull(previousNode, childrenContainer::remove)
+        );
+        log.info("Showing node view...");
+        transition.play();
     }
 
     @Override
@@ -156,17 +157,5 @@ public class ApplicationRouter implements IApplicationRouter<IRoute> {
 
         IRoute previousRoute = this.routeManager.previousRoute();
         this.navigateTo(previousRoute, this.onNavigateBackTransition);
-    }
-
-    private FXMLLoader buildFML(IRoute route) {
-        URL resource = Objects.requireNonNull(
-                getClass().getResource(route.getRoute())
-        );
-
-        this.bundlerManager.registerBundles(route.getBundlePaths());
-
-        FXMLLoader loader = new FXMLLoader(resource, this.bundlerManager);
-        loader.setControllerFactory(applicationContext::getBean);
-        return loader;
     }
 }

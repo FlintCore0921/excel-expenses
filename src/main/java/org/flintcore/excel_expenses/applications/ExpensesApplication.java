@@ -1,14 +1,17 @@
 package org.flintcore.excel_expenses.applications;
 
-import org.flintcore.excel_expenses.ExcelExpensesApplication;
-import org.flintcore.excel_expenses.listeners.WindowRelocationHandler;
-import org.flintcore.excel_expenses.models.locations.RelocationParam;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.input.MouseEvent;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
+import lombok.RequiredArgsConstructor;
+import org.flintcore.excel_expenses.ExcelExpensesApplication;
+import org.flintcore.excel_expenses.listeners.WindowRelocationHandler;
+import org.flintcore.excel_expenses.managers.routers.ApplicationRouter;
+import org.flintcore.excel_expenses.managers.shutdowns.ShutdownFXApplication;
+import org.flintcore.excel_expenses.models.locations.RelocationParam;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.stereotype.Component;
@@ -18,11 +21,12 @@ import java.net.URL;
 import java.util.Objects;
 
 @Component
+@RequiredArgsConstructor
 public class ExpensesApplication extends Application {
     private ConfigurableApplicationContext springApplicationContext;
 
     @Override
-    public void init()  {
+    public void init() {
         this.springApplicationContext = new SpringApplicationBuilder(
                 ExcelExpensesApplication.class
         ).run();
@@ -46,13 +50,18 @@ public class ExpensesApplication extends Application {
 
         setListeners(stage);
 
+        getShutdownHandler().setStage(stage);
+
         stage.show();
+    }
+
+    private ShutdownFXApplication getShutdownHandler() {
+        return this.springApplicationContext.getBean(ShutdownFXApplication.class);
     }
 
     private void setListeners(Stage stage) {
         RelocationParam params = new RelocationParam(
-                new Dimension(Integer.MAX_VALUE, 15),
-                stage
+                new Dimension(Integer.MAX_VALUE, 15), stage
         );
         WindowRelocationHandler windowRelocationHandler =
                 new WindowRelocationHandler(params);

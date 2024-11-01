@@ -10,8 +10,8 @@ import org.apache.commons.lang3.ObjectUtils;
 import org.flintcore.excel_expenses.managers.factories.receipts.LocalNFCFactory;
 import org.flintcore.excel_expenses.managers.rules.IReceiptRules;
 import org.flintcore.excel_expenses.models.properties.formatters.NFCFormatter;
-import org.flintcore.excel_expenses.models.subscriptions.consumers.ISubscriptionConsumerHandler;
-import org.flintcore.excel_expenses.models.subscriptions.consumers.MultiSubscriptionConsumerHandler;
+import org.flintcore.excel_expenses.managers.subscriptions.consumers.ISubscriptionConsumerHandler;
+import org.flintcore.excel_expenses.managers.subscriptions.consumers.MultiSubscriptionConsumerHandler;
 
 public class NFCAutoCompleteListener {
     protected final TextField nfcFilter;

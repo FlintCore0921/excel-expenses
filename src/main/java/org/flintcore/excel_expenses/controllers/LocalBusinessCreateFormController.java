@@ -1,29 +1,27 @@
 package org.flintcore.excel_expenses.controllers;
 
-import javafx.animation.PauseTransition;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.scene.control.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.TextField;
+import javafx.scene.control.TextInputControl;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.BorderPane;
-import javafx.util.Duration;
 import org.flintcore.excel_expenses.managers.routers.ApplicationRouter;
 import org.flintcore.excel_expenses.managers.rules.ILocalBusinessRules;
-import org.flintcore.excel_expenses.managers.validators.LocalBusinessValidator;
-import org.flintcore.excel_expenses.models.alerts.CancelableTaskAlert;
+import org.flintcore.excel_expenses.models.alerts.ObservableTaskAlert;
 import org.flintcore.excel_expenses.models.events.TaskFxEvent;
-import org.flintcore.excel_expenses.models.subscriptions.tasks.ObservableTask;
-import org.flintcore.excel_expenses.services.business.LocalBusinessFileFXService;
-import org.flintcore.excel_expenses.tasks.bussiness.local.RegisterLocalBusinessOnFileTask;
+import org.flintcore.excel_expenses.services.business.RegisterLocalBusinessFXService;
+import org.flintcore.utilities.fx.BindingsUtils;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import java.net.URL;
 import java.util.List;
-import java.util.Objects;
 import java.util.ResourceBundle;
 import java.util.stream.Stream;
 
@@ -32,23 +30,22 @@ import java.util.stream.Stream;
 public class LocalBusinessCreateFormController implements Initializable {
     private final ApplicationRouter appRouter;
     @Lazy
-    private final LocalBusinessFileFXService localBusinessFileService;
-    @Lazy
-    private final LocalBusinessValidator localBusinessValidator;
-
-    private ObservableTask<Void> registerTask;
+    private final RegisterLocalBusinessFXService storeBusinessTaskService;
+    // Bundles
+    private ResourceBundle bundles;
 
     public LocalBusinessCreateFormController(
             ApplicationRouter appRouter,
-            LocalBusinessFileFXService localBusinessFileService,
-            LocalBusinessValidator localBusinessValidator) {
+            RegisterLocalBusinessFXService storeBusinessTaskService
+    ) {
         this.appRouter = appRouter;
-        this.localBusinessFileService = localBusinessFileService;
-        this.localBusinessValidator = localBusinessValidator;
+        this.storeBusinessTaskService = storeBusinessTaskService;
     }
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
+        this.bundles = resources;
+
         this.btnBack.setOnMousePressed(evt -> this.appRouter.navigateBack());
 
         configureNameTextField();
@@ -59,8 +56,7 @@ public class LocalBusinessCreateFormController implements Initializable {
         // TODO FIX THIS
         this.localRNCTxt.addEventFilter(KeyEvent.KEY_TYPED, evt -> {
             String content = localRNCTxt.getText();
-            if (content.length() >= ILocalBusinessRules.RNC_SIZE
-                    || !evt.getCharacter().matches("[0-9]")) {
+            if (content.length() >= ILocalBusinessRules.RNC_SIZE || !evt.getCharacter().matches("[0-9]")) {
                 evt.consume();
             }
         });
@@ -68,7 +64,7 @@ public class LocalBusinessCreateFormController implements Initializable {
         // TODO FIX THIS
         this.localNameTxt.addEventFilter(KeyEvent.KEY_TYPED, evt -> {
             String content = localNameTxt.getText();
-            if (content.length() >= ILocalBusinessRules.MAX_NAME_SIZE) {
+            if (content.length() > ILocalBusinessRules.MAX_NAME_SIZE) {
                 evt.consume();
             }
         });
@@ -76,62 +72,40 @@ public class LocalBusinessCreateFormController implements Initializable {
 
 
     private void configureSaveLogic() {
+        // Disable if Any field is blank, and RNC field not has the expected size.
+        TextField[] fieldsToValidate = {this.localNameTxt, this.localRNCTxt};
+
         BooleanBinding disableOnSaveIf = Stream.of(
-                Bindings.createBooleanBinding(
-                        () -> Stream.of(this.localNameTxt, this.localRNCTxt)
-                                .map(TextField::getText)
-                                .anyMatch(String::isBlank),
-                        this.localRNCTxt.textProperty(), this.localNameTxt.textProperty()
-                ),
+                BindingsUtils.createAnyBlankBinding(fieldsToValidate),
                 Bindings.notEqual(
-                        ILocalBusinessRules.RNC_SIZE, this.localRNCTxt.lengthProperty()
+                        ILocalBusinessRules.RNC_SIZE,
+                        this.localRNCTxt.lengthProperty()
                 )
-        ).reduce(Bindings::or).get();
+        ).reduce(Bindings::or).orElseThrow();
 
         this.btnSave.disableProperty().bind(disableOnSaveIf);
 
-        this.btnSave.setOnAction(e -> {
-            if (Objects.nonNull(this.registerTask)) return;
+        this.storeBusinessTaskService.setLocalRNCSupplier(this.localRNCTxt::getText);
+        this.storeBusinessTaskService.setLocalNameSupplier(this.localNameTxt::getText);
 
-            this.requestRegisterLocalBusinessTask();
+        // Clean data in used fields
+        this.storeBusinessTaskService.addSubscription(List.of(TaskFxEvent.WORKER_STATE_SUCCEEDED, TaskFxEvent.WORKER_STATE_FAILED), () -> {
+            List.of(this.localRNCTxt, this.localNameTxt).forEach(TextInputControl::clear);
         });
+
+        this.btnSave.setOnAction(e -> this.requestRegisterLocalBusinessTask());
     }
 
     private void requestRegisterLocalBusinessTask() {
-        registerTask = new RegisterLocalBusinessOnFileTask(
-                this.localBusinessFileService, this.localBusinessValidator,
-                this.localNameTxt::getText, this.localRNCTxt::getText
-        );
+        if (storeBusinessTaskService.isRunning()) return;
 
-        new CancelableTaskAlert(registerTask);
+        ObservableTaskAlert taskAlert = new ObservableTaskAlert(this.storeBusinessTaskService::cancel);
 
-        // Show an alert.
-        registerTask.addSubscription(
-                TaskFxEvent.WORKER_STATE_SUCCEEDED,
-                () -> {
-                    Alert alert = new Alert(Alert.AlertType.INFORMATION);
-                    alert.setTitle("Task completed");
-                    alert.getButtonTypes().retainAll(ButtonType.OK);
-                    alert.show();
+        taskAlert.setTitle(bundles.getString("messages.saving-loading"));
+        taskAlert.bindTaskState(this.storeBusinessTaskService.stateProperty());
+        taskAlert.bindMessage(this.storeBusinessTaskService.messageProperty());
 
-                    new PauseTransition(Duration.seconds(10))
-                            .setOnFinished(__ -> {
-                                alert.close();
-                            });
-                }
-        );
-
-        // Clean data
-        registerTask.addSubscription(
-                TaskFxEvent.ALL_WORKER_STATE_DONE,
-                () -> {
-                    List.of(this.localRNCTxt, this.localNameTxt)
-                            .forEach(TextInputControl::clear);
-                    this.registerTask = null;
-                }
-        );
-
-        new Thread(registerTask).start();
+        this.storeBusinessTaskService.restart();
     }
 
     @FXML

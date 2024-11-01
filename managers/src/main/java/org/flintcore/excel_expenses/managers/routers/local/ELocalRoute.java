@@ -2,7 +2,7 @@ package org.flintcore.excel_expenses.managers.routers.local;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import org.flintcore.excel_expenses.managers.properties.CompoundResourceBundle;
+import org.flintcore.excel_expenses.managers.properties.CompoundResourceBundle.Bundles;
 import org.flintcore.excel_expenses.managers.routers.IRoute;
 
 @AllArgsConstructor
@@ -10,10 +10,10 @@ import org.flintcore.excel_expenses.managers.routers.IRoute;
 public enum ELocalRoute implements IRoute {
     CREATE(
             "/templates/createLocalBusinessForm.fxml",
-            null
+            new Bundles[]{Bundles.LOCAL_MESSAGES}
     );
     private final String route;
-    private final CompoundResourceBundle.Bundles[] bundlePaths;
+    private final Bundles[] bundlePaths;
 
     @Override
     public int getOrder() {
