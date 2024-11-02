@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.flintcore.excel_expenses.managers.subscriptions.events.IEventSubscriptionFxHolder;
 import org.flintcore.utilities.iterations.EventIterationUtils;
 
+import java.io.IOException;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -51,6 +52,14 @@ public abstract class ObservableFXService<T> extends Service<T>
         }
     }
 
+    @Override
+    public void addOneTimeSubscription(EventType<WorkerStateEvent> type, Runnable action) {
+        this.addSubscription(type, () -> {
+            action.run();
+            this.getEventListenerHolder().get(type).remove(action);
+        });
+    }
+
     protected Set<Runnable> buildSubscriptionHolder(EventType<WorkerStateEvent> __) {
         return new CopyOnWriteArraySet<>();
     }
@@ -64,5 +73,10 @@ public abstract class ObservableFXService<T> extends Service<T>
         setOnScheduled(eventListenerHandler);
         setOnCancelled(eventListenerHandler);
         setOnRunning(eventListenerHandler);
+    }
+
+    @Override
+    public void close() throws IOException {
+
     }
 }

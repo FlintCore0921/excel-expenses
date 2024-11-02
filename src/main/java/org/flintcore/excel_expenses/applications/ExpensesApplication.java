@@ -9,7 +9,6 @@ import javafx.stage.StageStyle;
 import lombok.RequiredArgsConstructor;
 import org.flintcore.excel_expenses.ExcelExpensesApplication;
 import org.flintcore.excel_expenses.listeners.WindowRelocationHandler;
-import org.flintcore.excel_expenses.managers.routers.ApplicationRouter;
 import org.flintcore.excel_expenses.managers.shutdowns.ShutdownFXApplication;
 import org.flintcore.excel_expenses.models.locations.RelocationParam;
 import org.springframework.boot.builder.SpringApplicationBuilder;

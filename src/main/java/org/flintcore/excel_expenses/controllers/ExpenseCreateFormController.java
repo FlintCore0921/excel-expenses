@@ -1,5 +1,6 @@
 package org.flintcore.excel_expenses.controllers;
 
+import data.utils.NullableUtils;
 import jakarta.annotation.PreDestroy;
 import javafx.animation.FadeTransition;
 import javafx.animation.PauseTransition;
@@ -9,10 +10,7 @@ import javafx.beans.binding.BooleanBinding;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.scene.control.Button;
-import javafx.scene.control.ComboBox;
-import javafx.scene.control.DatePicker;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
@@ -26,12 +24,14 @@ import org.flintcore.excel_expenses.managers.events.texts.filters.business.RNCFi
 import org.flintcore.excel_expenses.managers.pickers.dates.ByMonthCellFactory;
 import org.flintcore.excel_expenses.managers.routers.ApplicationRouter;
 import org.flintcore.excel_expenses.managers.routers.local.ELocalRoute;
+import org.flintcore.excel_expenses.managers.subscriptions.SubscriptionHolder;
+import org.flintcore.excel_expenses.models.events.TaskFxEvent;
 import org.flintcore.excel_expenses.models.expenses.IBusiness;
 import org.flintcore.excel_expenses.models.expenses.LocalBusiness;
 import org.flintcore.excel_expenses.models.properties.formatters.StaticNumericFormatter;
 import org.flintcore.excel_expenses.models.receipts.Receipt;
-import org.flintcore.excel_expenses.managers.subscriptions.SubscriptionHolder;
 import org.flintcore.excel_expenses.services.business.LocalBusinessFileFXService;
+import org.flintcore.excel_expenses.services.receipts.ReceiptFileScheduledFXService;
 import org.flintcore.utilities.animations.ViewAnimationUtils;
 import org.flintcore.utilities.dates.DateUtils;
 import org.flintcore.utilities.lists.ObservableListUtils;
@@ -52,34 +52,36 @@ public class ExpenseCreateFormController implements Initializable {
 
     private final ApplicationRouter appRouter;
     private final SubscriptionHolder subscriptionManager;
-    private final LocalBusinessFileFXService localBusinessService;
+    private final ReceiptFileScheduledFXService receiptFileService;
+    private final LocalBusinessFileFXService localBusinessFileService;
 
-    // Required builders
     private final ReceiptBuilderService receiptBuilderService;
 
-    @SuppressWarnings("all")
-    private ResourceBundle _bundles;
+    private ResourceBundle bundles;
     // Listeners
     private RNCFilterManager rncFilterManager;
     private NFCAutoCompleteListener NFCListener;
 
     public boolean hasRequestLocalBusiness;
+    private Alert registerReceiptAlert;
 
     public ExpenseCreateFormController(
             ApplicationRouter appRouter,
             SubscriptionHolder subscriptionManager,
+            ReceiptFileScheduledFXService receiptFileService,
             LocalBusinessFileFXService localBusinessService,
             ReceiptBuilderService receiptBuilderService
     ) {
         this.appRouter = appRouter;
         this.subscriptionManager = subscriptionManager;
-        this.localBusinessService = localBusinessService;
+        this.receiptFileService = receiptFileService;
+        this.localBusinessFileService = localBusinessService;
         this.receiptBuilderService = receiptBuilderService;
     }
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        this._bundles = resources;
+        this.bundles = resources;
 
         configureBtnRouting();
         initFXMLListeners();
@@ -93,10 +95,10 @@ public class ExpenseCreateFormController implements Initializable {
         configurePriceFields();
 
         // Receipts
-        configureReceiptFields();
         configureSections();
 
-        configureLocalService();
+        configureOnBuildRequestService();
+        configureOnRegisterBtn();
     }
 
     private void initFXMLListeners() {
@@ -110,7 +112,7 @@ public class ExpenseCreateFormController implements Initializable {
 
         try {
             CompletableFuture<ObservableList<LocalBusiness>> listBusinessFuture =
-                    this.localBusinessService.getDataList();
+                    this.localBusinessFileService.getDataList();
 
             listBusinessFuture.thenAcceptAsync(localBusinessList -> {
                 Subscription subscription = ObservableListUtils.listenList(
@@ -123,28 +125,71 @@ public class ExpenseCreateFormController implements Initializable {
         }
     }
 
+    private void configureSections() {
+        configureReceiptSection();
+        configurePriceSection();
+    }
+
+    private void configureReceiptSection() {
+        configureReceiptFields();
+
+        BooleanBinding onLocalSectionCompleted = this.rncFilterManager.selectedBusinessProperty
+                .isNotNull();
+
+        receiptSection.visibleProperty().bind(
+                // Bind it while the animation move the section
+                receiptSection.opacityProperty().isNotEqualTo(0.0, 0)
+        );
+
+        final double xTranslatePos = this.receiptSection.getTranslateX(),
+                yTranslatePos = this.receiptSection.getTranslateY();
+
+        Subscription localReceiptSectionSubscription = ViewAnimationUtils.animateTranslateFadedBy(
+                onLocalSectionCompleted,
+                Duration.millis(600),
+                this.receiptSection,
+                Pair.of(xTranslatePos, 0.0),
+                Pair.of(yTranslatePos, 0.0),
+                Pair.of(0.0, 1.0)
+        );
+
+        this.subscriptionManager.appendSubscriptionOn(this, localReceiptSectionSubscription);
+    }
+
+    private void configureReceiptFields() {
+        // Receipts
+        this.NFCListener = new NFCAutoCompleteListener(this.receiptNFCTxt);
+
+        this.NFCListener.NFCProperty.subscribe(
+                receiptBuilderService.getReceiptBuilder()::NFC
+        );
+
+        // Picker
+        this.receiptDate.setDayCellFactory(new ByMonthCellFactory());
+
+        this.receiptDate.valueProperty().subscribe(receiptDate ->
+                receiptBuilderService.getReceiptBuilder().dateCreation(
+                        DateUtils.convertToDate(receiptDate)
+                )
+        );
+    }
+
     private void configureLocalBusinessFields() {
         localNameTxt.textProperty().bind(
                 this.rncFilterManager.selectedBusinessProperty
                         .map(IBusiness::getName).orElse("")
         );
 
-        this.rncFilterManager.selectedBusinessProperty.subscribe((old, business) -> {
-            if (Objects.isNull(business)) return;
-            this.localRNCTxt.setText(business.getRNC());
-        });
+        // Set builder values.
 
-        this.localNameTxt.textProperty().subscribe(
-                receiptBuilderService.getBusinessBuilder()::name
-        );
-
-        this.localRNCTxt.textProperty().subscribe(
-                receiptBuilderService.getBusinessBuilder()::RNC
+        // Listen on business selection
+        this.rncFilterManager.selectedBusinessProperty.subscribe(
+                this.receiptBuilderService.getReceiptBuilder()::business
         );
 
         // Disable the RNC field if service is requesting data.
         this.localRNCTxt.disableProperty().bind(
-                this.localBusinessService.requestingProperty()
+                this.localBusinessFileService.requestingProperty()
         );
     }
 
@@ -160,7 +205,7 @@ public class ExpenseCreateFormController implements Initializable {
 
         PauseTransition onPauseTransition = new PauseTransition(loadingDefaultDuration);
 
-        this.localBusinessService.requestingProperty().subscribe((old_, requesting) -> {
+        this.localBusinessFileService.requestingProperty().subscribe((old_, requesting) -> {
             onPauseTransition.stop();
 
             onPauseTransition.setOnFinished(e -> {
@@ -186,22 +231,29 @@ public class ExpenseCreateFormController implements Initializable {
         this.btnLoadRNC.setOnAction(e -> callDataFromServices());
     }
 
-    private void configureReceiptFields() {
-        // Receipts
-        this.NFCListener = new NFCAutoCompleteListener(this.receiptNFCTxt);
+    private void configurePriceSection() {
+        //Checks that fields date and NFC are not null
+        BooleanBinding onReceiptSectionCompleted = this.NFCListener.NFCProperty.isNotEmpty()
+                .and(this.receiptDate.valueProperty().isNotNull());
 
-        this.NFCListener.NFCProperty.subscribe(
-                receiptBuilderService.getReceiptBuilder()::NFC
+        priceSection.visibleProperty().bind(
+                // Bind it while the animation move the section
+                priceSection.opacityProperty().isNotEqualTo(0.0, 0)
         );
 
-        // Picker
-        this.receiptDate.setDayCellFactory(new ByMonthCellFactory());
+        final double xTranslatePos = this.priceSection.getTranslateX(),
+                yTranslatePos = this.priceSection.getTranslateY();
 
-        this.receiptDate.valueProperty().subscribe(receiptDate ->
-                receiptBuilderService.getReceiptBuilder().dateCreation(
-                        DateUtils.convertToDate(receiptDate)
-                )
+        Subscription priceSectionSubscription = ViewAnimationUtils.animateTranslateFadedBy(
+                onReceiptSectionCompleted,
+                Duration.millis(600),
+                this.priceSection,
+                Pair.of(xTranslatePos, 0.0),
+                Pair.of(yTranslatePos, 0.0),
+                Pair.of(0.0, 1.0)
         );
+
+        this.subscriptionManager.appendSubscriptionOn(this, priceSectionSubscription);
     }
 
     private void configurePriceFields() {
@@ -228,72 +280,102 @@ public class ExpenseCreateFormController implements Initializable {
         );
     }
 
-    private void configureSections() {
-        configureReceiptSection();
-        configurePriceSection();
-    }
+    private void configureOnBuildRequestService() {
+        final PauseTransition closeAlertWait = new PauseTransition(Duration.seconds(4));
 
-    private void configureReceiptSection() {
-        BooleanBinding onLocalSectionCompleted = this.rncFilterManager.selectedBusinessProperty
-                .isNotNull();
+        // Hide and set to null the given alert.
+        closeAlertWait.setOnFinished(e -> NullableUtils.executeNonNull(this.registerReceiptAlert, () -> {
+            this.registerReceiptAlert.hide();
+            this.registerReceiptAlert = null;
+        }));
 
-        receiptSection.visibleProperty().bind(
-                // Bind it while the animation move the section
-                receiptSection.opacityProperty().isNotEqualTo(0.0, 0)
-        );
+        // Start build receipt
+        this.receiptBuilderService.addSubscription(TaskFxEvent.WORKER_STATE_SCHEDULED, () -> {
+            NullableUtils.executeNonNull(this.registerReceiptAlert, alert -> {
+                alert.setHeaderText(
+                        this.bundles.getString("receipts.message.building")
+                );
+                alert.show();
+            });
+        });
 
-        final double xTranslatePos = this.receiptSection.getTranslateX(),
-                yTranslatePos = this.receiptSection.getTranslateY();
+        // Fail build receipt
+        this.receiptBuilderService.addSubscription(TaskFxEvent.WORKER_STATE_FAILED, () -> {
+            NullableUtils.executeNonNull(this.registerReceiptAlert, alert -> alert.setHeaderText(
+                    this.bundles.getString("receipts.message.build-fail")
+            ));
+        });
 
-        Subscription localReceiptSectionSubscription = ViewAnimationUtils.animateTranslateFadedBySubscription(
-                onLocalSectionCompleted,
-                Duration.millis(600),
-                this.receiptSection,
-                Pair.of(xTranslatePos, 0.0),
-                Pair.of(yTranslatePos, 0.0),
-                Pair.of(0.0, 1.0)
-        );
-
-        this.subscriptionManager.appendSubscriptionOn(this, localReceiptSectionSubscription);
-    }
-
-    private void configurePriceSection() {
-        //Checks that fields date and NFC are not null
-        BooleanBinding onReceiptSectionCompleted = this.NFCListener.NFCProperty.isNotEmpty()
-                .and(this.receiptDate.valueProperty().isNotNull());
-
-        priceSection.visibleProperty().bind(
-                // Bind it while the animation move the section
-                priceSection.opacityProperty().isNotEqualTo(0.0, 0)
-        );
-
-        final double xTranslatePos = this.priceSection.getTranslateX(),
-                yTranslatePos = this.priceSection.getTranslateY();
-
-        Subscription priceSectionSubscription = ViewAnimationUtils.animateTranslateFadedBySubscription(
-                onReceiptSectionCompleted,
-                Duration.millis(600),
-                this.priceSection,
-                Pair.of(xTranslatePos, 0.0),
-                Pair.of(yTranslatePos, 0.0),
-                Pair.of(0.0, 1.0)
-        );
-
-        this.subscriptionManager.appendSubscriptionOn(this, priceSectionSubscription);
-    }
-
-
-    private void configureLocalService() {
-        this.receiptBuilderService.setOnSucceeded(e -> {
+        // Build receipt successfully listener.
+        this.receiptBuilderService.addSubscription(TaskFxEvent.WORKER_STATE_SUCCEEDED, () -> {
             Receipt receiptBuilt = this.receiptBuilderService.getValue();
 
-            // TODO ADD TO RECEIPT SERVICE
+            this.receiptFileService.register(receiptBuilt).thenAcceptAsync(saved -> {
+                String message = this.bundles.getString(saved ?
+                        "receipts.message.register-success" : "receipts.message.register-duplicated"
+                );
+
+                NullableUtils.executeNonNull(this.registerReceiptAlert, alert -> alert.setHeaderText(message));
+
+                if (saved) {
+                    this.receiptBuilderService.clearData();
+                    clearFormData();
+                }
+
+                closeAlertWait.playFromStart();
+            }, Platform::runLater).exceptionallyAsync(th -> {
+                NullableUtils.executeNonNull(this.registerReceiptAlert, alert -> alert.setHeaderText(
+                        this.bundles.getString("receipts.message.register-fail")
+                ));
+
+                return null;
+            }, Platform::runLater).thenRunAsync(() -> {
+                this.registerReceiptAlert
+                        .setOnCloseRequest(ev -> this.registerReceiptAlert.close()
+                        );
+            }, Platform::runLater);
+        });
+
+        this.receiptBuilderService.addSubscription(TaskFxEvent.WORKER_STATE_FAILED, () -> {
+            NullableUtils.executeNonNull(this.registerReceiptAlert, alert -> alert.setHeaderText(
+                    this.bundles.getString("receipts.message.build-fail")
+            ));
+        });
+    }
+
+    private void configureOnRegisterBtn() {
+        this.btnSubmit.setOnAction(e -> {
+            if (this.receiptBuilderService.isRunning() || Objects.nonNull(this.registerReceiptAlert)) return;
+
+            this.registerReceiptAlert = new Alert(Alert.AlertType.NONE);
+            this.registerReceiptAlert.setTitle(
+                    this.bundles.getString("receipts.message.register")
+            );
+            // Request on build data provided.
+            this.receiptBuilderService.restart();
         });
     }
 
     private void configureBtnRouting() {
         this.btnBack.setOnMousePressed(evt -> this.appRouter.navigateBack());
         this.btnRegisterLocal.setOnAction(e -> this.appRouter.navigateTo(ELocalRoute.CREATE));
+    }
+
+    /**
+     * Clean all fields on the view.
+     */
+    private void clearFormData() {
+        // Locals
+        this.localRNCTxt.clear();
+
+        // Receipts
+        this.receiptDate.setValue(null);
+        this.receiptNFCTxt.clear();
+
+        // Price
+        this.priceTxt.clear();
+        this.percentServicePriceTxt.clear();
+        this.priceItbisTxt.clear();
     }
 
     @PreDestroy

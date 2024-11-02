@@ -21,15 +21,18 @@ import org.flintcore.excel_expenses.managers.filters.BasicBusinessStringConverte
 import org.flintcore.excel_expenses.managers.rules.ILocalBusinessRules;
 import org.flintcore.excel_expenses.models.expenses.IBusiness;
 import org.flintcore.excel_expenses.models.properties.formatters.RNCFormatter;
+import org.flintcore.utilities.bindings.NoChangeObjectBinding;
 import org.flintcore.utilities.lists.ObservableListUtils;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Predicate;
 
 @Log4j2
 public class RNCFilterManager extends TextFilterListenerManager<IBusiness> {
     // Own properties
     public final ObjectProperty<IBusiness> selectedBusinessProperty;
+    private final NoChangeObjectBinding<IBusiness> hasNotUpdateSelectBinding;
     // Listeners
     @Getter
     protected RemoteKeyListener remoteKeyListener;
@@ -44,6 +47,7 @@ public class RNCFilterManager extends TextFilterListenerManager<IBusiness> {
         super(textFilter, null, IBusiness::getRNC);
         this.optionsBox = optionsBox;
         this.selectedBusinessProperty = new SimpleObjectProperty<>();
+        this.hasNotUpdateSelectBinding = NoChangeObjectBinding.bind(this.selectedBusinessProperty);
     }
 
     @Override
@@ -67,6 +71,7 @@ public class RNCFilterManager extends TextFilterListenerManager<IBusiness> {
         ((ObservableList<T>) this.mainListProperty.get()).addAll(items);
     }
 
+    @SuppressWarnings("all")
     public <T extends IBusiness> void removeItems(List<T> items) {
         this.mainListProperty.get().removeAll(items);
     }
@@ -84,31 +89,55 @@ public class RNCFilterManager extends TextFilterListenerManager<IBusiness> {
         );
 
         this.optionsBox.itemsProperty().bind(this.itemsFilteredProperty);
+
+        this.selectedBusinessProperty.subscribe(b -> {
+            if (Objects.isNull(b)) return;
+            this.textFilterProperty.set(b.getRNC());
+        });
+
+        // Listen on changes inside the selection list.
+        this.selectedBusinessProperty.bind(this.optionsBox.valueProperty());
     }
 
     protected void setUpFilterItemsListen() {
+        BooleanBinding mainListNotEmpty = this.mainListSizeProperty.greaterThan(0);
+
         this.canFilterTextBinding = this.textFilterProperty.isNotEmpty()
-                .and(this.mainListSizeProperty.greaterThan(0));
+                .and(mainListNotEmpty);
 
         this.textFilter.setTextFormatter(
                 new RNCFormatter(ILocalBusinessRules.RNC_SIZE)
         );
 
-        final PauseTransition filterDebounce = new PauseTransition(
-                Duration.millis(450)
-        );
+        final PauseTransition filterDebounce = new PauseTransition(Duration.millis(500));
 
-        Subscription onFilterSubscription = this.textFilterProperty.subscribe((__o, text) -> {
-            filterDebounce.stop();
+        // TODO Create better subscription when set textField value
+        //  when select programmatically.
+        Subscription onFilterSubscription = this.textFilterProperty
+                .when(mainListNotEmpty).when(hasNotUpdateSelectBinding)
+                .subscribe((__o, text) -> {filterDebounce.stop();
+                    log.info("Text changed");
+                    filterDebounce.setOnFinished(e ->
+                            this.itemsFilteredProperty.get().setPredicate(buildFilter(text))
+                    );
 
-            filterDebounce.setOnFinished(e ->
-                    this.itemsFilteredProperty.get().setPredicate(buildFilter(text))
-            );
-
-            filterDebounce.playFromStart();
-        });
+                    filterDebounce.playFromStart();
+                });
 
         this.subsManager.appendSubscriptionOn(this, onFilterSubscription);
+
+        // When there is a selection and text field lost focus and updated to a different value
+        // Revert value
+
+        this.textFilterProperty
+                .when(hasNotUpdateSelectBinding)
+                .when(this.textFilter.focusedProperty().not())
+                .subscribe((old, curr) -> {
+                    ObjectProperty<IBusiness> businessProperty = this.selectedBusinessProperty;
+
+                    if (businessProperty.isNull().get()) return;
+                    this.textFilterProperty.set(businessProperty.get().getRNC());
+                });
     }
 
     private void setUpOptionsBoxListen() {
@@ -117,17 +146,18 @@ public class RNCFilterManager extends TextFilterListenerManager<IBusiness> {
         this.optionsBox.setConverter(
                 new BasicBusinessStringConverter<>(this.optionsBox::getItems)
         );
-
-        // Investigate why the box value is changing 4 times and set to 4 at the end.
-//        this.optionsBox.valueProperty().subscribe(
-//                v -> log.info("Value passed: {}", v)
-//        );
     }
 
     private void addKeyListeners() {
         initKeyFilterListener();
 
         this.remoteKeyListener.appendGeneralListener(this.optionsBox::show);
+
+        this.subsManager.appendSubscriptionOn(this,
+                this.remoteKeyListener.appendHandlerListener(KeyCode.ESCAPE,
+                        () -> this.optionsBox.setValue(null)
+                )
+        );
 
         this.subsManager.appendSubscriptionOn(this,
                 this.remoteKeyListener.appendHandlerListener(KeyCode.UP,

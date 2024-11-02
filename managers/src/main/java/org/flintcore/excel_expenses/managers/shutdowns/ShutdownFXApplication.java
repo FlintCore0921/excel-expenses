@@ -140,7 +140,7 @@ public final class ShutdownFXApplication implements IShutdownHandler<Runnable> {
     }
 
     private Alert setupShutdownAlert() {
-        final Alert shutDownAlert = new Alert(Alert.AlertType.INFORMATION);
+        final Alert shutDownAlert = new Alert(Alert.AlertType.NONE);
         triggerAlertOnScreen(shutDownAlert);
         return shutDownAlert;
     }

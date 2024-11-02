@@ -1,35 +1,37 @@
 package org.flintcore.excel_expenses.managers.builders;
 
-import javafx.concurrent.Service;
+import data.utils.NullableUtils;
 import javafx.concurrent.Task;
-import lombok.Getter;
-import org.flintcore.excel_expenses.managers.validators.LocalBusinessValidator;
+import org.flintcore.excel_expenses.managers.subscriptions.tasks.ObservableFXService;
 import org.flintcore.excel_expenses.managers.validators.receipts.ReceiptValidator;
 import org.flintcore.excel_expenses.models.expenses.LocalBusiness;
 import org.flintcore.excel_expenses.models.receipts.Receipt;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
+/**
+ * Service for local receipt based to capture {@link LocalBusiness} and {@link Receipt} implementations.
+ */
 @Component
 @Scope("prototype")
-public final class ReceiptBuilderService extends Service<Receipt> {
-    @Getter(lazy = true)
-    private final Receipt.ReceiptBuilder receiptBuilder = Receipt.builder();
-    @Getter(lazy = true)
-    private final LocalBusiness.LocalBusinessBuilder businessBuilder = LocalBusiness.builder();
+public final class ReceiptBuilderService extends ObservableFXService<Receipt> {
+    private Receipt.ReceiptBuilder receiptBuilder;
 
-
-    private final LocalBusinessValidator localBusinessValidator;
 
     // Validators
     private final ReceiptValidator receiptValidator;
 
     public ReceiptBuilderService(
-            LocalBusinessValidator localBusinessValidator,
             ReceiptValidator receiptValidator
     ) {
-        this.localBusinessValidator = localBusinessValidator;
         this.receiptValidator = receiptValidator;
+    }
+
+    public Receipt.ReceiptBuilder getReceiptBuilder() {
+        NullableUtils.executeIsNull(this.receiptBuilder,
+                () -> this.receiptBuilder = Receipt.builder());
+
+        return this.receiptBuilder;
     }
 
     @Override
@@ -39,22 +41,8 @@ public final class ReceiptBuilderService extends Service<Receipt> {
 
             @Override
             protected Receipt call() throws IllegalArgumentException {
-                // Local business builder
-                LocalBusiness.LocalBusinessBuilder ownerBusinessBuilder = OWNER.getBusinessBuilder();
-
-                // Local business built
-                LocalBusiness localBusiness = ownerBusinessBuilder.build();
-
-                // local business validator
-
-                if (!OWNER.localBusinessValidator.validateContent(localBusiness)) {
-                    throw new IllegalArgumentException();
-                }
-
                 // Get receipt builder
                 Receipt.ReceiptBuilder ownerReceiptBuilder = OWNER.getReceiptBuilder();
-
-                ownerReceiptBuilder.business(localBusiness);
 
                 // Receipt built
                 Receipt receipt = OWNER.getReceiptBuilder().build();
@@ -66,5 +54,9 @@ public final class ReceiptBuilderService extends Service<Receipt> {
                 return receipt;
             }
         };
+    }
+
+    public void clearData() {
+        this.receiptBuilder = null;
     }
 }

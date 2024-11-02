@@ -34,14 +34,6 @@ public class LocalBusinessRequestFileService extends ObservableFXService<List<Lo
     }
 
     @Override
-    public void addOneTimeSubscription(EventType<WorkerStateEvent> type, Runnable action) {
-        this.addSubscription(type, () -> {
-            action.run();
-            this.getEventListenerHolder().get(type).remove(action);
-        });
-    }
-
-    @Override
     protected Task<List<LocalBusiness>> createTask() {
         return new Task<>() {
             @Override

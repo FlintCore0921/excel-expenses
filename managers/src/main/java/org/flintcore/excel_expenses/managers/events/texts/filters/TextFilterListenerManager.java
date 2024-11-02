@@ -20,7 +20,9 @@ public abstract class TextFilterListenerManager<T> implements Closeable {
     protected final IntegerProperty itemsFilteredSizeProperty;
     protected final ObjectProperty<ObservableList<? extends T>> mainListProperty;
     protected final IntegerProperty mainListSizeProperty;
+
     protected SubscriptionHolder subsManager;
+
     // Update filter comparator
     @Setter
     protected Function<T, String> filterComparator;
