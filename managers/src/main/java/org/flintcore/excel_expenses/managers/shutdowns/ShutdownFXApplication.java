@@ -87,6 +87,7 @@ public final class ShutdownFXApplication implements IShutdownHandler<Runnable> {
     public void close() {
         if (!Platform.isFxApplicationThread()) {
             log.warn("Only trigger close inside the FX Thread. Ensure you use it correctly.");
+            return;
         }
 
         if (!this.closeTrigger.compareAndSet(false, true)) return;

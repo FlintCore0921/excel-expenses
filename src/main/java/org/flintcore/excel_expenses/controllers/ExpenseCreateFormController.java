@@ -285,7 +285,7 @@ public class ExpenseCreateFormController implements Initializable {
 
         // Hide and set to null the given alert.
         closeAlertWait.setOnFinished(e -> NullableUtils.executeNonNull(this.registerReceiptAlert, () -> {
-            this.registerReceiptAlert.hide();
+            this.registerReceiptAlert.close();
             this.registerReceiptAlert = null;
         }));
 
@@ -304,6 +304,8 @@ public class ExpenseCreateFormController implements Initializable {
             NullableUtils.executeNonNull(this.registerReceiptAlert, alert -> alert.setHeaderText(
                     this.bundles.getString("receipts.message.build-fail")
             ));
+
+            closeAlertWait.playFromStart();
         });
 
         // Build receipt successfully listener.
@@ -329,10 +331,6 @@ public class ExpenseCreateFormController implements Initializable {
                 ));
 
                 return null;
-            }, Platform::runLater).thenRunAsync(() -> {
-                this.registerReceiptAlert
-                        .setOnCloseRequest(ev -> this.registerReceiptAlert.close()
-                        );
             }, Platform::runLater);
         });
 
@@ -347,7 +345,7 @@ public class ExpenseCreateFormController implements Initializable {
         this.btnSubmit.setOnAction(e -> {
             if (this.receiptBuilderService.isRunning() || Objects.nonNull(this.registerReceiptAlert)) return;
 
-            this.registerReceiptAlert = new Alert(Alert.AlertType.NONE);
+            this.registerReceiptAlert = new Alert(Alert.AlertType.INFORMATION);
             this.registerReceiptAlert.setTitle(
                     this.bundles.getString("receipts.message.register")
             );

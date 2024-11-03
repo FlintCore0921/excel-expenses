@@ -115,7 +115,8 @@ public class RNCFilterManager extends TextFilterListenerManager<IBusiness> {
         //  when select programmatically.
         Subscription onFilterSubscription = this.textFilterProperty
                 .when(mainListNotEmpty).when(hasNotUpdateSelectBinding)
-                .subscribe((__o, text) -> {filterDebounce.stop();
+                .subscribe((__o, text) -> {
+                    filterDebounce.stop();
                     log.info("Text changed");
                     filterDebounce.setOnFinished(e ->
                             this.itemsFilteredProperty.get().setPredicate(buildFilter(text))
