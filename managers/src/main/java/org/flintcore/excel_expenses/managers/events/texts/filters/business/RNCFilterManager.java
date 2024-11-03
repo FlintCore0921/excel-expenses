@@ -21,7 +21,7 @@ import org.flintcore.excel_expenses.managers.filters.BasicBusinessStringConverte
 import org.flintcore.excel_expenses.managers.rules.ILocalBusinessRules;
 import org.flintcore.excel_expenses.models.expenses.IBusiness;
 import org.flintcore.excel_expenses.models.properties.formatters.RNCFormatter;
-import org.flintcore.utilities.bindings.NoChangeObjectBinding;
+import org.flintcore.utilities.bindings.NoChangeObjectObservable;
 import org.flintcore.utilities.lists.ObservableListUtils;
 
 import java.util.List;
@@ -32,7 +32,7 @@ import java.util.function.Predicate;
 public class RNCFilterManager extends TextFilterListenerManager<IBusiness> {
     // Own properties
     public final ObjectProperty<IBusiness> selectedBusinessProperty;
-    private final NoChangeObjectBinding<IBusiness> hasNotUpdateSelectBinding;
+    private final NoChangeObjectObservable<IBusiness> hasNotUpdateSelectBinding;
     // Listeners
     @Getter
     protected RemoteKeyListener remoteKeyListener;
@@ -47,7 +47,7 @@ public class RNCFilterManager extends TextFilterListenerManager<IBusiness> {
         super(textFilter, null, IBusiness::getRNC);
         this.optionsBox = optionsBox;
         this.selectedBusinessProperty = new SimpleObjectProperty<>();
-        this.hasNotUpdateSelectBinding = NoChangeObjectBinding.bind(this.selectedBusinessProperty);
+        this.hasNotUpdateSelectBinding = NoChangeObjectObservable.bind(this.selectedBusinessProperty);
     }
 
     @Override

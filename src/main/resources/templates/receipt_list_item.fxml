@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.effect.ColorAdjust?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.paint.Color?>
+<?import javafx.scene.paint.LinearGradient?>
+<?import javafx.scene.paint.Stop?>
+<?import javafx.scene.shape.Circle?>
+<?import javafx.scene.shape.SVGPath?>
+<?import javafx.scene.text.Font?>
+
+<HBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" spacing="10.0" xmlns="http://javafx.com/javafx/23" xmlns:fx="http://javafx.com/fxml/1">
+   <children>
+      <HBox alignment="CENTER" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" HBox.hgrow="ALWAYS">
+         <children>
+            <Label fx:id="receiptName" text="new item" textAlignment="CENTER">
+               <font>
+                  <Font name="Segoe UI Bold Italic" size="25.0" />
+               </font>
+               <padding>
+                  <Insets left="10.0" right="10.0" />
+               </padding>
+            </Label>
+         </children>
+      </HBox>
+      <StackPane fx:id="optionsHolder">
+         <HBox.margin>
+            <Insets />
+         </HBox.margin>
+         <children>
+            <HBox fx:id="menuOptions" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" opacity="0.0" spacing="4.0">
+               <children>
+                  <StackPane>
+                     <children>
+                        <Circle fx:id="btnEdit" radius="18.0" stroke="BLACK" strokeType="INSIDE">
+                           <fill>
+                              <LinearGradient cycleMethod="REFLECT" endX="1.0" endY="1.0" startX="0.5078863992299943">
+                                 <stops>
+                                    <Stop>
+                                       <color>
+                                          <Color red="0.5545267462730408" green="0.6613195538520813" blue="0.859649121761322" />
+                                       </color>
+                                    </Stop>
+                                    <Stop offset="0.19463087248322147">
+                                       <color>
+                                          <Color red="0.5545267462730408" green="0.6613195538520813" blue="0.859649121761322" />
+                                       </color>
+                                    </Stop>
+                                    <Stop offset="1.0">
+                                       <color>
+                                          <Color red="1.0" green="1.0" blue="1.0" />
+                                       </color>
+                                    </Stop>
+                                 </stops>
+                              </LinearGradient>
+                           </fill></Circle>
+                        <SVGPath content="M20.8477 1.87868C19.6761 0.707109 17.7766 0.707105 16.605 1.87868L2.44744 16.0363C2.02864 16.4551 1.74317 16.9885 1.62702 17.5692L1.03995 20.5046C0.760062 21.904 1.9939 23.1379 3.39334 22.858L6.32868 22.2709C6.90945 22.1548 7.44285 21.8693 7.86165 21.4505L22.0192 7.29289C23.1908 6.12132 23.1908 4.22183 22.0192 3.05025L20.8477 1.87868ZM18.0192 3.29289C18.4098 2.90237 19.0429 2.90237 19.4335 3.29289L20.605 4.46447C20.9956 4.85499 20.9956 5.48815 20.605 5.87868L17.9334 8.55027L15.3477 5.96448L18.0192 3.29289ZM13.9334 7.3787L3.86165 17.4505C3.72205 17.5901 3.6269 17.7679 3.58818 17.9615L3.00111 20.8968L5.93645 20.3097C6.13004 20.271 6.30784 20.1759 6.44744 20.0363L16.5192 9.96448L13.9334 7.3787Z" fill="#080341" scaleX="1.1" scaleZ="0.0" strokeLineCap="ROUND" strokeWidth="0.0" StackPane.alignment="CENTER" />
+                     </children>
+                     <HBox.margin>
+                        <Insets />
+                     </HBox.margin>
+                     <padding>
+                        <Insets bottom="3.0" left="3.0" right="3.0" top="3.0" />
+                     </padding>
+                  </StackPane>
+                  <StackPane>
+                     <children>
+                        <Circle fill="#ff6464" radius="18.0" stroke="BLACK" strokeType="INSIDE" />
+                        <SVGPath content="M10.9393 12L6.9696 15.9697L8.03026 17.0304L12 13.0607L15.9697 17.0304L17.0304 15.9697L13.0607 12L17.0303 8.03039L15.9696 6.96973L12 10.9393L8.03038 6.96973L6.96972 8.03039L10.9393 12Z" fill="#080341" scaleX="2.0" scaleY="2.0" strokeLineCap="ROUND" StackPane.alignment="CENTER" />
+                     </children>
+                     <HBox.margin>
+                        <Insets />
+                     </HBox.margin>
+                     <padding>
+                        <Insets bottom="3.0" left="3.0" right="3.0" top="3.0" />
+                     </padding>
+                  </StackPane>
+               </children>
+               <effect>
+                  <ColorAdjust />
+               </effect>
+            </HBox>
+            <HBox fx:id="menuHolder" alignment="CENTER_LEFT" nodeOrientation="RIGHT_TO_LEFT">
+               <children>
+                  <StackPane>
+                     <children>
+                        <Circle fx:id="btnMoreOptions" radius="18.0" stroke="BLACK" strokeType="INSIDE">
+                           <fill>
+                              <LinearGradient cycleMethod="REFLECT" endX="1.0" endY="1.0" startX="1.0">
+                                 <stops>
+                                    <Stop>
+                                       <color>
+                                          <Color red="0.8568875789642334" green="0.26803117990493774" blue="0.8771929740905762" />
+                                       </color>
+                                    </Stop>
+                                    <Stop offset="1.0">
+                                       <color>
+                                          <Color red="1.0" green="1.0" blue="1.0" />
+                                       </color>
+                                    </Stop>
+                                 </stops>
+                              </LinearGradient>
+                           </fill></Circle>
+                        <SVGPath content="M8,12a2,2,0,1,1-2-2A2,2,0,0,1,8,12Zm10-2a2,2,0,1,0,2,2A2,2,0,0,0,18,10Zm-6,0a2,2,0,1,0,2,2A2,2,0,0,0,12,10Z" scaleX="1.5" scaleY="1.5" />
+                     </children>
+                     <padding>
+                        <Insets bottom="3.0" left="3.0" right="3.0" top="3.0" />
+                     </padding>
+                  </StackPane>
+               </children>
+            </HBox>
+         </children>
+      </StackPane>
+   </children>
+</HBox>
