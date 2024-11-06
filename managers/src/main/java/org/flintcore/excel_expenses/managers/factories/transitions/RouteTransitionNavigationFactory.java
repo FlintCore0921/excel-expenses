@@ -1,4 +1,4 @@
-package org.flintcore.excel_expenses.managers.factories.views;
+package org.flintcore.excel_expenses.managers.factories.transitions;
 
 import jakarta.annotation.PostConstruct;
 import javafx.animation.Transition;
@@ -6,7 +6,6 @@ import javafx.scene.Node;
 import javafx.util.Duration;
 import lombok.Getter;
 import lombok.NonNull;
-import org.flintcore.excel_expenses.managers.factories.transitions.TransitionFactory;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 

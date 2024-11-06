@@ -1,29 +1,22 @@
 package org.flintcore.excel_expenses.managers.factories.navigation;
 
-import org.flintcore.excel_expenses.models.NodeWrapper;
-import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import lombok.RequiredArgsConstructor;
-import org.springframework.context.ApplicationContext;
+import org.flintcore.excel_expenses.managers.routers.factories.nodes.FXMLFactory;
+import org.flintcore.excel_expenses.models.NodeWrapper;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
-import java.net.URL;
-import java.util.Objects;
 
 @Component
 @RequiredArgsConstructor
 public class NavbarItemFactory {
 
-    private final ApplicationContext springContext;
+    private final FXMLFactory fxmlFactory;
 
-    public <T extends Node> NodeWrapper<T, ?> createSidebarItem(String fxmlLocation) throws IOException {
-        URL resource = Objects.requireNonNull(
-                getClass().getResource(fxmlLocation)
-        );
-        FXMLLoader loader = new FXMLLoader(resource);
-        loader.setControllerFactory(springContext::getBean);
-
-        return new NodeWrapper<>(loader.load(), loader.getController());
+    /**@throws IOException if file or build process fails.*/
+    public NodeWrapper<? extends Node, ?> createSidebarItem(String fxmlLocation) throws IOException {
+        return fxmlFactory.buildLoader(fxmlLocation)
+                .orElseThrow(IOException::new);
     }
 }

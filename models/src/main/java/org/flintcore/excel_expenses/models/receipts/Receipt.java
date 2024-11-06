@@ -19,15 +19,13 @@ public record Receipt(
         double price,
         double servicePrice,
         double itbPrice
-        ) implements Serializable, Comparable<Receipt> {
+) implements Serializable, Comparable<Receipt> {
     @Serial
     private static final long serialVersionUID = 64621238L;
     public static final int RECEIPT_SCALE = 2;
 
     public Double getTotalPrice() {
-        return BigDecimal.valueOf(price)
-                .add(BigDecimal.valueOf(servicePrice))
-                .add(BigDecimal.valueOf(itbPrice))
+        return BigDecimal.valueOf(price + servicePrice + itbPrice)
                 .setScale(RECEIPT_SCALE, RoundingMode.HALF_DOWN)
                 .doubleValue();
     }

@@ -116,7 +116,7 @@ public class ExpenseCreateFormController implements Initializable {
 
             listBusinessFuture.thenAcceptAsync(localBusinessList -> {
                 Subscription subscription = ObservableListUtils.listenList(
-                        localBusinessList, this.rncFilterManager.getItems()
+                        this.rncFilterManager.getItems(), localBusinessList
                 );
                 this.subscriptionManager.appendSubscriptionOn(this, subscription);
             }, Platform::runLater);

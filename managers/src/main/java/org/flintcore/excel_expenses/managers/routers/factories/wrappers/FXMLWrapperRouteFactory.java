@@ -1,16 +1,16 @@
-package org.flintcore.excel_expenses.managers.routers.builders;
+package org.flintcore.excel_expenses.managers.routers.factories.wrappers;
 
 import javafx.fxml.FXMLLoader;
-import lombok.AllArgsConstructor;
+import javafx.scene.Node;
 import lombok.extern.log4j.Log4j2;
 import org.flintcore.excel_expenses.managers.properties.CompoundResourceBundle;
 import org.flintcore.excel_expenses.managers.routers.IRoute;
+import org.flintcore.excel_expenses.managers.routers.factories.FXMLRouteFactoryImpl;
+import org.flintcore.excel_expenses.models.NodeWrapper;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
-import java.net.URL;
-import java.util.Objects;
 import java.util.Optional;
 
 /**
@@ -18,22 +18,17 @@ import java.util.Optional;
  */
 @Log4j2
 @Component
-@AllArgsConstructor
-public final class FXMLFactory {
-    private final ApplicationContext appContext;
-    private CompoundResourceBundle bundleManager;
+public final class FXMLWrapperRouteFactory extends FXMLRouteFactoryImpl<IRoute, NodeWrapper<Node, ?>> {
 
-    public <T> Optional<T> buildLoader(IRoute route) {
+    public FXMLWrapperRouteFactory(ApplicationContext appContext, CompoundResourceBundle bundleManager) {
+        super(appContext, bundleManager);
+    }
+
+    public Optional<NodeWrapper<Node, ?>> buildLoader(IRoute route) {
         try {
-            URL resource = Objects.requireNonNull(
-                    getClass().getResource(route.getRoute())
-            );
+            FXMLLoader loader = prepareLoader(route);
 
-            this.bundleManager.registerBundles(route.getBundlePaths());
-
-            FXMLLoader loader = new FXMLLoader(resource, this.bundleManager);
-            loader.setControllerFactory(appContext::getBean);
-            return Optional.ofNullable(loader.load());
+            return Optional.of(buildWrapperResult(loader));
         } catch (IOException e) {
             log.error("Fail at load fxml file {}. \nError {}",
                     route.name(), e.getMessage());
@@ -43,5 +38,4 @@ public final class FXMLFactory {
         }
         return Optional.empty();
     }
-
 }

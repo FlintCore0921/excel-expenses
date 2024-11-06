@@ -17,7 +17,6 @@ import org.springframework.stereotype.Component;
 public final class ReceiptBuilderService extends ObservableFXService<Receipt> {
     private Receipt.ReceiptBuilder receiptBuilder;
 
-
     // Validators
     private final ReceiptValidator receiptValidator;
 

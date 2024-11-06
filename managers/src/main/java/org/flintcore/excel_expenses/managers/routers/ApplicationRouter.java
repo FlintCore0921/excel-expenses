@@ -12,8 +12,8 @@ import lombok.NonNull;
 import lombok.Setter;
 import lombok.extern.log4j.Log4j2;
 import org.flintcore.excel_expenses.managers.exceptions.ErrorConsumerHandler;
-import org.flintcore.excel_expenses.managers.factories.views.RouteTransitionNavigationFactory;
-import org.flintcore.excel_expenses.managers.routers.builders.FXMLFactory;
+import org.flintcore.excel_expenses.managers.factories.transitions.RouteTransitionNavigationFactory;
+import org.flintcore.excel_expenses.managers.routers.factories.nodes.FXMLRouteFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
@@ -31,7 +31,7 @@ public class ApplicationRouter implements IApplicationRouter<IRoute> {
     public static final int EXIT_MILLIS_ANIMATION = 200;
 
     private final RouteManager<IRoute> routeManager;
-    private final FXMLFactory fxmlFactory;
+    private final FXMLRouteFactory fxmlFactory;
     private final RouteTransitionNavigationFactory transitionFactory;
     @Getter
     private final ErrorConsumerHandler errorConsumerHandler;
@@ -44,7 +44,7 @@ public class ApplicationRouter implements IApplicationRouter<IRoute> {
 
     public ApplicationRouter(ApplicationContext applicationContext,
                              RouteManager<IRoute> routeManager,
-                             @Qualifier("routeViewFactory") FXMLFactory fxmlFactory,
+                             @Qualifier("routeViewFactory") FXMLRouteFactory fxmlFactory,
                              RouteTransitionNavigationFactory transitionFactory,
                              ErrorConsumerHandler errorConsumerHandler) {
         this.routeManager = routeManager;
