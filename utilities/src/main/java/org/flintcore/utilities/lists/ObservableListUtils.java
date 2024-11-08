@@ -27,7 +27,7 @@ public final class ObservableListUtils {
         ObservableList<T> observable = FXCollections.observableArrayList();
 
         List<Subscription> subscriptions = Arrays.stream(lists)
-                .map(l -> listenList(observable, l))
+                .map(l -> listenSet(observable, l))
                 .toList();
 
         return Pair.ofNonNull(observable, subscriptions);
@@ -39,7 +39,7 @@ public final class ObservableListUtils {
      * @param receptorObservable List that will be listened and will provide data to {@code observableList}.
      * @param observableList     List that receipts the data from {@code receptorObservable}.
      */
-    public static <T> Subscription listenList(
+    public static <T> Subscription listenSet(
             final ObservableList<? super T> receptorObservable,
             ObservableList<? extends T> observableList
     ) throws IllegalArgumentException {
@@ -75,7 +75,7 @@ public final class ObservableListUtils {
      * @param receptorObservable Set that will be listened and will provide data to {@code observableList}.
      * @param observableList     List that receipts the data from {@code receptorObservable}.
      */
-    public static <T> Subscription listenSet(
+    public static <T> Subscription listenList(
             final ObservableSet<? super T> receptorObservable,
             ObservableList<? extends T> observableList
     ) {
@@ -90,19 +90,39 @@ public final class ObservableListUtils {
     /**
      * Reflects changes of a set inside another list.
      *
-     * @param receptorObservable Set that will be listened and will provide data to {@code observableList}.
-     * @param observableList     List that receipts the data from {@code receptorObservable}.
+     * @param receptorObservable Set that will be listened and will provide data to {@code observableSet}.
+     * @param observableSet      List that receipts the data from {@code receptorObservable}.
      */
-    public static <T> Subscription listenList(
+    public static <T> Subscription listenSet(
             final ObservableList<? super T> receptorObservable,
-            ObservableSet<? extends T> observableList
+            ObservableSet<? extends T> observableSet
     ) {
         SetChangeListener<? super T> changeListener = prepareSetChangeListener(receptorObservable);
 
-        receptorObservable.addAll(observableList);
-        observableList.addListener(changeListener);
+        receptorObservable.addAll(observableSet);
+        observableSet.addListener(changeListener);
 
-        return () -> observableList.removeListener(changeListener);
+        return () -> observableSet.removeListener(changeListener);
+    }
+
+    public static <T, R> Subscription listenMap(
+            ObservableSet<? super T> receptorObservable,
+            ObservableMap<T, R> observableMap
+    ) {
+        MapChangeListener<? super T, ? super R> listener = change -> {
+            if (change.wasAdded()) {
+                receptorObservable.add(change.getKey());
+            }
+
+            if (change.wasRemoved()) {
+                receptorObservable.remove(change.getKey());
+            }
+        };
+
+        receptorObservable.addAll(observableMap.keySet());
+        observableMap.addListener(listener);
+
+        return () -> observableMap.removeListener(listener);
     }
 
     public static <T> FilteredList<T> wrapInto(ObservableList<T> list) {
@@ -110,8 +130,8 @@ public final class ObservableListUtils {
                 filtered : list.filtered(null);
     }
 
-
     // Utilities
+
     public static <T> SetChangeListener<T> prepareSetChangeListener(Collection<? super T> receptorObservable) {
         return change -> {
             if (change.wasAdded()) {

@@ -32,7 +32,7 @@ public class PeriodReceiptSerializeFileManager extends ReceiptSerializeFileManag
     @Override
     protected FilePathHolder getFilePath() {
         Month currentMonth = (onMonth = ObjectUtils.defaultIfNull(onMonth, LocalDate.now().getMonth()));
-        int currentYear = onYear >= 0 ? onYear : (onYear = LocalDate.now().getYear());
+        int currentYear = onYear > 0 ? onYear : (onYear = LocalDate.now().getYear());
 
         String fileName = "receipts_%s_%d".formatted(currentMonth, currentYear);
         String[] filePath = ArrayUtils.add(RECEIPTS_PATH, fileName);

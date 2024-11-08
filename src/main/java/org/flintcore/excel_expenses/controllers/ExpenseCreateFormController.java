@@ -7,6 +7,7 @@ import javafx.animation.PauseTransition;
 import javafx.animation.Transition;
 import javafx.application.Platform;
 import javafx.beans.binding.BooleanBinding;
+import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -115,7 +116,7 @@ public class ExpenseCreateFormController implements Initializable {
                     this.localBusinessFileService.getDataList();
 
             listBusinessFuture.thenAcceptAsync(localBusinessList -> {
-                Subscription subscription = ObservableListUtils.listenList(
+                Subscription subscription = ObservableListUtils.listenSet(
                         this.rncFilterManager.getItems(), localBusinessList
                 );
                 this.subscriptionManager.appendSubscriptionOn(this, subscription);
@@ -133,7 +134,7 @@ public class ExpenseCreateFormController implements Initializable {
     private void configureReceiptSection() {
         configureReceiptFields();
 
-        BooleanBinding onLocalSectionCompleted = this.rncFilterManager.selectedBusinessProperty
+        BooleanBinding onLocalSectionCompleted = this.rncFilterManager.getSelectedBusiness()
                 .isNotNull();
 
         receiptSection.visibleProperty().bind(
@@ -161,7 +162,7 @@ public class ExpenseCreateFormController implements Initializable {
         this.NFCListener = new NFCAutoCompleteListener(this.receiptNFCTxt);
 
         this.NFCListener.NFCProperty.subscribe(
-                receiptBuilderService.getReceiptBuilder()::NFC
+                NFC -> receiptBuilderService.getReceiptBuilder().NFC(NFC)
         );
 
         // Picker
@@ -175,16 +176,19 @@ public class ExpenseCreateFormController implements Initializable {
     }
 
     private void configureLocalBusinessFields() {
+        ReadOnlyObjectProperty<IBusiness> selectedBusinessProperty = this.rncFilterManager
+                .getSelectedBusiness();
+
         localNameTxt.textProperty().bind(
-                this.rncFilterManager.selectedBusinessProperty
+                selectedBusinessProperty
                         .map(IBusiness::getName).orElse("")
         );
 
         // Set builder values.
 
         // Listen on business selection
-        this.rncFilterManager.selectedBusinessProperty.subscribe(
-                this.receiptBuilderService.getReceiptBuilder()::business
+        selectedBusinessProperty.subscribe(
+                business -> this.receiptBuilderService.getReceiptBuilder().business(business)
         );
 
         // Disable the RNC field if service is requesting data.
@@ -320,6 +324,7 @@ public class ExpenseCreateFormController implements Initializable {
                 NullableUtils.executeNonNull(this.registerReceiptAlert, alert -> alert.setHeaderText(message));
 
                 if (saved) {
+                    this.localFilterBox.setValue(null);
                     this.receiptBuilderService.clearData();
                     clearFormData();
                 }
@@ -365,6 +370,7 @@ public class ExpenseCreateFormController implements Initializable {
     private void clearFormData() {
         // Locals
         this.localRNCTxt.clear();
+        this.rncFilterManager.clearSelection();
 
         // Receipts
         this.receiptDate.setValue(null);

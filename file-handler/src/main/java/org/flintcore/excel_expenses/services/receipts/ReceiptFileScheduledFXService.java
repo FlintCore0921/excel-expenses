@@ -34,22 +34,11 @@ public class ReceiptFileScheduledFXService extends FileScheduledFxService<Receip
         this.receiptSaveTaskService = receiptSaveTaskService;
     }
 
-    @Override
-    public CompletableFuture<ObservableList<Receipt>> getDataList() {
-        NullableUtils.executeIsNull(this.dataSetList, this::requestData);
-        return CompletableFuture.completedFuture(
-                readOnlyListWrapper.getReadOnlyProperty()
-        );
-    }
-
-    @Override
     protected void initObservableList() {
         super.initObservableList();
 
-        if (Objects.isNull(this.readOnlyListWrapper)) return;
-
         this.receiptSaveTaskService.setLocalBusinessSupplier(
-                () -> SerialListHolder.from(this.readOnlyListWrapper.getReadOnlyProperty())
+                () -> SerialListHolder.from(this.dataSetList)
         );
     }
 }

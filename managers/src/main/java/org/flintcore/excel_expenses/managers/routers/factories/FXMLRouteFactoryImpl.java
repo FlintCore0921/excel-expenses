@@ -12,7 +12,10 @@ public abstract class FXMLRouteFactoryImpl<L extends IRoute, R> implements IFXML
     private final ApplicationContext appContext;
     protected final CompoundResourceBundle bundleManager;
 
-    public FXMLRouteFactoryImpl(ApplicationContext appContext, CompoundResourceBundle bundleManager) {
+    public FXMLRouteFactoryImpl(
+            ApplicationContext appContext,
+            CompoundResourceBundle bundleManager
+    ) {
         this.appContext = appContext;
         this.bundleManager = bundleManager;
     }
@@ -24,7 +27,7 @@ public abstract class FXMLRouteFactoryImpl<L extends IRoute, R> implements IFXML
 
         this.bundleManager.registerBundles(route.getBundlePaths());
 
-        FXMLLoader loader = new FXMLLoader(resource);
+        FXMLLoader loader = new FXMLLoader(resource, this.bundleManager);
         loader.setControllerFactory(appContext::getBean);
         return loader;
     }

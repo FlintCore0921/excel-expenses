@@ -37,7 +37,7 @@ public class StaticNumericFormatter extends TextFormatter<String> {
 
         private boolean isValidContent(String value) {
             initPattern();
-            return !value.isBlank() && formatPattern.matcher(value).matches();
+            return formatPattern.matcher(value).matches();
         }
 
         private void initPattern() {

@@ -17,11 +17,12 @@ import org.springframework.stereotype.Component;
 
 import java.net.URL;
 import java.util.ResourceBundle;
+import java.util.function.Consumer;
 
 @Component
 public class ExpenseItemController implements IItemViewHandler<Receipt, VBox>, Initializable {
 
-    public ObjectProperty<Receipt> receiptProperty;
+    private final ObjectProperty<Receipt> receiptProperty;
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
@@ -74,6 +75,16 @@ public class ExpenseItemController implements IItemViewHandler<Receipt, VBox>, I
     @Override
     public VBox getView() {
         return this.parentPane;
+    }
+
+    @Override
+    public void setOnEdit(Consumer<Receipt> action) {
+        this.btnEdit.setOnMouseClicked(event -> action.accept(this.getValue()));
+    }
+
+    @Override
+    public void setOnRemove(Consumer<Receipt> action) {
+        this.btnDelete.setOnMouseClicked(event -> action.accept(this.getValue()));
     }
 
     @FXML

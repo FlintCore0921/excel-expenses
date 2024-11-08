@@ -1,14 +1,13 @@
 package org.flintcore.excel_expenses.services;
 
+import data.utils.NullableUtils;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import javafx.application.Platform;
 import javafx.beans.property.ReadOnlyBooleanProperty;
-import javafx.beans.property.ReadOnlyListWrapper;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.ObservableSet;
-import javafx.collections.SetChangeListener;
 import javafx.concurrent.WorkerStateEvent;
 import javafx.event.EventType;
 import javafx.util.Subscription;
@@ -19,6 +18,7 @@ import org.flintcore.excel_expenses.managers.subscriptions.tasks.ObservableFXSch
 import org.flintcore.excel_expenses.managers.subscriptions.tasks.ObservableFXService;
 import org.flintcore.excel_expenses.managers.timers.ApplicationScheduler;
 import org.flintcore.excel_expenses.models.events.TaskFxEvent;
+import org.flintcore.utilities.lists.ObservableListUtils;
 import org.springframework.context.annotation.Lazy;
 
 import java.util.List;
@@ -43,7 +43,6 @@ public abstract class FileScheduledFxService<T> {
     protected final ShutdownFXApplication shutDownHolder;
 
     protected ObservableSet<T> dataSetList;
-    protected ReadOnlyListWrapper<T> readOnlyListWrapper;
 
     protected AtomicBoolean requiresRequest;
 
@@ -97,9 +96,15 @@ public abstract class FileScheduledFxService<T> {
 
 
     /**
-     * Returns a Future with a **Read only** unmodifiable list
+     * Returns a Future with a new non-related list, modifications won't change any in the service.
      */
-    public abstract CompletableFuture<ObservableList<T>> getDataList();
+    public CompletableFuture<ObservableList<T>> getDataList() {
+        NullableUtils.executeIsNull(this.dataSetList, this::requestData);
+        ObservableList<T> resultedList = FXCollections.observableArrayList();
+        ObservableListUtils.listenSet(resultedList, this.dataSetList);
+
+        return CompletableFuture.completedFuture(resultedList);
+    }
 
     public CompletableFuture<Boolean> register(T item) {
 //      TODO  Test do not fail on not related FX thread
@@ -250,24 +255,6 @@ public abstract class FileScheduledFxService<T> {
     @SuppressWarnings("unchecked")
     private void initFields() {
         this.dataSetList = FXCollections.observableSet();
-
-        this.readOnlyListWrapper = new ReadOnlyListWrapper<>(this, null);
-        this.readOnlyListWrapper.set(FXCollections.observableArrayList());
-
-        appendListenerOnReaderProperty();
-    }
-
-    // Read data from main list to wrapper.
-    protected void appendListenerOnReaderProperty() {
-        this.dataSetList.addListener((SetChangeListener<? super T>) change -> {
-            if (change.wasAdded()) {
-                this.readOnlyListWrapper.add(change.getElementAdded());
-            }
-
-            if (change.wasRemoved()) {
-                this.readOnlyListWrapper.add(change.getElementRemoved());
-            }
-        });
     }
 
     @PreDestroy

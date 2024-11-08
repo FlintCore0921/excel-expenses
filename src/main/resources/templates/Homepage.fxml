@@ -5,6 +5,7 @@
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.ColumnConstraints?>
 <?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.HBox?>
@@ -66,8 +67,17 @@
             <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
          </padding>
       </GridPane>
-      <VBox>
+      <VBox styleClass="dark-text">
          <children>
+            <HBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" nodeOrientation="RIGHT_TO_LEFT">
+               <children>
+                  <TextField fx:id="searchField" promptText="Search">
+                     <font>
+                        <Font name="System Bold Italic" size="16.0" />
+                     </font>
+                  </TextField>
+               </children>
+            </HBox>
             <HBox>
                <children>
                   <Label alignment="CENTER" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" styleClass="dark-text" text="Recent Expenses" HBox.hgrow="ALWAYS">

@@ -5,7 +5,8 @@ import javafx.animation.PauseTransition;
 import javafx.application.Platform;
 import javafx.beans.binding.BooleanBinding;
 import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.ReadOnlyObjectProperty;
+import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.collections.ObservableList;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.TextField;
@@ -31,7 +32,7 @@ import java.util.function.Predicate;
 @Log4j2
 public class RNCFilterManager extends TextFilterListenerManager<IBusiness> {
     // Own properties
-    public final ObjectProperty<IBusiness> selectedBusinessProperty;
+    private final ReadOnlyObjectWrapper<IBusiness> selectedBusinessProperty;
     private final NoChangeObjectObservable<IBusiness> hasNotUpdateSelectBinding;
     // Listeners
     @Getter
@@ -46,7 +47,7 @@ public class RNCFilterManager extends TextFilterListenerManager<IBusiness> {
     public RNCFilterManager(TextField textFilter, @NonNull ComboBox<IBusiness> optionsBox) {
         super(textFilter, null, IBusiness::getRNC);
         this.optionsBox = optionsBox;
-        this.selectedBusinessProperty = new SimpleObjectProperty<>();
+        this.selectedBusinessProperty = new ReadOnlyObjectWrapper<>();
         this.hasNotUpdateSelectBinding = NoChangeObjectObservable.bind(this.selectedBusinessProperty);
     }
 
@@ -59,6 +60,10 @@ public class RNCFilterManager extends TextFilterListenerManager<IBusiness> {
 
         setUpFilterItemsListen();
         setUpOptionsBoxListen();
+    }
+
+    public ReadOnlyObjectProperty<IBusiness> getSelectedBusiness() {
+        return this.selectedBusinessProperty.getReadOnlyProperty();
     }
 
     @SuppressWarnings("unchecked")
@@ -96,7 +101,7 @@ public class RNCFilterManager extends TextFilterListenerManager<IBusiness> {
         });
 
         // Listen on changes inside the selection list.
-        this.selectedBusinessProperty.bind(this.optionsBox.valueProperty());
+        this.optionsBox.valueProperty().subscribe(this.selectedBusinessProperty::set);
     }
 
     protected void setUpFilterItemsListen() {
@@ -204,5 +209,9 @@ public class RNCFilterManager extends TextFilterListenerManager<IBusiness> {
     @SuppressWarnings("unchecked")
     public ObservableList<? super IBusiness> getItems() {
         return (ObservableList<? super IBusiness>) this.mainListProperty.get();
+    }
+
+    public void clearSelection() {
+        this.optionsBox.setValue(null);
     }
 }

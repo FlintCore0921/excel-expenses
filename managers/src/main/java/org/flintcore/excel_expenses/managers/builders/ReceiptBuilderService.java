@@ -44,7 +44,7 @@ public final class ReceiptBuilderService extends ObservableFXService<Receipt> {
                 Receipt.ReceiptBuilder ownerReceiptBuilder = OWNER.getReceiptBuilder();
 
                 // Receipt built
-                Receipt receipt = OWNER.getReceiptBuilder().build();
+                Receipt receipt = ownerReceiptBuilder.build();
 
                 if (!OWNER.receiptValidator.validate(receipt)) {
                     throw new IllegalArgumentException();
