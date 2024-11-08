@@ -10,6 +10,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.Objects;
 
 @Builder
 public record Receipt(

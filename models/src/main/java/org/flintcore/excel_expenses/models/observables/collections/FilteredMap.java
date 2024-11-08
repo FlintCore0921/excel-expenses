@@ -1,22 +1,25 @@
 package org.flintcore.excel_expenses.models.observables.collections;
 
-import data.utils.NullableUtils;
 import data.utils.collections.ICollectionUtils;
 import javafx.beans.InvalidationListener;
-import javafx.beans.binding.Bindings;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
-import javafx.beans.property.SimpleMapProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.MapChangeListener;
 import javafx.collections.ObservableMap;
 import lombok.Getter;
 import lombok.NonNull;
+import lombok.extern.log4j.Log4j2;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+@Log4j2
 public class FilteredMap<K, V> implements ObservableMap<K, V> {
     @Getter
     private final ObservableMap<K, V> sourceMap;
@@ -42,6 +45,9 @@ public class FilteredMap<K, V> implements ObservableMap<K, V> {
         this(mapProperty, null);
     }
 
+    public static <K, V> FilteredMap<K, V> selfManagedFiltered() {
+        return new FilteredMap<>(FXCollections.observableHashMap(), null);
+    }
 
     public ObservableMap<K, V> filteredProperty() {
         if (Objects.isNull(this.filterMap)) {
@@ -104,23 +110,37 @@ public class FilteredMap<K, V> implements ObservableMap<K, V> {
 
     @Override
     public V put(K key, V value) {
-        return this.filteredProperty().put(key, value);
+        return ensureHandle(() -> this.sourceMap.put(key, value));
     }
 
     @Override
     public V remove(Object key) {
-        return this.filteredProperty().remove(key);
+        return ensureHandle(() -> this.sourceMap.remove(key));
     }
 
     @Override
-    public void putAll(Map<? extends K, ? extends V> m) {
-        NullableUtils.executeNonNull(m, this.filteredProperty()::putAll);
+    public void putAll(@NonNull Map<? extends K, ? extends V> newMap) {
+        ensureHandle(() -> {
+            this.sourceMap.putAll(newMap);
+            return null;
+        });
     }
 
     @Override
     public void clear() {
-        if (Objects.isNull(this.filterMap)) return;
-        this.filterMap.clear();
+        ensureHandle(() -> {
+            this.sourceMap.clear();
+            return null;
+        });
+    }
+
+    private V ensureHandle(Supplier<V> onAction) {
+        try {
+            return onAction.get();
+        } catch (UnsupportedOperationException e) {
+            log.info("Source map is unmodifiable.");
+            return null;
+        }
     }
 
     @Override
@@ -154,7 +174,7 @@ public class FilteredMap<K, V> implements ObservableMap<K, V> {
     protected void applyListeners() {
         this.sourceMap.addListener((MapChangeListener<? super K, ? super V>) changes -> {
             if (changes.wasRemoved()) {
-                this.filteredProperty().put(changes.getKey(), changes.getValueRemoved());
+                this.filteredProperty().remove(changes.getKey());
             }
 
             if (changes.wasAdded()) {
@@ -163,7 +183,7 @@ public class FilteredMap<K, V> implements ObservableMap<K, V> {
         });
 
         // If predicate changes, trigger remove or
-        this.predicateProperty().when(Bindings.isNotEmpty(this.sourceMap))
+        this.predicateProperty()//.when(Bindings.isNotEmpty(this.sourceMap))
                 .subscribe(checker -> reEvaluateValues());
     }
 
@@ -171,7 +191,11 @@ public class FilteredMap<K, V> implements ObservableMap<K, V> {
         Predicate<Entry<K, V>> predicate = this.predicateProperty().getValue();
         ObservableMap<K, V> filterList = this.filteredProperty();
 
-        if(Objects.isNull(predicate)) return;
+        // If null add all values.
+        if (Objects.isNull(predicate)) {
+            filterList.putAll(this.sourceMap);
+            return;
+        }
 
         Set<K> keysToRemove = filterList.entrySet().stream()
                 .filter(predicate.negate())

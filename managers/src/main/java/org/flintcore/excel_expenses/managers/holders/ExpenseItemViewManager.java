@@ -2,7 +2,6 @@ package org.flintcore.excel_expenses.managers.holders;
 
 import data.utils.NullableUtils;
 import javafx.animation.Transition;
-import javafx.collections.FXCollections;
 import javafx.collections.ObservableMap;
 import javafx.scene.Node;
 import javafx.util.Pair;
@@ -10,6 +9,7 @@ import lombok.Setter;
 import lombok.extern.log4j.Log4j2;
 import org.flintcore.excel_expenses.managers.factories.views.IItemViewHandler;
 import org.flintcore.excel_expenses.managers.factories.views.receipts.ExpenseItemPreviewFactory;
+import org.flintcore.excel_expenses.models.observables.collections.FilteredMap;
 import org.flintcore.excel_expenses.models.receipts.Receipt;
 import org.springframework.stereotype.Component;
 
@@ -17,6 +17,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
+import java.util.function.Predicate;
 
 /**
  * Class to handle the list of items handlers of the expenses.
@@ -26,7 +27,7 @@ import java.util.function.Function;
 public class ExpenseItemViewManager {
     protected final ExpenseItemPreviewFactory expenseItemFactory;
 
-    protected ObservableMap<IItemViewHandler<Receipt, Node>, Transition> expenseItemHandlers;
+    protected FilteredMap<IItemViewHandler<Receipt, Node>, Transition> expenseItemHandlers;
     @Setter
     protected Function<Node, Transition> transitionBuilder;
 
@@ -84,13 +85,44 @@ public class ExpenseItemViewManager {
         assignTransitionOf(handler);
     }
 
-    public Optional<Transition> removeHandler(Receipt receipt) {
+    public Optional<Pair<IItemViewHandler<Receipt, Node>, Transition>> removeHandler(Receipt receipt) {
         if (Objects.isNull(this.expenseItemHandlers)) return Optional.empty();
 
-        return this.expenseItemHandlers.entrySet().stream()
+        Optional<Pair<IItemViewHandler<Receipt, Node>, Transition>> optionalEntry = this.expenseItemHandlers
+                .entrySet()
+                .stream()
                 .filter(handler -> Objects.equals(handler.getKey().getValue(), receipt))
                 .findFirst()
-                .map(Map.Entry::getValue);
+                .map(handler -> new Pair<>(handler.getKey(), handler.getValue()));
+
+        optionalEntry.ifPresent(entry -> this.expenseItemHandlers.remove(entry.getKey()));
+
+        return optionalEntry;
+    }
+
+    /**
+     * Set a predicate based on the key of values. Will override the previous filter.
+     *
+     * @see #setReceiptFilter(Predicate)
+     */
+    public void setKeyFilter(Predicate<IItemViewHandler<Receipt, Node>> predicate) {
+        this.expenseItemHandlers.filterByKey(predicate);
+    }
+
+    /**
+     * Set a predicate based on the key of values. Will override the previous filter.
+     *
+     * @see #setKeyFilter(Predicate)
+     */
+    public void setReceiptFilter(Predicate<Receipt> predicate) {
+        this.setKeyFilter(handler -> predicate.test(handler.getValue()));
+    }
+
+    /**
+     * Set a predicate based on the key of values. Will override the previous filter.
+     */
+    public void cleanFilter() {
+        this.expenseItemHandlers.filterBy(null);
     }
 
     private void assignTransitionOf(IItemViewHandler<Receipt, Node> handler) {
@@ -111,7 +143,7 @@ public class ExpenseItemViewManager {
     protected void initProperties() {
         // Set items handlers, view and value holder to preview.
         NullableUtils.executeIsNull(this.expenseItemHandlers,
-                () -> this.expenseItemHandlers = FXCollections.observableHashMap()
+                () -> this.expenseItemHandlers = FilteredMap.selfManagedFiltered()
         );
     }
 }

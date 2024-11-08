@@ -1,7 +1,5 @@
 package org.flintcore.excel_expenses.services.receipts;
 
-import data.utils.NullableUtils;
-import javafx.collections.ObservableList;
 import lombok.extern.log4j.Log4j2;
 import org.flintcore.excel_expenses.managers.shutdowns.ShutdownFXApplication;
 import org.flintcore.excel_expenses.managers.subscriptions.SubscriptionHolder;
@@ -10,9 +8,6 @@ import org.flintcore.excel_expenses.models.lists.SerialListHolder;
 import org.flintcore.excel_expenses.models.receipts.Receipt;
 import org.flintcore.excel_expenses.services.FileScheduledFxService;
 import org.springframework.stereotype.Component;
-
-import java.util.Objects;
-import java.util.concurrent.CompletableFuture;
 
 @Component
 @Log4j2

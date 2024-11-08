@@ -5,24 +5,29 @@ import javafx.animation.Transition;
 import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
-import javafx.collections.*;
+import javafx.collections.ListChangeListener;
+import javafx.collections.MapChangeListener;
+import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.scene.Node;
 import javafx.scene.layout.Pane;
+import javafx.util.Pair;
+import javafx.util.Subscription;
 import lombok.Getter;
 import lombok.NonNull;
-import lombok.Setter;
 import lombok.extern.log4j.Log4j2;
 import org.flintcore.excel_expenses.managers.factories.transitions.TransitionFactory;
 import org.flintcore.excel_expenses.managers.factories.views.IItemViewHandler;
 import org.flintcore.excel_expenses.managers.filters.ExpenseMatchFilter;
 import org.flintcore.excel_expenses.managers.holders.ExpenseItemViewManager;
+import org.flintcore.excel_expenses.models.observables.collections.OnChangeListener;
 import org.flintcore.excel_expenses.models.receipts.Receipt;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Objects;
 import java.util.function.BiFunction;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 /**
@@ -44,10 +49,10 @@ public final class MainExpenseItemFileHandler {
     private final StringProperty filterText;
 
     // Filter the items to animate views.
-    private FilteredList<Receipt> filteredExpenseList;
+    private FilteredList<Receipt> filteredReceipt;
+    private ObservableList<? extends Receipt> expenseListSource;
     private boolean hasAttached;
 
-    @Setter
     private Supplier<@NonNull Pane> parentPane;
 
     public MainExpenseItemFileHandler(
@@ -70,7 +75,7 @@ public final class MainExpenseItemFileHandler {
 
         log.info("Requesting main expense file items");
         this.expenseFileService.getDataList().thenAcceptAsync(receipts -> {
-                    this.filteredExpenseList = new FilteredList<>(receipts);
+                    expenseListSource = receipts;
                     setFilterListeners();
                     registerViews(receipts);
                 }, Platform::runLater)
@@ -82,17 +87,25 @@ public final class MainExpenseItemFileHandler {
         log.info("Data requested!");
     }
 
-    public ObservableSet<Node> getItemViews() {
-        NullableUtils.executeIsNull(this.itemViews, () -> {
-            this.itemViews = FXCollections.observableSet();
+    public Subscription listenReceiptsViews(OnChangeListener<IItemViewHandler<Receipt, Node>> changes) {
+        MapChangeListener<? super IItemViewHandler<Receipt, Node>, ? super Transition> changeListener = chMap -> {
+            if (chMap.wasAdded()) changes.onAdded(chMap.getKey());
+            if (chMap.wasRemoved()) changes.onRemove(chMap.getKey());
+        };
+        this.expenseItemViewManager.getExpenseHandlers().addListener(changeListener);
 
-            ObservableMap<IItemViewHandler<Receipt, Node>, Transition> expenseHandlers = this.expenseItemViewManager
-                    .getExpenseHandlers();
+        return () -> this.expenseItemViewManager.getExpenseHandlers().removeListener(changeListener);
+    }
 
-            expenseHandlers.addListener(prepareMapHolderListener());
-        });
+    public void setParentPane(Supplier<@NonNull Pane> parentPane) {
+        this.parentPane = parentPane;
 
-        return this.itemViews;
+        if (Objects.nonNull(parentPane)) {
+            ObservableList<Node> parentChildrenList = this.parentPane.get().getChildren();
+            this.expenseItemViewManager.getExpenseHandlers().keySet().forEach(
+                    handler -> parentChildrenList.add(handler.getView())
+            );
+        }
     }
 
     public void setNodeTransitions(BiFunction<TransitionFactory, Node, Transition> transitionBuilder) {
@@ -101,28 +114,17 @@ public final class MainExpenseItemFileHandler {
                 log.warn("Requires a parent pane to set views.");
                 return null;
             }
+            final Pane parentPaneRef = this.parentPane.get();
 
             node.setOpacity(0);
-            this.parentPane.get().getChildren().add(node);
+
+            // If parent does not contains value, added it.
+            if (!parentPaneRef.getChildren().contains(node)) {
+                parentPaneRef.getChildren().add(node);
+            }
 
             return transitionBuilder.apply(this.transitionFactory, node);
         });
-    }
-
-    // Private methods
-
-    private MapChangeListener<? super IItemViewHandler<Receipt, Node>, ? super Transition> prepareMapHolderListener() {
-        return change -> {
-            IItemViewHandler<Receipt, Node> viewHandler = change.getKey();
-
-            if (change.wasAdded()) {
-                this.itemViews.add(viewHandler.getView());
-            }
-
-            if (change.wasRemoved()) {
-                this.itemViews.remove(viewHandler.getView());
-            }
-        };
     }
 
     private void registerViews(List<Receipt> receipts) {
@@ -135,49 +137,87 @@ public final class MainExpenseItemFileHandler {
         // Set the text to filter data
         this.filterText.subscribe(text -> {
             if (text.isBlank()) {
-                this.filteredExpenseList.setPredicate(null);
+                this.expenseItemViewManager.cleanFilter();
                 return;
             }
 
-            this.filteredExpenseList.setPredicate(rep -> this.matchFilter.filterByContains(text,
-                    rep::NFC, rep.getTotalPrice()::toString,
-                    rep.business()::getName, rep.business()::getName
-            ));
+            Predicate<Receipt> receiptPredicate = rep -> this.matchFilter.filterByContains(text,
+                    rep::NFC,
+                    rep.getTotalPrice()::toString,
+                    rep.business()::getName,
+                    rep.business()::getRNC
+            );
+
+            this.expenseItemViewManager.setReceiptFilter(receiptPredicate);
         });
 
-        this.filteredExpenseList.getSource().addListener((ListChangeListener<? super Receipt>) c -> {
+        // Listen service changes
+        expenseListSource.addListener((ListChangeListener<? super Receipt>) c -> {
             while (c.next()) {
                 if (c.wasAdded()) {
                     for (Receipt receipt : c.getAddedSubList()) {
                         this.expenseItemViewManager.createNewHandler(receipt);
-                        triggerShow(receipt);
+                        this.expenseItemViewManager.getHandler(receipt).ifPresent(handler -> {
+                            IItemViewHandler<Receipt, Node> viewHandler = handler.getKey();
+                            viewHandler.setOnEdit(rep -> {/* TODO */});
+
+                            viewHandler.setOnRemove(this.expenseFileService::delete);
+                        });
+
+                        if (Objects.nonNull(this.parentPane)) {
+                            triggerShow(receipt);
+                        }
                     }
                 }
 
                 if (c.wasRemoved()) {
-                    for (Receipt receipt : c.getRemoved()) {
-                        // If source list does not contain changed value
-                        this.expenseItemViewManager.removeHandler(receipt).ifPresent(
-                                transition -> handleAnimationOn(transition, -1)
-                        );
-                    }
+                    c.getRemoved().forEach(this::triggerHide);
                 }
             }
-
         });
+
+        // Listen to item handlerFiltering
+        this.listenReceiptsViews(new OnChangeListener<>() {
+            @Override
+            public void onAdded(IItemViewHandler<Receipt, Node> value) {
+                triggerShow(value.getValue());
+            }
+
+            @Override
+            public void onRemove(IItemViewHandler<Receipt, Node> value) {
+                triggerHide(value.getValue());
+            }
+        });
+
         log.info("Set filter source listener");
     }
 
     private void triggerShow(Receipt receipt) {
-        this.expenseItemViewManager.getHandler(receipt).ifPresent(pair -> {
-            Transition viewTransition = pair.getValue();
-            handleAnimationOn(viewTransition, 1);
-        });
+        this.expenseItemViewManager.getHandler(receipt).ifPresent(
+                pair -> handleAnimationOn(pair, 1)
+        );
     }
 
-    private void handleAnimationOn(Transition transition, int value) {
+    private void triggerHide(Receipt receipt) {
+        this.expenseItemViewManager.removeHandler(receipt)
+                .ifPresent(entry -> handleAnimationOn(entry, -1));
+    }
+
+    private void handleAnimationOn(Pair<IItemViewHandler<Receipt, Node>, Transition> handlerEntry, int interval) {
+        IItemViewHandler<Receipt, Node> viewHandler = handlerEntry.getKey();
+        Transition transition = handlerEntry.getValue();
         transition.stop();
-        transition.setRate(value);
+
+        transition.setOnFinished(e -> {
+            if (interval < 0) {
+                NullableUtils.executeNonNull(this.parentPane,
+                        paneSupplier -> paneSupplier.get().getChildren()
+                                .remove(viewHandler.getView())
+                );
+            }
+        });
+
+        transition.setRate(interval);
         transition.playFromStart();
     }
 }

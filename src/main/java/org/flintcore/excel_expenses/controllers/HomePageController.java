@@ -1,6 +1,8 @@
 package org.flintcore.excel_expenses.controllers;
 
+import jakarta.annotation.PreDestroy;
 import javafx.animation.PauseTransition;
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
@@ -12,8 +14,8 @@ import lombok.extern.log4j.Log4j2;
 import org.flintcore.excel_expenses.managers.routers.ApplicationRouter;
 import org.flintcore.excel_expenses.managers.routers.expenses.EExpenseRoute;
 import org.flintcore.excel_expenses.managers.routers.local.ELocalRoute;
+import org.flintcore.excel_expenses.managers.subscriptions.SubscriptionHolder;
 import org.flintcore.excel_expenses.services.receipts.MainExpenseItemFileHandler;
-import org.flintcore.utilities.lists.ObservableListUtils;
 import org.springframework.stereotype.Component;
 
 import java.net.URL;
@@ -27,6 +29,7 @@ public class HomePageController implements Initializable {
 
     private final ApplicationRouter appRouter;
     private final MainExpenseItemFileHandler expenseFileListManager;
+    private final SubscriptionHolder subscriptionHolder;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -40,6 +43,10 @@ public class HomePageController implements Initializable {
         // Assign the parent view to hold expense items
         this.expenseFileListManager.setParentPane(() -> this.expenseHolder);
 
+        this.subscriptionHolder.appendSubscriptionOn(this,
+                () -> this.expenseFileListManager.setParentPane(null)
+        );
+
         setExpenseItemTransitionBuilder();
 
         // Set textField search
@@ -51,10 +58,7 @@ public class HomePageController implements Initializable {
         // Pause delay
         PauseTransition delayRequest = new PauseTransition(Duration.seconds(5));
 
-        delayRequest.setOnFinished(evt -> {
-            initApplyingItemsOnView();
-            this.expenseFileListManager.loadData();
-        });
+        delayRequest.setOnFinished(evt -> this.expenseFileListManager.loadData());
 
         delayRequest.playFromStart();
     }
@@ -75,9 +79,10 @@ public class HomePageController implements Initializable {
         this.btnNewBusiness.setOnAction(evt -> this.appRouter.navigateTo(ELocalRoute.CREATE));
     }
 
-    private void initApplyingItemsOnView() {
-        final var expenseHolderList = this.expenseHolder.getChildren();
-        ObservableListUtils.listenSet(expenseHolderList, this.expenseFileListManager.getItemViews());
+
+    @PreDestroy
+    public void onClose() {
+        Platform.runLater(this.subscriptionHolder::close);
     }
 
     @FXML

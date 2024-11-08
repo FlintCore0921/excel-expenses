@@ -78,7 +78,7 @@ public abstract class FileScheduledFxService<T> {
     public void requestData() {
         initObservableList();
         Platform.runLater(() -> {
-            if (!this.requestTaskService.isRunning() || requiresRequest.get()) {
+            if (!this.requestTaskService.isRunning() && requiresRequest.get()) {
                 this.requestTaskService.restart();
             }
         });
@@ -241,7 +241,7 @@ public abstract class FileScheduledFxService<T> {
         });
     }
 
-    protected void initObservableList() {
+    protected void  initObservableList() {
         if (Objects.nonNull(this.dataSetList)) return;
 
         if (!Platform.isFxApplicationThread())

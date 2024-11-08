@@ -13,6 +13,7 @@ import org.flintcore.excel_expenses.managers.factories.views.IItemViewHandler;
 import org.flintcore.excel_expenses.models.expenses.IBusiness;
 import org.flintcore.excel_expenses.models.receipts.Receipt;
 import org.flintcore.utilities.dates.DateUtils;
+import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import java.net.URL;
@@ -20,6 +21,7 @@ import java.util.ResourceBundle;
 import java.util.function.Consumer;
 
 @Component
+@Scope("prototype")
 public class ExpenseItemController implements IItemViewHandler<Receipt, VBox>, Initializable {
 
     private final ObjectProperty<Receipt> receiptProperty;
