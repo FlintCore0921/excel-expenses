@@ -1,6 +1,7 @@
 package org.flintcore.excel_expenses.services.receipts;
 
 import data.utils.NullableUtils;
+import javafx.animation.PauseTransition;
 import javafx.animation.Transition;
 import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
@@ -9,8 +10,11 @@ import javafx.collections.ListChangeListener;
 import javafx.collections.MapChangeListener;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.scene.Node;
 import javafx.scene.layout.Pane;
+import javafx.util.Duration;
 import javafx.util.Pair;
 import javafx.util.Subscription;
 import lombok.Getter;
@@ -75,6 +79,7 @@ public final class MainExpenseItemFileHandler {
 
         log.info("Requesting main expense file items");
         this.expenseFileService.getDataList().thenAcceptAsync(receipts -> {
+                    this.filteredReceipt = new FilteredList<>(receipts);
                     expenseListSource = receipts;
                     setFilterListeners();
                     registerViews(receipts);
@@ -105,10 +110,15 @@ public final class MainExpenseItemFileHandler {
             this.expenseItemViewManager.getExpenseHandlers().keySet().forEach(
                     handler -> parentChildrenList.add(handler.getView())
             );
+        } else {
+            this.expenseItemViewManager.clear();
         }
+
     }
 
-    public void setNodeTransitions(BiFunction<TransitionFactory, Node, Transition> transitionBuilder) {
+    public void setNodeTransitions(
+            BiFunction<TransitionFactory, Node, Transition> transitionBuilder
+    ) {
         this.expenseItemViewManager.setTransitionBuilder(node -> {
             if (Objects.isNull(parentPane)) {
                 log.warn("Requires a parent pane to set views.");
@@ -134,29 +144,56 @@ public final class MainExpenseItemFileHandler {
     }
 
     private void setFilterListeners() {
+        final PauseTransition filterDelay = new PauseTransition(Duration.millis(500));
+
         // Set the text to filter data
         this.filterText.subscribe(text -> {
+            filterDelay.stop();
+            // Java fx 17 Bug:
+            // For JavaFX 17, notable fixes included improvements to ListChangeListener behavior,
+            // such as resolving an issue where Change.getRemoved() returned items that were not truly removed
+            // under certain conditions. This could influence how added and removed changes are reported in listeners,
+            // potentially affecting your list updates with wasAdded
+            // and wasRemoved actions (GitHub).
+
+            // Try intermediate steps such as setting the predicate to null
+            // temporarily before updating it,
+            // which can prevent sequence issues.
+            this.filteredReceipt.setPredicate(null);
+
             if (text.isBlank()) {
-                this.expenseItemViewManager.cleanFilter();
                 return;
             }
 
-            Predicate<Receipt> receiptPredicate = rep -> this.matchFilter.filterByContains(text,
-                    rep::NFC,
-                    rep.getTotalPrice()::toString,
-                    rep.business()::getName,
-                    rep.business()::getRNC
-            );
+            filterDelay.setOnFinished(e -> {
+                Predicate<Receipt> receiptPredicate = rep -> this.matchFilter.filterByContains(text,
+                        rep::NFC, rep.getTotalPrice()::toString,
+                        rep.business()::getName,
+                        rep.business()::getRNC
+                );
+                this.filteredReceipt.setPredicate(receiptPredicate);
+            });
 
-            this.expenseItemViewManager.setReceiptFilter(receiptPredicate);
+            filterDelay.playFromStart();
         });
 
         // Listen service changes
-        expenseListSource.addListener((ListChangeListener<? super Receipt>) c -> {
+        this.filteredReceipt.addListener((ListChangeListener<? super Receipt>) c -> {
             while (c.next()) {
+                // Bug order making issues. java 17
+                if (c.wasRemoved()) {
+                    c.getRemoved().forEach(receipt -> {
+                        triggerRemove(receipt);
+                        NullableUtils.executeNonNull(this.filteredReceipt.getPredicate(), pred -> {
+                            log.info("Log predicate for filter: {}", pred.test(receipt));
+                        });
+                    });
+                }
+
                 if (c.wasAdded()) {
                     for (Receipt receipt : c.getAddedSubList()) {
                         this.expenseItemViewManager.createNewHandler(receipt);
+
                         this.expenseItemViewManager.getHandler(receipt).ifPresent(handler -> {
                             IItemViewHandler<Receipt, Node> viewHandler = handler.getKey();
                             viewHandler.setOnEdit(rep -> {/* TODO */});
@@ -164,58 +201,50 @@ public final class MainExpenseItemFileHandler {
                             viewHandler.setOnRemove(this.expenseFileService::delete);
                         });
 
-                        if (Objects.nonNull(this.parentPane)) {
-                            triggerShow(receipt);
-                        }
+                        triggerAdd(receipt);
                     }
                 }
-
-                if (c.wasRemoved()) {
-                    c.getRemoved().forEach(this::triggerHide);
-                }
             }
         });
 
-        // Listen to item handlerFiltering
-        this.listenReceiptsViews(new OnChangeListener<>() {
-            @Override
-            public void onAdded(IItemViewHandler<Receipt, Node> value) {
-                triggerShow(value.getValue());
-            }
-
-            @Override
-            public void onRemove(IItemViewHandler<Receipt, Node> value) {
-                triggerHide(value.getValue());
-            }
-        });
-
-        log.info("Set filter source listener");
     }
 
-    private void triggerShow(Receipt receipt) {
+    private void triggerAdd(Receipt receipt) {
         this.expenseItemViewManager.getHandler(receipt).ifPresent(
-                pair -> handleAnimationOn(pair, 1)
+                pair -> handleAnimationOn(pair, 1, e -> {
+                    NullableUtils.executeNonNull(this.parentPane, paneSupplier -> {
+                        Pane pane = parentPane.get();
+                        ObservableList<Node> paneChildren = pane.getChildren();
+
+                        Node view = pair.getKey().getView();
+
+                        if (paneChildren.contains(view)) return;
+
+                        paneChildren.add(view);
+                    });
+                })
         );
     }
 
-    private void triggerHide(Receipt receipt) {
+    private void triggerRemove(Receipt receipt) {
         this.expenseItemViewManager.removeHandler(receipt)
-                .ifPresent(entry -> handleAnimationOn(entry, -1));
+                .ifPresent(pair -> handleAnimationOn(pair, -1, e -> {
+                    NullableUtils.executeNonNull(this.parentPane,
+                            paneSupplier -> paneSupplier.get().getChildren()
+                                    .remove(pair.getKey().getView())
+                    );
+                }));
     }
 
-    private void handleAnimationOn(Pair<IItemViewHandler<Receipt, Node>, Transition> handlerEntry, int interval) {
-        IItemViewHandler<Receipt, Node> viewHandler = handlerEntry.getKey();
+    private void handleAnimationOn(
+            Pair<IItemViewHandler<Receipt, Node>, Transition> handlerEntry,
+            int interval,
+            EventHandler<ActionEvent> onFinished
+    ) {
         Transition transition = handlerEntry.getValue();
         transition.stop();
 
-        transition.setOnFinished(e -> {
-            if (interval < 0) {
-                NullableUtils.executeNonNull(this.parentPane,
-                        paneSupplier -> paneSupplier.get().getChildren()
-                                .remove(viewHandler.getView())
-                );
-            }
-        });
+        transition.setOnFinished(onFinished);
 
         transition.setRate(interval);
         transition.playFromStart();
