@@ -8,7 +8,11 @@ import org.springframework.context.annotation.ComponentScans;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.stereotype.Component;
 
-@SpringBootApplication
+@SpringBootApplication(
+        scanBasePackages = {
+                "org.flintcore.excel_expenses"
+        }
+)
 public class ExcelExpensesApplication {
     public static void main(String[] args) {
 //		SpringApplication.run(ExcelExpensesApplication.class, args);
