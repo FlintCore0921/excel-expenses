@@ -15,18 +15,18 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 // Also use the @Configuration or @TestConfiguration to component scope out of the module / project.
 @SpringBootTest(classes = {
-        ExcelFileCreatorService.class,
+        XSSFCreatorService.class,
         BeanConfiguration.class
 })
 class ExcelFileManagementServiceTest {
     @Autowired
-    private ExcelFileCreatorService excelFileCreatorService;
+    private XSSFCreatorService XSSFCreatorService;
 
     @Test
     void BuildFileByExcel() throws Exception {
         String path = "C:\\Users\\Elior\\Desktop\\FORMULARIO DE EXPENSE XPERTCODE- Julio - 2024 - Elio Erick Ramos Mosquea.xlsm";
 
-        XSSFWorkbook workbook = excelFileCreatorService.loadWorkBook(path).get();
+        XSSFWorkbook workbook = XSSFCreatorService.loadWorkBook(path).get();
 
         assertNotNull(workbook);
 

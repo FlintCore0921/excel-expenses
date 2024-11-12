@@ -15,11 +15,11 @@ import java.util.concurrent.Future;
 @Log4j2
 @Service
 @Lazy
-public class ExcelFileCreatorService {
+public class XSSFCreatorService {
     protected final XSSFFileService workbookService;
     protected final FileCreator fileCreator;
 
-    public ExcelFileCreatorService(
+    public XSSFCreatorService(
             XSSFFileService workbookService,
             FileCreator fileCreator
     ) {
@@ -40,8 +40,9 @@ public class ExcelFileCreatorService {
         log.debug("Saving workbook to: \n{}", workbookLocation);
         return CompletableFuture.supplyAsync(() -> this.fileCreator.createParentDirectory(workbookLocation))
                 .thenComposeAsync(wasCreated ->
-                        CompletableFuture.completedFuture(workbookLocation))
-                .thenApplyAsync(pathOptional ->
-                        new SaveWorkBookFileTask(pathOptional, workbook).get());
+                        CompletableFuture.completedFuture(workbookLocation)
+                ).thenApplyAsync(pathOptional ->
+                        new SaveWorkBookFileTask(pathOptional, workbook).get()
+                );
     }
 }

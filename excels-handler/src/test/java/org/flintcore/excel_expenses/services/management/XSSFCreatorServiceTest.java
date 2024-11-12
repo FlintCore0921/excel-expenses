@@ -17,15 +17,15 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SpringBootTest(classes = {
-        ExcelFileCreatorService.class,
+        XSSFCreatorService.class,
         XFFSExcelPathBuilder.class,
         FileCreator.class,
         PathValidator.class,
         BeanConfiguration.class
 })
-class ExcelFileCreatorServiceTest {
+class XSSFCreatorServiceTest {
     @Autowired
-    private ExcelFileCreatorService excelFileCreatorService;
+    private XSSFCreatorService XSSFCreatorService;
     @Autowired
     private XFFSExcelPathBuilder pathBuilder;
 
@@ -44,7 +44,7 @@ class ExcelFileCreatorServiceTest {
 
                 Path localate = this.pathBuilder.buildPath(pathD, "Localate");
 
-                var request = this.excelFileCreatorService.saveWorkBook(book, localate);
+                var request = this.XSSFCreatorService.saveWorkBook(book, localate);
 
                 boolean result = request.get();
 
