@@ -5,7 +5,7 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.text.Font?>
 
-<HBox xmlns="http://javafx.com/javafx/23" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.flintcore.excel_expenses.controllers.MenuItemController">
+<HBox xmlns="http://javafx.com/javafx/23" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.flintcore.excel_expenses.excels_handler.controllers.MenuItemController">
    <children>
       <Button fx:id="btnTrigger" maxWidth="1.7976931348623157E308" mnemonicParsing="false" styleClass="navbar-menu-item" text="Home" wrapText="true" HBox.hgrow="ALWAYS">
          <HBox.margin>

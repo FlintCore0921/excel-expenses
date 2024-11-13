@@ -13,7 +13,7 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<VBox alignment="TOP_CENTER" styleClass="white-text" stylesheets="@styles/homeStyles.css" xmlns="http://javafx.com/javafx/23" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.flintcore.excel_expenses.controllers.HomePageController">
+<VBox alignment="TOP_CENTER" styleClass="white-text" stylesheets="@styles/homeStyles.css" xmlns="http://javafx.com/javafx/23" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.flintcore.excel_expenses.excels_handler.controllers.HomePageController">
    <children>
       <HBox>
          <children>

@@ -15,7 +15,7 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<BorderPane stylesheets="@styles/expensePageStyles.css" xmlns="http://javafx.com/javafx/23" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.flintcore.excel_expenses.controllers.ExpensePageController">
+<BorderPane stylesheets="@styles/expensePageStyles.css" xmlns="http://javafx.com/javafx/23" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.flintcore.excel_expenses.excels_handler.controllers.ExpensePageController">
    <top>
       <StackPane BorderPane.alignment="CENTER">
          <children>

@@ -36,3 +36,6 @@ out/
 ### VS Code ###
 .vscode/
 /app/
+
+### Class ###
+excels-handler/src/test/java/org/flintcore/excel_expenses/resources/PathResource.java
