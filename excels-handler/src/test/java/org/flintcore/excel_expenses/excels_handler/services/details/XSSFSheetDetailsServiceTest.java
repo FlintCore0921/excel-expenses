@@ -1,6 +1,7 @@
 package org.flintcore.excel_expenses.excels_handler.services.details;
 
 import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFTable;
 import org.flintcore.excel_expenses.excels_handler.resources.PathResource;
 import org.flintcore.excel_expenses.excels_handler.resources.XSSFUtils;
 import org.flintcore.excelib.models.xssf.XSSFSheetDetails;
@@ -66,6 +67,18 @@ class XSSFSheetDetailsServiceTest {
 
                 assertEquals(expected, numberOfSheets,
                         "This sheet must has %d sheet inside it.".formatted(expected));
+            });
+        });
+    }
+
+    @Test
+    void readExternalSheet2() {
+        assertDoesNotThrow(() -> {
+            File expenseFile = Path.of(pathResource.getSecondaryExpensePath()).toFile();
+            XSSFUtils.handleEmptyWorkbook(new FileInputStream(expenseFile), wb -> {
+                XSSFTable table = wb.getSheetAt(0).getTables().get(0);
+
+                int rowCount = table.getRowCount();
             });
         });
     }

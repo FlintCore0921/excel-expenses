@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.flintcore.excel_expenses.excels_handler.expenses.XSSFExpenseBuilderHolder;
+import org.flintcore.excel_expenses.excels_handler.tasks.ApplyExpenseHeaderTask;
 import org.flintcore.excel_expenses.excels_handler.tasks.PrepareXSSFSheetTask;
 import org.flintcore.excel_expenses.excels_handler.tasks.PrepareXSSFTableTask;
 import org.flintcore.excel_expenses.excels_handler.utils.files.ExpenseAreaReferenceBuilder;
@@ -32,19 +33,18 @@ public class XSSFExpenseFileBuilderService {
         );
 
         return completableFuture.thenApply( // Create the sheet
-                wb -> new PrepareXSSFSheetTask(wb).apply(builderHolder.sheetName())
-        ).thenApply(sheet -> { // Create the table
-            XSSFWorkbook workbook = sheet.getWorkbook();
+                        wb -> new PrepareXSSFSheetTask(wb).apply(builderHolder.sheetName())
+                ).thenApply(sheet -> { // Create the table
+                    XSSFWorkbook workbook = sheet.getWorkbook();
 
-            var tableArea = areaReferenceBuilder.buildAreaReference(
-                    sheet, builderHolder.receipts().size(),
-                    workbook.getSpreadsheetVersion()
-            );
+                    var tableArea = areaReferenceBuilder.buildAreaReference(
+                            sheet, builderHolder.receipts().size(),
+                            workbook.getSpreadsheetVersion()
+                    );
 
-            return new PrepareXSSFTableTask(tableArea)
-                    .apply(sheet, builderHolder.tableName());
-        }).thenApply(table -> { // Load data in table
-            return null;
-        }).thenApply(__ -> workbookPath);
+                    return new PrepareXSSFTableTask(tableArea)
+                            .apply(sheet, builderHolder.tableName());
+                }).thenApply(new ApplyExpenseHeaderTask()) // Add the header columns at the start of the table
+                .thenApply(__ -> workbookPath);
     }
 }

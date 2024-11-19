@@ -10,4 +10,9 @@ public class PathResource implements IPathResource {
     public String getExternalExpensePath() {
         return "C:\\Users\\Elior\\Desktop\\FORMULARIO DE EXPENSE XPERTCODE- Julio - 2024 - Elio Erick Ramos Mosquea.xlsm";
     }
+
+    @Override
+    public String getSecondaryExpensePath() {
+        return "test_expenses1.xlsx";
+    }
 }

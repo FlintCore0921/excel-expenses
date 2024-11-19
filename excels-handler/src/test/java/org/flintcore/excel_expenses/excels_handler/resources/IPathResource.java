@@ -5,7 +5,12 @@ import java.util.List;
 public interface IPathResource {
     String getExternalExpensePath();
 
+    String getSecondaryExpensePath();
+
     default List<String> getExternalExpensePaths() {
-        return List.of(getExternalExpensePath());
+        return List.of(
+                getExternalExpensePath(),
+                getSecondaryExpensePath()
+        );
     }
 }
