@@ -2,6 +2,7 @@ package org.flintcore.excel_expenses.excels_handler.utils.files;
 
 import lombok.extern.log4j.Log4j2;
 import org.apache.poi.ss.SpreadsheetVersion;
+import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.util.AreaReference;
 import org.apache.poi.ss.util.CellReference;
@@ -20,15 +21,20 @@ public class ExpenseAreaReferenceBuilder {
             Sheet sheet, int rows,
             SpreadsheetVersion spreadsheetVersion
     ) {
-        int startRowIndex = sheet.getLastRowNum() + 2;
+        int startRowIndex = sheet.getLastRowNum() + 1;
+
+        Row lastRowRef = sheet.getRow(startRowIndex -1);
+
         int endRowIndex = startRowIndex + rows;
 
         for (int i = startRowIndex; i < endRowIndex; i++) {
             sheet.createRow(i);
         }
 
-        var startCellReference = new CellReference(startRowIndex, TABLE_COLUMNS);
-        var endCellReference = new CellReference(endRowIndex, TABLE_COLUMNS);
+        int rowLastCellPos = lastRowRef.getLastCellNum();
+
+        var startCellReference = new CellReference(startRowIndex, rowLastCellPos);
+        var endCellReference = new CellReference(endRowIndex, rowLastCellPos + TABLE_COLUMNS);
 
         return new AreaReference(startCellReference, endCellReference, spreadsheetVersion);
     }

@@ -15,6 +15,7 @@ import org.flintcore.excel_expenses.excels_handler.expenses.ExpenseCellValueMapp
 import org.flintcore.excel_expenses.excels_handler.models.receipts.Receipt;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.function.BiFunction;
 
 @Log4j2
@@ -57,8 +58,9 @@ public class LoadExpenseDataOnTableTask<T extends Receipt>
             // If row not created or does not have any cell.
             // row cell value is empty.
             if (row == null || row.getLastCellNum() == 0
-                    || StringUtils.isBlank(row.getCell(0).getRawValue()))
-                return Pair.of(true, validRow);
+                    || Objects.isNull(row.getCell(0))
+                    || StringUtils.isBlank(row.getCell(0).getRawValue())
+            ) return Pair.of(true, validRow);
 
             validRow++;
         } while (validRow < endCellRow);

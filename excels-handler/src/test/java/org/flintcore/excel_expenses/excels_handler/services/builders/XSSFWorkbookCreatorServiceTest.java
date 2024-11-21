@@ -1,8 +1,8 @@
 package org.flintcore.excel_expenses.excels_handler.services.builders;
 
 import org.apache.poi.xssf.usermodel.XSSFSheet;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import org.flintcore.excel_expenses.excels_handler.TestBeanConfiguration;
+import org.flintcore.excel_expenses.excels_handler.resources.PathResource;
+import org.flintcore.excel_expenses.excels_handler.resources.XSSFUtils;
 import org.flintcore.excel_expenses.excels_handler.utils.XFFSExcelPathBuilder;
 import org.flintcore.excel_expenses.excels_handler.utils.files.FileCreator;
 import org.flintcore.excel_expenses.excels_handler.utils.paths.PathValidator;
@@ -11,12 +11,13 @@ import org.flintcore.excelib.services.builders.XSSFFileService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 
+import java.awt.*;
 import java.io.File;
 import java.nio.file.Path;
 
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest(classes = {
         XSSFWorkbookCreatorService.class,
@@ -24,18 +25,22 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
         PathValidator.class,
         FileCreator.class,
         XFFSExcelPathBuilder.class,
-        DefaultThreadPoolHolder.class
+        DefaultThreadPoolHolder.class,
+        PathResource.class
 })
+@ActiveProfiles({"test"})
 class XSSFWorkbookCreatorServiceTest {
     @Autowired
     private XSSFWorkbookCreatorService XSSFCreatorService;
     @Autowired
     private XFFSExcelPathBuilder pathBuilder;
+    @Autowired
+    private PathResource pathResource;
 
     @Test
     void shouldStoreData() {
         assertDoesNotThrow(() -> {
-            try (XSSFWorkbook book = new XSSFWorkbook()) {
+            XSSFUtils.handleEmptyWorkbook(book -> {
                 XSSFSheet sheet = book.createSheet("Local");
 
                 sheet.setDefaultColumnWidth(15);
@@ -55,8 +60,35 @@ class XSSFWorkbookCreatorServiceTest {
                 assertTrue(file.exists());
 
                 file.deleteOnExit();
-            }
+            });
         });
     }
 
+    @Test
+    void shouldLoadData() {
+        assertDoesNotThrow(() -> {
+            assertDoesNotThrow(() -> {
+                var pathFileName = this.pathResource.getSecondaryExpensePath();
+
+                var request = this.XSSFCreatorService.loadWorkBook(pathFileName);
+
+                var requestResult = request.get();
+
+                assertNotNull(requestResult);
+            });
+        });
+    }
+
+    @Test
+    void shouldLoadFromExternalProject() {
+        assertDoesNotThrow(() -> {
+            var pathFileName = this.pathResource.getExternalExpensePath();
+
+            var request = this.XSSFCreatorService.loadWorkBook(pathFileName);
+
+            var requestResult = request.get();
+
+            assertNotNull(requestResult);
+        });
+    }
 }

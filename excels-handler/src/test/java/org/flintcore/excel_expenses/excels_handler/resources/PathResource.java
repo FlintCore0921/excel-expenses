@@ -13,6 +13,6 @@ public class PathResource implements IPathResource {
 
     @Override
     public String getSecondaryExpensePath() {
-        return "test_expenses1.xlsx";
+        return "test_expenses.xlsx";
     }
 }

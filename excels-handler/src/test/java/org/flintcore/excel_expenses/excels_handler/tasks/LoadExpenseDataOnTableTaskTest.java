@@ -3,31 +3,20 @@ package org.flintcore.excel_expenses.excels_handler.tasks;
 import org.apache.poi.ss.util.AreaReference;
 import org.apache.poi.ss.util.CellReference;
 import org.apache.poi.xssf.usermodel.*;
-import org.flintcore.excel_expenses.excels_handler.models.expenses.LocalBusiness;
 import org.flintcore.excel_expenses.excels_handler.models.receipts.Receipt;
+import org.flintcore.excel_expenses.excels_handler.resources.ExpenseDataSource;
 import org.flintcore.excel_expenses.excels_handler.resources.XSSFUtils;
 import org.junit.jupiter.api.Test;
 
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.util.Date;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
 class LoadExpenseDataOnTableTaskTest {
-    private static final List<Receipt> VALUES = List.of(
-            new Receipt(
-                    "990", new Date(),
-                    new LocalBusiness("Local", "300"),
-                    300.0, 40.0, 0.0
-            ),
-            new Receipt(
-                    "990", new Date(),
-                    new LocalBusiness("Local", "300"),
-                    1300.0, 700.0, 0.0
-            )
-    );
+
+
     public static final String TEST_EXPENSES_XLSX = "test_expenses.xlsx";
 
     @Test
@@ -43,7 +32,8 @@ class LoadExpenseDataOnTableTaskTest {
                 LoadExpenseDataOnTableTask<Receipt> onTableTask =
                         new LoadExpenseDataOnTableTask<>();
 
-                onTableTask.apply(table, VALUES);
+                List<Receipt> list = ExpenseDataSource.receiptListDataSource();
+                onTableTask.apply(table, list);
 
                 try (FileOutputStream outputStream = new FileOutputStream(TEST_EXPENSES_XLSX)) {
                     wb.write(outputStream);
@@ -64,14 +54,15 @@ class LoadExpenseDataOnTableTaskTest {
 
                 {
 //                     Set the headers.
-                    ApplyExpenseHeaderTask headerTask = new ApplyExpenseHeaderTask();
+                    XSSFApplyExpenseHeaderTask headerTask = new XSSFApplyExpenseHeaderTask();
                     headerTask.apply(table);
                 }
 
                 LoadExpenseDataOnTableTask<Receipt> onTableTask =
                         new LoadExpenseDataOnTableTask<>();
 
-                onTableTask.apply(table, VALUES);
+                List<Receipt> list = ExpenseDataSource.receiptListDataSource();
+                onTableTask.apply(table, list);
 
                 {
                     // Set style

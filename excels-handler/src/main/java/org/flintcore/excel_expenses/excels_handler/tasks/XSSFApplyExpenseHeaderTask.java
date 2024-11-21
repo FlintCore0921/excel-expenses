@@ -16,7 +16,7 @@ import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTTableColumns;
 
 import java.util.function.UnaryOperator;
 
-public class ApplyExpenseHeaderTask implements UnaryOperator<XSSFTable> {
+public class XSSFApplyExpenseHeaderTask implements UnaryOperator<XSSFTable> {
     public static final String TABLE_HEADER_NAME = "Money";
     public static final String[] EXPENSE_COLUMN_HEADERS = EExpenseCellData.COLUMN_HEADERS;
     public static final int HEADER_SIZE = EXPENSE_COLUMN_HEADERS.length;
@@ -74,10 +74,10 @@ public class ApplyExpenseHeaderTask implements UnaryOperator<XSSFTable> {
 
 //         Add new columns
         for (int i = 0; i < HEADER_SIZE; i++) {
-            CTTableColumn ctTableColumn = ObjectUtils.getIfNull(
-                    columns.getTableColumnArray(i),
-                    columns::addNewTableColumn
-            );
+            if(columns.getCount() <= i)
+                columns.addNewTableColumn();
+
+            CTTableColumn ctTableColumn = columns.getTableColumnArray(i);
 
             applyCellText(row, i, EXPENSE_COLUMN_HEADERS[i]);
             ctTableColumn.setId(i + 1);

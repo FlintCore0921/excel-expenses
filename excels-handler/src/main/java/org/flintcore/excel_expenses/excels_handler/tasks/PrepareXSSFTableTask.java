@@ -23,9 +23,9 @@ public class PrepareXSSFTableTask implements BiFunction<XSSFSheet, String, XSSFT
     }
 
     private XSSFTable createTable(XSSFSheet sheet, String tableName) {
-        return ObjectUtils.defaultIfNull(
+        return ObjectUtils.getIfNull(
                 sheet.getWorkbook().getTable(tableName),
-                sheet.createTable(this.tableArea)
+                () -> sheet.createTable(this.tableArea)
         );
     }
 }

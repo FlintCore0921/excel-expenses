@@ -3,7 +3,7 @@ flint-data-utils = "1.2.2"
 apache-commons-text = "1.12.0"
 javafx = "22"
 junit = "5.10.0"
-excelib = "1.0.0"
+excelib = "1.1.1"
 testfx = "4.0.18"
 testfx-monocle = "17.0.10"
 

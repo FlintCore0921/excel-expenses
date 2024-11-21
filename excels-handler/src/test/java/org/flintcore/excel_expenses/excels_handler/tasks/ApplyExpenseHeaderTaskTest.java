@@ -22,7 +22,7 @@ class ApplyExpenseHeaderTaskTest {
     void shouldCreateHeader() {
         assertDoesNotThrow(() -> {
             XSSFUtils.handleEmptyWorkbook(wb -> {
-                ApplyExpenseHeaderTask applyExpenseHeaderTask = new ApplyExpenseHeaderTask();
+                XSSFApplyExpenseHeaderTask applyExpenseHeaderTask = new XSSFApplyExpenseHeaderTask();
 
                 XSSFSheet sheet = wb.createSheet(SHEET_NAME);
 

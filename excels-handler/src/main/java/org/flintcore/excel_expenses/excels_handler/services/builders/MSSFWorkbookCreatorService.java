@@ -1,10 +1,11 @@
 package org.flintcore.excel_expenses.excels_handler.services.builders;
 
 import lombok.extern.log4j.Log4j2;
+import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.flintcore.excel_expenses.excels_handler.tasks.SaveWorkBookFileTask;
 import org.flintcore.excel_expenses.excels_handler.utils.files.FileCreator;
-import org.flintcore.excelib.services.builders.XSSFFileService;
+import org.flintcore.excelib.services.builders.MSSFFileService;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
@@ -18,12 +19,12 @@ import java.util.concurrent.Future;
 @Log4j2
 @Service
 @Lazy
-public class XSSFWorkbookCreatorService {
-    protected final XSSFFileService workbookService;
+public class MSSFWorkbookCreatorService {
+    protected final MSSFFileService workbookService;
     protected final FileCreator fileCreator;
 
-    public XSSFWorkbookCreatorService(
-            XSSFFileService workbookService,
+    public MSSFWorkbookCreatorService(
+            MSSFFileService workbookService,
             FileCreator fileCreator
     ) {
         this.workbookService = workbookService;
@@ -31,11 +32,11 @@ public class XSSFWorkbookCreatorService {
     }
 
     // Set scheduled
-    public Future<XSSFWorkbook> loadWorkBook(final String workbookName) {
+    public Future<Workbook> loadWorkBook(final String workbookName) {
         return loadWorkBook(Path.of(workbookName));
     }
 
-    public Future<XSSFWorkbook> loadWorkBook(final Path workbookPath) {
+    public Future<Workbook> loadWorkBook(final Path workbookPath) {
         log.debug("Loading workbook:\n{}", workbookPath.toAbsolutePath());
         return this.workbookService.buildWorkBookFrom(workbookPath);
     }
