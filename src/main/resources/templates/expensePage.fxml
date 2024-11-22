@@ -15,13 +15,23 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<BorderPane stylesheets="@styles/expensePageStyles.css" xmlns="http://javafx.com/javafx/23" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.flintcore.excel_expenses.excels_handler.controllers.ExpensePageController">
+<BorderPane stylesheets="@styles/expensePageStyles.css" xmlns="http://javafx.com/javafx/23" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.flintcore.excel_expenses.controllers.ExpensePageController">
    <top>
       <StackPane BorderPane.alignment="CENTER">
          <children>
-            <HBox>
+            <HBox spacing="8.0">
                <children>
                   <Button fx:id="btnCreateExpense" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" mnemonicParsing="false" text="Add Expense" HBox.hgrow="ALWAYS">
+                     <font>
+                        <Font name="System Bold Italic" size="28.0" />
+                     </font>
+                     <styleClass>
+                        <String fx:value="transparent-bg" />
+                        <String fx:value="action-button" />
+                        <String fx:value="white-text" />
+                     </styleClass>
+                  </Button>
+                  <Button fx:id="btnExportFile" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#requestExportFile" text="Export file">
                      <font>
                         <Font name="System Bold Italic" size="28.0" />
                      </font>

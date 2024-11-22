@@ -8,7 +8,7 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<ScrollPane fitToHeight="true" fitToWidth="true" hbarPolicy="NEVER" pickOnBounds="false" xmlns="http://javafx.com/javafx/23" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.flintcore.excel_expenses.excels_handler.controllers.SidebarController">
+<ScrollPane fitToHeight="true" fitToWidth="true" hbarPolicy="NEVER" pickOnBounds="false" xmlns="http://javafx.com/javafx/23" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.flintcore.excel_expenses.controllers.SidebarController">
     <content>
         <VBox id="navbar" cache="true" cacheHint="SPEED">
             <children>
