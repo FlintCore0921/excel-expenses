@@ -1,5 +1,8 @@
 external:
-  service:
+  paths:
+    local-dgii: servers/py/dgii_api_py/app.py
+  services:
     dgii:
       port: 9999
       url: http://localhost:${external.service.dgii.port}/backups
+      timeGapRequest: 10m

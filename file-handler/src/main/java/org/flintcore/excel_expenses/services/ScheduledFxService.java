@@ -30,7 +30,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
 
 @Log4j2
-public abstract class FileScheduledFxService<T> {
+public abstract class ScheduledFxService<T> {
     @Lazy
     protected final ObservableFXService<List<T>> requestTaskService;
     @Lazy
@@ -46,7 +46,7 @@ public abstract class FileScheduledFxService<T> {
 
     protected AtomicBoolean requiresRequest;
 
-    public FileScheduledFxService(
+    public ScheduledFxService(
             ObservableFXService<List<T>> requestTaskService,
             ObservableFXScheduledService<Void> storeTaskService,
             SubscriptionHolder subscriptionManager,

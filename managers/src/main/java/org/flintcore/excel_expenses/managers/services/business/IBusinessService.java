@@ -1,10 +1,10 @@
-package org.flintcore.excel_expenses.services.excels.external;
+package org.flintcore.excel_expenses.managers.services.business;
 
 import org.flintcore.excel_expenses.models.expenses.IBusiness;
 
 import java.util.List;
 import java.util.concurrent.Future;
 
-public interface ILocalBusinessService<B extends IBusiness> {
+public interface IBusinessService<B extends IBusiness> {
     Future<List<B>> getBusinessDataList();
 }

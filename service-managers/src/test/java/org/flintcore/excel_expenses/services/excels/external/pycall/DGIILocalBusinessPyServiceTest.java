@@ -1,6 +1,6 @@
 package org.flintcore.excel_expenses.services.excels.external.pycall;
 
-import org.flintcore.excel_expenses.services.excels.external.DGIIApiProperties;
+import org.flintcore.excel_expenses.services.excels.external.DGIIAPIProperties;
 import org.flintcore.excel_expenses.services.excels.external.YamlPropertySourceFactory;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,16 +11,16 @@ import org.springframework.test.context.TestPropertySource;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @SpringBootTest(classes = {
-        DGIIPyService.class
+        DGIILocalBusinessPyService.class
 })
-@EnableConfigurationProperties(value = DGIIApiProperties.class)
+@EnableConfigurationProperties(value = DGIIAPIProperties.class)
 @TestPropertySource(
         value = "classpath:external_dgii_py_test.yaml",
         factory = YamlPropertySourceFactory.class
 )
-class DGIIPyServiceTest {
+class DGIILocalBusinessPyServiceTest {
     @Autowired
-    private DGIIPyService service;
+    private DGIILocalBusinessPyService service;
 
     @Test
     void shouldBuildApplication() {

@@ -9,8 +9,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 @ExtendWith(SpringExtension.class)
 @ContextConfiguration(classes = DGIIApiPropertiesTest.TestConfig.class)
@@ -21,17 +20,21 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class DGIIApiPropertiesTest {
 
     @Autowired
-    private DGIIApiProperties dgiiApiProperties;
+    private DGIIAPIProperties dgiiApiProperties;
 
     @Test
     void shouldFoundCorrectValues() {
         assertNotNull(dgiiApiProperties);
         assertTrue(dgiiApiProperties.url().startsWith("http"));
         assertTrue(dgiiApiProperties.port() > 1000);
+        assertNotNull(dgiiApiProperties.timeGapRequest());
+        assertEquals(dgiiApiProperties.timeGapRequest().toMinutes(), 10);
+
+        System.out.println(dgiiApiProperties);
     }
 
     @TestConfiguration
-    @EnableConfigurationProperties(DGIIApiProperties.class)
+    @EnableConfigurationProperties(DGIIAPIProperties.class)
     static class TestConfig {
         // Add any additional beans if necessary
     }

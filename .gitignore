@@ -38,7 +38,9 @@ out/
 /app/
 
 ### Class ###
-excels-handler/src/test/java/org/flintcore/excel_expenses/resources/PathResource.java
+/excels-handler/src/test/java/org/flintcore/excel_expenses/resources/PathResource.java
 
 ### Test data ###
 /excels-handler/*.xlsx
+/service-managers/src/main/resources/external_dgii_py.yaml
+/service-managers/src/test/resources/*.yaml

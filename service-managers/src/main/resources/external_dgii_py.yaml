@@ -1,5 +1,9 @@
 external:
-  service:
+  services:
+    paths:
+      py-head: python3
+      local-dgii: ../dgii_api_py/app.py
     dgii:
       port: 6603
       url: http://localhost:${external.service.dgii.port}
+      timeGapRequest: 30m

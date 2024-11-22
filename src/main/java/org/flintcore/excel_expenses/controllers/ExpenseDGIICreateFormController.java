@@ -8,6 +8,7 @@ import javafx.animation.Transition;
 import javafx.application.Platform;
 import javafx.beans.binding.BooleanBinding;
 import javafx.beans.property.ReadOnlyObjectProperty;
+import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -31,13 +32,13 @@ import org.flintcore.excel_expenses.models.expenses.IBusiness;
 import org.flintcore.excel_expenses.models.expenses.LocalBusiness;
 import org.flintcore.excel_expenses.models.properties.formatters.StaticNumericFormatter;
 import org.flintcore.excel_expenses.models.receipts.Receipt;
-import org.flintcore.excel_expenses.services.business.LocalBusinessFileFXService;
+import org.flintcore.excel_expenses.services.excels.external.pycall.LocalBusinessRequestPyService;
 import org.flintcore.excel_expenses.services.receipts.ReceiptFileScheduledFXService;
+import org.flintcore.excelib.commons.utilities.FutureHandlerUtils;
 import org.flintcore.utilities.animations.ViewAnimationUtils;
 import org.flintcore.utilities.dates.DateUtils;
 import org.flintcore.utilities.lists.ObservableListUtils;
 import org.flintcore.utilities.susbcriptions.SubscriptionUtils;
-import org.springframework.context.annotation.Profile;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
@@ -49,14 +50,13 @@ import java.util.concurrent.CompletableFuture;
 
 @Component
 @Scope("prototype")
-@Profile("expense_basic_1")
 @Log4j2
-public class ExpenseCreateFormController implements Initializable {
+public class ExpenseDGIICreateFormController implements Initializable {
 
     private final ApplicationRouter appRouter;
     private final SubscriptionHolder subscriptionManager;
     private final ReceiptFileScheduledFXService receiptFileService;
-    private final LocalBusinessFileFXService localBusinessFileService;
+    private final LocalBusinessRequestPyService localBusinessRequestService;
 
     private final ReceiptBuilderService receiptBuilderService;
 
@@ -68,17 +68,16 @@ public class ExpenseCreateFormController implements Initializable {
     public boolean hasRequestLocalBusiness;
     private Alert registerReceiptAlert;
 
-    public ExpenseCreateFormController(
+    public ExpenseDGIICreateFormController(
             ApplicationRouter appRouter,
             SubscriptionHolder subscriptionManager,
-            ReceiptFileScheduledFXService receiptFileService,
-            LocalBusinessFileFXService localBusinessService,
+            ReceiptFileScheduledFXService receiptFileService, LocalBusinessRequestPyService localBusinessRequestService,
             ReceiptBuilderService receiptBuilderService
     ) {
         this.appRouter = appRouter;
         this.subscriptionManager = subscriptionManager;
         this.receiptFileService = receiptFileService;
-        this.localBusinessFileService = localBusinessService;
+        this.localBusinessRequestService = localBusinessRequestService;
         this.receiptBuilderService = receiptBuilderService;
     }
 
@@ -115,7 +114,9 @@ public class ExpenseCreateFormController implements Initializable {
 
         try {
             CompletableFuture<ObservableList<LocalBusiness>> listBusinessFuture =
-                    this.localBusinessFileService.getDataList();
+                    FutureHandlerUtils.asCompletable(
+                            this.localBusinessRequestService.getBusinessDataList()
+                    ).thenApply(FXCollections::observableList);
 
             listBusinessFuture.thenAcceptAsync(localBusinessList -> {
                 Subscription subscription = ObservableListUtils.listenSet(
@@ -195,7 +196,7 @@ public class ExpenseCreateFormController implements Initializable {
 
         // Disable the RNC field if service is requesting data.
         this.localRNCTxt.disableProperty().bind(
-                this.localBusinessFileService.requestingProperty()
+                this.localBusinessRequestService.runningProperty()
         );
     }
 
@@ -211,7 +212,7 @@ public class ExpenseCreateFormController implements Initializable {
 
         PauseTransition onPauseTransition = new PauseTransition(loadingDefaultDuration);
 
-        this.localBusinessFileService.requestingProperty().subscribe((old_, requesting) -> {
+        this.localBusinessRequestService.runningProperty().subscribe((old_, requesting) -> {
             onPauseTransition.stop();
 
             onPauseTransition.setOnFinished(e -> {
