@@ -20,6 +20,7 @@ import org.flintcore.excel_expenses.models.files.EFileExtension;
 import org.flintcore.excel_expenses.models.receipts.Receipt;
 import org.flintcore.excel_expenses.services.excels.XSSFExcelExpenseExportFXService;
 import org.flintcore.excel_expenses.services.receipts.ReceiptFileScheduledFXService;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
@@ -106,11 +107,11 @@ public class ExpensePageController implements Initializable {
                 alert.show();
 
                 if (Objects.isNull(selectedFile)) {
+
                     alert.setAlertType(AlertType.CONFIRMATION);
                     alert.setTitle("Action canceled!");
                     alert.setHeaderText(null);
                     alert.setContentText(null);
-
 
                     pauseTransition.play();
                 }
@@ -131,7 +132,7 @@ public class ExpensePageController implements Initializable {
                 alert.show();
 
                 alert.contentTextProperty().bind(
-                        this.expenseExportService.messageProperty()
+                        this.expenseExportService.messageProperty().orElse("")
                 );
 
                 this.expenseExportService.setOnFailed(evt -> isExporting.set(false));

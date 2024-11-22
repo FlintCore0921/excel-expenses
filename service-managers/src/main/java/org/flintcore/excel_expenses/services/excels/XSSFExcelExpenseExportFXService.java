@@ -2,7 +2,6 @@ package org.flintcore.excel_expenses.services.excels;
 
 import javafx.concurrent.Service;
 import javafx.concurrent.Task;
-import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.extern.log4j.Log4j2;
 import org.flintcore.excel_expenses.expenses.ExpenseBuilderHolder;
@@ -10,7 +9,6 @@ import org.flintcore.excel_expenses.models.receipts.Receipt;
 import org.flintcore.excel_expenses.services.builders.XSSFExpenseFileBuilderService;
 import org.flintcore.excel_expenses.services.builders.XSSFWorkbookManagerService;
 import org.flintcore.excel_expenses.services.receipts.ReceiptFileScheduledFXService;
-import org.springframework.context.annotation.Lazy;
 
 import java.nio.file.Path;
 import java.util.List;
@@ -18,9 +16,7 @@ import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 
-@Lazy
 @org.springframework.stereotype.Service
-@RequiredArgsConstructor
 @Log4j2
 public class XSSFExcelExpenseExportFXService extends Service<Boolean> {
 
@@ -38,6 +34,16 @@ public class XSSFExcelExpenseExportFXService extends Service<Boolean> {
 
     @Setter
     private Path newExpenseLocation;
+
+    public XSSFExcelExpenseExportFXService(
+            ReceiptFileScheduledFXService receiptFileService,
+            XSSFExpenseFileBuilderService excelFileBuilderService,
+            XSSFWorkbookManagerService workbookBuilderManager) {
+        super();
+        this.receiptFileService = receiptFileService;
+        this.excelFileBuilderService = excelFileBuilderService;
+        this.workbookBuilderManager = workbookBuilderManager;
+    }
 
     @Override
     protected Task<Boolean> createTask() {

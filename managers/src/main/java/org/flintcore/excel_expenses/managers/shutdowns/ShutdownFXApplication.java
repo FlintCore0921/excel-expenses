@@ -95,7 +95,6 @@ public final class ShutdownFXApplication implements IShutdownHandler<Runnable> {
         final Alert shutdownAlert = setupShutdownAlert();
 
         PauseTransition waitAfterClose = new PauseTransition(Duration.seconds(1.5));
-
         waitAfterClose.setOnFinished(event -> {
             shutdownAlert.close();
             Platform.exit();
@@ -112,6 +111,13 @@ public final class ShutdownFXApplication implements IShutdownHandler<Runnable> {
 
         CountDownLatch counterWait = new CountDownLatch(totalTasks);
         ExecutorService tasksExecutor = Executors.newSingleThreadExecutor();
+
+        var previousClose = waitAfterClose.getOnFinished();
+
+        waitAfterClose.setOnFinished(event -> {
+            tasksExecutor.shutdown();
+            previousClose.handle(event);
+        });
 
         for (Map.Entry<Object, Set<Runnable>> entry : this.subscriptions.entrySet()) {
             tasksExecutor.execute(() -> {
@@ -134,7 +140,6 @@ public final class ShutdownFXApplication implements IShutdownHandler<Runnable> {
                 counterWait.await();
             } catch (InterruptedException ignored) {
             } finally {
-                tasksExecutor.shutdown();
                 waitAfterClose.play();
             }
         });
