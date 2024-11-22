@@ -36,7 +36,7 @@ public final class ViewAnimationUtils {
         });
     }
 
-    public static Subscription animateTranslateFadedBySubscription(
+    public static Subscription animateTranslateFadedBy(
             BooleanBinding subscriber,
             Duration duration,
             Node node,

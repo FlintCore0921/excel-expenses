@@ -14,6 +14,7 @@ javafx {
 
 dependencies {
     compileOnly(project(":models"))
+    compileOnly(project(":excels-handler"))
     compileOnly(libs.javafx.controls)
     compileOnly(libs.javafx.fxml)
 

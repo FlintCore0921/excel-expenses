@@ -16,11 +16,7 @@ import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@SpringBootTest(
-        classes = {
-                ExcelMonthNameBuilder.class
-        }
-)
+@SpringBootTest(classes = {ExcelMonthNameBuilder.class})
 class ExcelMonthNameBuilderTest {
     public static final String EXCEL_SAVER = "excelSaver";
     @Autowired

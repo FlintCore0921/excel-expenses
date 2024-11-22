@@ -3,12 +3,14 @@ flint-data-utils = "1.2.2"
 apache-commons-text = "1.12.0"
 javafx = "22"
 junit = "5.10.0"
-excelib="1.0.0"
+excelib = "1.1.1"
+testfx = "4.0.18"
+testfx-monocle = "17.0.10"
 
 [libraries]
 data_utils = { group = "com.flintCore", name = "data-utils", version.ref = "flint-data-utils" }
-excelib_bom = { group="org.flintcore.excelib", name="excelib-bom", version.ref="excelib" }
-excelib_commons = { group="org.flintcore.excelib", name="commons" }
+excelib_bom = { group = "org.flintcore.excelib", name = "excelib-bom", version.ref = "excelib" }
+excelib_commons = { group = "org.flintcore.excelib", name = "commons" }
 
 lombok = { group = "org.projectlombok", name = "lombok" }
 
@@ -26,3 +28,9 @@ spring_boot_starter_test = { group = "org.springframework.boot", name = "spring-
 junit_jupiter = { group = "org.junit.jupiter", name = "junit-jupiter" }
 junit_bom = { group = "org.junit", name = "junit-bom", version.ref = "junit" }
 junit_platform_launcher = { group = "org.junit.platform", name = "junit-platform-launcher" }
+
+# Test FX
+
+testfx-core = { group = "org.testfx", name = "testfx-core", version.ref = "testfx" }
+testfx-junit5 = { group = "org.testfx", name = "testfx-junit5", version.ref = "testfx" }
+testfx-monocle = { group = "org.testfx", name = "openjfx-monocle", version.ref = "testfx-monocle" }

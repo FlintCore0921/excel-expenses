@@ -10,11 +10,10 @@ import javafx.collections.ObservableSet;
 import javafx.concurrent.WorkerStateEvent;
 import javafx.event.EventType;
 import javafx.util.Subscription;
-import lombok.RequiredArgsConstructor;
 import org.flintcore.excel_expenses.managers.timers.ApplicationScheduler;
 import org.flintcore.excel_expenses.models.events.TaskFxEvent;
-import org.flintcore.excel_expenses.models.subscriptions.SubscriptionHolder;
-import org.flintcore.excel_expenses.models.subscriptions.tasks.ObservableService;
+import org.flintcore.excel_expenses.managers.subscriptions.SubscriptionHolder;
+import org.flintcore.excel_expenses.managers.subscriptions.tasks.ObservableFXService;
 import org.springframework.context.annotation.Lazy;
 
 import java.time.Duration;
@@ -24,12 +23,11 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
 
-@RequiredArgsConstructor
 public abstract class FileFxService<T> {
     @Lazy
-    protected final ObservableService<List<T>> requestTaskService;
+    protected final ObservableFXService<List<T>> requestTaskService;
     @Lazy
-    protected final ObservableService<Void> storeTaskService;
+    protected final ObservableFXService<Void> storeTaskService;
     @Lazy
     protected final SubscriptionHolder subscriptionManager;
     @Lazy
@@ -55,6 +53,18 @@ public abstract class FileFxService<T> {
 
     public ReadOnlyBooleanProperty storingProperty() {
         return this.requestTaskService.runningProperty();
+    }
+
+    public FileFxService(
+            ObservableFXService<List<T>> requestTaskService,
+            ObservableFXService<Void> storeTaskService,
+            SubscriptionHolder subscriptionManager,
+            ApplicationScheduler appScheduler
+    ) {
+        this.requestTaskService = requestTaskService;
+        this.storeTaskService = storeTaskService;
+        this.subscriptionManager = subscriptionManager;
+        this.appScheduler = appScheduler;
     }
 
     /**
@@ -171,7 +181,10 @@ public abstract class FileFxService<T> {
 
     @PreDestroy
     protected void onClose() {
-        this.subscriptionManager.close();
-        Platform.runLater(this.storeTaskService::restart);
+
+        Platform.runLater(() -> {
+            this.subscriptionManager.close();
+            this.storeTaskService.restart();
+        });
     }
 }

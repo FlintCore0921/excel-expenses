@@ -9,9 +9,9 @@ import lombok.NonNull;
 import org.apache.commons.lang3.ObjectUtils;
 import org.flintcore.excel_expenses.managers.factories.receipts.LocalNFCFactory;
 import org.flintcore.excel_expenses.managers.rules.IReceiptRules;
+import org.flintcore.excel_expenses.managers.subscriptions.consumers.ISubscriptionConsumerHandler;
+import org.flintcore.excel_expenses.managers.subscriptions.consumers.MultiSubscriptionConsumerHandler;
 import org.flintcore.excel_expenses.models.properties.formatters.NFCFormatter;
-import org.flintcore.excel_expenses.models.subscriptions.consumers.ISubscriptionConsumerHandler;
-import org.flintcore.excel_expenses.models.subscriptions.consumers.MultiSubscriptionConsumerHandler;
 
 public class NFCAutoCompleteListener {
     protected final TextField nfcFilter;
@@ -38,25 +38,26 @@ public class NFCAutoCompleteListener {
                 new NFCFormatter(IReceiptRules::getCodeFormatterPattern)
         );
 
-        Runnable onValidate = () -> {
-            this.initNFCFactory();
-            String NFCFiltered = this.nfcFilter.getText();
+        this.nfcFilter.focusedProperty().subscribe((old, curr) -> callFieldValidation());
 
-            final String result = localNfcFactory.apply(NFCFiltered),
-                    NFC = ObjectUtils.defaultIfNull(result, "");
-
-            this.NFCProperty.set(NFC);
-            this.nfcFilter.setText(NFC);
-        };
-
-        this.keyHandler.addLastSubscription(KeyCode.TAB, onValidate);
-        this.keyHandler.addLastSubscription(KeyCode.ENTER, onValidate);
+        this.keyHandler.addLastSubscription(KeyCode.ENTER, this::callFieldValidation);
     }
 
     protected void initHandlerListener() {
         NullableUtils.executeIsNull(this.keyHandler,
                 () -> this.keyHandler = new MultiSubscriptionConsumerHandler<>()
         );
+    }
+
+    protected void callFieldValidation() {
+        this.initNFCFactory();
+        String NFCFiltered = this.nfcFilter.getText();
+
+        final String result = localNfcFactory.apply(NFCFiltered),
+                NFC = ObjectUtils.defaultIfNull(result, "");
+
+        this.NFCProperty.set(NFC);
+        this.nfcFilter.setText(NFC);
     }
 
     protected void initNFCFactory() {

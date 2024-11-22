@@ -69,6 +69,11 @@ subprojects {
         testImplementation(platform(projectLibs.junit.bom))
         testImplementation(projectLibs.junit.jupiter)
         testImplementation(projectLibs.spring.boot.starter.test)
+
+        // Text for javafx
+        testImplementation(projectLibs.testfx.core)
+        testImplementation(projectLibs.testfx.junit5)
+        testRuntimeOnly(projectLibs.testfx.monocle)
     }
 
     tasks.test {
@@ -90,7 +95,7 @@ dependencies {
     implementation(project(":file-handler"))
     implementation(project(":excels-handler"))
     implementation(project(":managers"))
-    implementation(project(":tasks-schedules"))
+    implementation(project(":service-managers"))
 
     implementation(libs.javafx.controls)
     implementation(libs.javafx.fxml)
@@ -101,4 +106,5 @@ dependencies {
     developmentOnly(libs.spring.boot.devtools)
     testImplementation(libs.spring.boot.starter.test)
     testRuntimeOnly(libs.junit.platform.launcher)
+
 }

@@ -37,13 +37,13 @@ public class StaticNumericFormatter extends TextFormatter<String> {
 
         private boolean isValidContent(String value) {
             initPattern();
-            return !value.isBlank() && formatPattern.matcher(value).matches();
+            return formatPattern.matcher(value).matches();
         }
 
         private void initPattern() {
             NullableUtils.executeIsNull(this.formatPattern, () -> {
                 String fixedLengthText = length < 0 ? "*" : "{0,%s}".formatted(Integer.toString(length));
-                String pattern = "^\\d%s(\\.\\d{1,%d})?$".formatted(fixedLengthText, precision);
+                String pattern = "^\\d%s(\\.\\d{0,%d})?$".formatted(fixedLengthText, precision);
                 this.formatPattern = Pattern.compile(pattern);
             });
         }
