@@ -18,11 +18,11 @@ import java.util.concurrent.Future;
 @Log4j2
 @Service
 @Lazy
-public class XSSFWorkbookCreatorService {
+public class XSSFWorkbookManagerService {
     protected final XSSFFileService workbookService;
     protected final FileCreator fileCreator;
 
-    public XSSFWorkbookCreatorService(
+    public XSSFWorkbookManagerService(
             XSSFFileService workbookService,
             FileCreator fileCreator
     ) {
@@ -38,6 +38,10 @@ public class XSSFWorkbookCreatorService {
     public Future<XSSFWorkbook> loadWorkBook(final Path workbookPath) {
         log.debug("Loading workbook:\n{}", workbookPath.toAbsolutePath());
         return this.workbookService.buildWorkBookFrom(workbookPath);
+    }
+
+    public Future<XSSFWorkbook> createEmptyWorkBook() {
+        return this.workbookService.createWorkBookFile();
     }
 
     public Future<Boolean> saveWorkBook(

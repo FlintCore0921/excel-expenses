@@ -27,7 +27,7 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 // Use ContextConfiguration for submodules test.
 @SpringBootTest(classes = {
-        XSSFWorkbookCreatorService.class,
+        XSSFWorkbookManagerService.class,
         XSSFFileService.class,
         FileCreator.class,
         PathValidator.class,
@@ -37,7 +37,7 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 @ActiveProfiles({"test"})
 class ExcelFileManagementServiceTest {
     @Autowired
-    private XSSFWorkbookCreatorService XSSFCreatorService;
+    private XSSFWorkbookManagerService XSSFCreatorService;
     @Autowired
     private IPathResource pathResource;
 

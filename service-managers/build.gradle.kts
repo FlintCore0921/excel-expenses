@@ -18,6 +18,10 @@ dependencies {
     compileOnly(libs.javafx.controls)
     compileOnly(libs.javafx.fxml)
 
+    compileOnly(platform(libs.excelib.bom))
+    testCompileOnly(platform(libs.excelib.bom))
+    configureCompileOnlyExcelib(*ExcelibModules.values())
+
     testCompileOnly(project(":models"))
     testCompileOnly(project(":managers"))
     testCompileOnly(project(":file-handler"))

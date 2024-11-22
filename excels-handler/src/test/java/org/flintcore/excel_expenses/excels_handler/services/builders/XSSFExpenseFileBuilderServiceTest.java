@@ -1,6 +1,5 @@
 package org.flintcore.excel_expenses.excels_handler.services.builders;
 
-import org.apache.commons.lang3.tuple.Pair;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.flintcore.excel_expenses.excels_handler.expenses.ExpenseBuilderHolder;
 import org.flintcore.excel_expenses.excels_handler.models.receipts.Receipt;
@@ -10,7 +9,6 @@ import org.flintcore.excel_expenses.excels_handler.utils.files.FileCreator;
 import org.flintcore.excel_expenses.excels_handler.utils.paths.PathValidator;
 import org.flintcore.excelib.commons.executors.DefaultThreadPoolHolder;
 import org.flintcore.excelib.services.builders.XSSFFileService;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,14 +19,13 @@ import java.io.FileOutputStream;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Objects;
-import java.util.concurrent.Future;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assumptions.assumeFalse;
 
 @SpringBootTest(classes = {
         XSSFExpenseFileBuilderService.class,
-        XSSFWorkbookCreatorService.class,
+        XSSFWorkbookManagerService.class,
         ExpenseAreaReferenceBuilder.class,
         XSSFFileService.class,
         DefaultThreadPoolHolder.class,
@@ -58,14 +55,20 @@ class XSSFExpenseFileBuilderServiceTest {
                     listReceipt
             );
 
-            Future<Pair<Workbook, ExpenseBuilderHolder>> expenseFileOptional = service.buildXSSFExpenseFile(dataHolder);
+            var expenseFileOptional = service.buildXSSFExpenseFile(dataHolder);
 
-            Pair<Workbook, ExpenseBuilderHolder> holderPair = expenseFileOptional.get();
+            var holderPair = expenseFileOptional.get();
 
             assertNotNull(holderPair);
 
-            try (FileOutputStream outputStream = new FileOutputStream("load_expenses_new.xlsx")) {
-                holderPair.getKey().write(outputStream);
+            assertTrue(holderPair.isPresent());
+
+            Workbook dataKey = holderPair.get();
+
+            assertNotNull(dataKey);
+
+            try (FileOutputStream outputStream = new FileOutputStream(filePath.toFile())) {
+                dataKey.write(outputStream);
             }
         });
     }

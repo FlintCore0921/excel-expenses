@@ -13,14 +13,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 
-import java.awt.*;
 import java.io.File;
 import java.nio.file.Path;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest(classes = {
-        XSSFWorkbookCreatorService.class,
+        XSSFWorkbookManagerService.class,
         XSSFFileService.class,
         PathValidator.class,
         FileCreator.class,
@@ -29,9 +28,9 @@ import static org.junit.jupiter.api.Assertions.*;
         PathResource.class
 })
 @ActiveProfiles({"test"})
-class XSSFWorkbookCreatorServiceTest {
+class XSSFWorkbookManagerServiceTest {
     @Autowired
-    private XSSFWorkbookCreatorService XSSFCreatorService;
+    private XSSFWorkbookManagerService XSSFCreatorService;
     @Autowired
     private XFFSExcelPathBuilder pathBuilder;
     @Autowired
