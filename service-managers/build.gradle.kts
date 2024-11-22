@@ -18,6 +18,9 @@ dependencies {
     compileOnly(libs.javafx.controls)
     compileOnly(libs.javafx.fxml)
 
+    // For web requests
+    implementation(libs.spring.boot.web)
+
     compileOnly(platform(libs.excelib.bom))
     testCompileOnly(platform(libs.excelib.bom))
     configureCompileOnlyExcelib(*ExcelibModules.values())

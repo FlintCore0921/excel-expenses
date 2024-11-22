@@ -22,6 +22,8 @@ javafx_graphics = { group = "org.openjfx", name = "javafx-graphics", version.ref
 javafx_base = { group = "org.openjfx", name = "javafx-base", version.ref = "javafx" }
 
 spring_boot_starter = { group = "org.springframework.boot", name = "spring-boot-starter" }
+spring_boot_webflux = { group = "org.springframework.boot", name = "spring-boot-starter-webflux" }
+spring_boot_web = { group = "org.springframework.boot", name = "spring-boot-starter-web" }
 spring_boot_devtools = { group = "org.springframework.boot", name = "spring-boot-devtools" }
 spring_boot_starter_test = { group = "org.springframework.boot", name = "spring-boot-starter-test" }
 
