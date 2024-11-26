@@ -3,7 +3,7 @@ package org.flintcore.excel_expenses.services.excels.external.pycall;
 import lombok.extern.log4j.Log4j2;
 import org.flintcore.excel_expenses.models.expenses.LocalBusiness;
 import org.flintcore.excel_expenses.services.excels.external.DGIIAPIProperties;
-import org.flintcore.excel_expenses.managers.services.business.IBusinessService;
+import org.flintcore.excel_expenses.managers.services.business.IBusinessLoaderService;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
@@ -18,7 +18,7 @@ import java.util.concurrent.Future;
 
 @Service
 @Log4j2
-public class DGIILocalBusinessPyService implements IBusinessService<LocalBusiness> {
+public class DGIILocalBusinessPyService implements IBusinessLoaderService<LocalBusiness> {
 
     private final DGIIAPIProperties apiProperties;
     private final RestTemplate callPyApi;

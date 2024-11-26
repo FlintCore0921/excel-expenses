@@ -7,11 +7,11 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.Node;
 import javafx.scene.layout.VBox;
-import org.flintcore.excel_expenses.models.NodeWrapper;
-import org.flintcore.excel_expenses.models.menues.SidebarItemStyle;
 import org.flintcore.excel_expenses.managers.factories.navigation.IMenuItemHandler;
 import org.flintcore.excel_expenses.managers.routers.ApplicationRouter;
 import org.flintcore.excel_expenses.managers.routers.IRoute;
+import org.flintcore.excel_expenses.models.NodeWrapper;
+import org.flintcore.excel_expenses.models.menues.SidebarItemStyle;
 import org.springframework.stereotype.Component;
 
 import java.net.URL;

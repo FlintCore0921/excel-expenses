@@ -8,7 +8,7 @@ import javafx.event.EventType;
 import javafx.util.Subscription;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import org.flintcore.excel_expenses.managers.services.business.IBusinessService;
+import org.flintcore.excel_expenses.managers.services.business.IBusinessLoaderService;
 import org.flintcore.excel_expenses.managers.shutdowns.IShutdownHandler;
 import org.flintcore.excel_expenses.managers.subscriptions.tasks.ObservableFXService;
 import org.flintcore.excel_expenses.models.expenses.LocalBusiness;
@@ -26,7 +26,7 @@ import java.util.concurrent.*;
 @RequiredArgsConstructor
 @Log4j2
 public class LocalBusinessRequestPyService extends ObservableFXService<List<LocalBusiness>>
-        implements IBusinessService<LocalBusiness> {
+        implements IBusinessLoaderService<LocalBusiness> {
 
     // Time wait data returns / is received.
     private static final long TIME_REQUEST_WAIT = 20;

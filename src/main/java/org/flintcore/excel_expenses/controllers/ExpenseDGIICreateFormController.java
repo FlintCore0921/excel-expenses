@@ -71,7 +71,8 @@ public class ExpenseDGIICreateFormController implements Initializable {
     public ExpenseDGIICreateFormController(
             ApplicationRouter appRouter,
             SubscriptionHolder subscriptionManager,
-            ReceiptFileScheduledFXService receiptFileService, LocalBusinessRequestPyService localBusinessRequestService,
+            ReceiptFileScheduledFXService receiptFileService,
+            LocalBusinessRequestPyService localBusinessRequestService,
             ReceiptBuilderService receiptBuilderService
     ) {
         this.appRouter = appRouter;

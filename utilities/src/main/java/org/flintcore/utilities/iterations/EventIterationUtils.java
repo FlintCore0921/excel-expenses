@@ -18,7 +18,9 @@ public final class EventIterationUtils {
             ET extends EventType<E>,
             V extends Iterable<Runnable>
             > EventHandler<E> onHandleRunnableEvents(
-            Map<ET, V> eventsHolder) {
+            Map<ET, V> eventsHolder
+    ) {
+
         return e -> NullableUtils.executeNonNull(eventsHolder,
                 subs -> NullableUtils.executeNonNull(subs.get(e.getEventType()),
                         l -> l.iterator().forEachRemaining(Runnable::run)

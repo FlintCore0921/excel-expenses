@@ -12,20 +12,15 @@ import org.springframework.stereotype.Component;
 @Component
 @Log4j2
 public class ReceiptFileScheduledFXService extends ScheduledFxService<Receipt> {
-    /**
-     * Just the same as {@link #storeTaskService} but as original impl type.
-     */
     private final ReceiptSaveTaskService receiptSaveTaskService;
 
     public ReceiptFileScheduledFXService(
             ReceiptSaveTaskService receiptSaveTaskService,
             ReceiptRequestTaskService requestTaskService,
             SubscriptionHolder subscriptionManager,
-            ApplicationScheduler appScheduler,
             ShutdownFXApplication shutDownSubscriptionHolder
     ) {
-        super(requestTaskService, receiptSaveTaskService, subscriptionManager,
-                appScheduler, shutDownSubscriptionHolder);
+        super(subscriptionManager, shutDownSubscriptionHolder);
         this.receiptSaveTaskService = receiptSaveTaskService;
     }
 
