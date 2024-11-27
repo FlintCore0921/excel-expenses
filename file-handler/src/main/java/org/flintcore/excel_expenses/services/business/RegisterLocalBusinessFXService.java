@@ -6,7 +6,6 @@ import javafx.concurrent.WorkerStateEvent;
 import javafx.event.EventType;
 import lombok.Setter;
 import lombok.extern.log4j.Log4j2;
-import org.flintcore.excel_expenses.managers.subscriptions.tasks.ObservableFXService;
 import org.flintcore.excel_expenses.managers.tasks.business.locals.BuildLocalBusinessTask;
 import org.flintcore.excel_expenses.managers.validators.LocalBusinessValidator;
 import org.flintcore.excel_expenses.models.expenses.LocalBusiness;

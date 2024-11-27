@@ -8,8 +8,15 @@ import java.util.List;
 
 public interface ISubscriptionHolder<T, R> extends Closeable {
 
-    Subscription DEFAULT_RESPONSE = () -> {
-    };
+    Subscription DEFAULT_RESPONSE = () -> {};
+
+    Subscription addSubscription(T type, R action);
+
+    /**
+     * <p>Store a listener to be triggered once inside the holder and after one call on any of the keys,
+     * it will be removed from list and won't be triggered again.</p>
+     */
+    void addOneTimeSubscription(T type, R action);
 
     default Subscription addSubscription(@NonNull List<T> types, R action) {
         if (types.isEmpty()) return DEFAULT_RESPONSE;
@@ -27,13 +34,5 @@ public interface ISubscriptionHolder<T, R> extends Closeable {
     default void addOneTimeSubscription(@NonNull List<T> types, R action) {
         types.forEach(e -> addOneTimeSubscription(e, action));
     }
-
-    Subscription addSubscription(T type, R action);
-
-    /**
-     * <p>Store a listener to be triggered once inside the holder and after one call on any of the keys,
-     * it will be removed from list and won't be triggered again.</p>
-     */
-    void addOneTimeSubscription(T type, R action);
 }
 

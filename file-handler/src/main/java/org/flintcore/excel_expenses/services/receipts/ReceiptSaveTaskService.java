@@ -11,7 +11,6 @@ import org.flintcore.excel_expenses.files.receipts.PeriodReceiptSerializeFileMan
 import org.flintcore.excel_expenses.files.receipts.ReceiptSerializeFileManager;
 import org.flintcore.excel_expenses.models.lists.SerialListHolder;
 import org.flintcore.excel_expenses.models.receipts.Receipt;
-import org.flintcore.excel_expenses.managers.subscriptions.tasks.ObservableFXScheduledService;
 import org.springframework.stereotype.Component;
 
 import java.util.Map;

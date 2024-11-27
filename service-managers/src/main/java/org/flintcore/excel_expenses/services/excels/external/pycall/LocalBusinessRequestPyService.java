@@ -10,7 +10,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.flintcore.excel_expenses.managers.services.business.IBusinessLoaderService;
 import org.flintcore.excel_expenses.managers.shutdowns.IShutdownHandler;
-import org.flintcore.excel_expenses.managers.subscriptions.tasks.ObservableFXService;
 import org.flintcore.excel_expenses.models.expenses.LocalBusiness;
 import org.flintcore.excel_expenses.services.excels.external.DGIIReferenceProperties;
 import org.springframework.stereotype.Component;

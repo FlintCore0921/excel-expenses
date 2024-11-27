@@ -1,12 +1,10 @@
 package org.flintcore.excel_expenses.managers.subscriptions.consumers;
 
-import data.utils.NullableUtils;
-
 import java.io.IOException;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArraySet;
-import java.util.concurrent.atomic.AtomicBoolean;
 
+/**
+ * T as event type, R as subscription task, L as Subscription task holder
+ */
 public abstract class SubscriptionRunnableConsumerHandler<T, R extends Runnable, L>
         extends SubscriptionConsumerHandler<T, R, L> {
 
@@ -29,38 +27,7 @@ public abstract class SubscriptionRunnableConsumerHandler<T, R extends Runnable,
     }
 
     @Override
-    protected void initSubscriptionHolder() {
-        NullableUtils.executeIsNull(this.subscriptions,
-                () -> this.subscriptions = new ConcurrentHashMap<>());
-    }
-
-    @Override
-    protected void initGeneralSubscriptionHolder() {
-        NullableUtils.executeIsNull(this.generalSubscriptions,
-                () -> this.generalSubscriptions = new CopyOnWriteArraySet<>()
-        );
-    }
-
-    @Override
-    protected void initOneTimeSubscriptionHolder() {
-        NullableUtils.executeIsNull(this.generalSubscriptions,
-                () -> {
-                    this.oneTimeSubscriptions = new CopyOnWriteArraySet<>();
-                    this.isOneTimeCalled = new AtomicBoolean();
-                }
-        );
-    }
-
-    @Override
-    protected void initLastSubscriptionHolder() {
-        NullableUtils.executeIsNull(this.lastSubscriptions,
-                () -> this.lastSubscriptions = new ConcurrentHashMap<>()
-        );
-    }
-
-    @Override
     public void close() throws IOException {
-        this.subscriptions.clear();
         this.generalSubscriptions.clear();
         this.lastSubscriptions.clear();
     }

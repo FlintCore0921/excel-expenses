@@ -9,7 +9,6 @@ import lombok.extern.log4j.Log4j2;
 import org.flintcore.excel_expenses.files.receipts.PeriodReceiptSerializeFileManager;
 import org.flintcore.excel_expenses.files.receipts.ReceiptSerializeFileManager;
 import org.flintcore.excel_expenses.models.receipts.Receipt;
-import org.flintcore.excel_expenses.managers.subscriptions.tasks.ObservableFXService;
 import org.springframework.stereotype.Component;
 
 import java.util.List;

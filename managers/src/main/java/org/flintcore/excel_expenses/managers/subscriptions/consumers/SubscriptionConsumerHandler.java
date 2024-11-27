@@ -5,6 +5,8 @@ import javafx.util.Subscription;
 
 import java.util.Collection;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
 
@@ -12,10 +14,12 @@ public abstract class SubscriptionConsumerHandler<T, R, L>
         implements ISubscriptionConsumerHandler<T, R> {
 
     protected Map<T, L> subscriptions;
+
     protected Collection<R> generalSubscriptions;
     protected Collection<R> oneTimeSubscriptions;
-    protected AtomicBoolean isOneTimeCalled;
     protected Map<T, L> lastSubscriptions;
+
+    protected AtomicBoolean isOneTimeCalled;
 
     @Override
     public Subscription addGeneralSubscription(R consumer) {
@@ -40,33 +44,49 @@ public abstract class SubscriptionConsumerHandler<T, R, L>
     }
 
     /**
-     * This function will be used to create the holder of subscriptions.
+     * This function create the holder of subscriptions.
      *
      * @apiNote Recommend be a concurrent Map for iterations and self detach from holder.
      */
-    protected abstract void initSubscriptionHolder();
-
-    /**
-     * This function will be used to create the holder of subscriptions.
-     *
-     * @apiNote Recommend be a concurrent Map for iterations and self detach from holder.
-     */
-    protected abstract void initOneTimeSubscriptionHolder();
+    protected void initSubscriptionHolder() {
+        NullableUtils.executeIsNull(this.subscriptions,
+                () -> this.subscriptions = new ConcurrentHashMap<>()
+        );
+    }
 
     /**
      * This function will be used to create the holder of general subscriptions.
      *
      * @apiNote Recommend be a concurrent Map for iterations and self detach from holder.
      */
-    protected abstract void initGeneralSubscriptionHolder();
+    protected void initGeneralSubscriptionHolder() {
+        NullableUtils.executeIsNull(this.generalSubscriptions,
+                () -> this.generalSubscriptions = new CopyOnWriteArraySet<>()
+        );
+    }
+
+    /**
+     * This function will be used to create the holder of general subscriptions.
+     *
+     * @apiNote Recommend be a concurrent Set for iterations and self detach from holder.
+     */
+    protected void initOneTimeSubscriptionHolder() {
+        NullableUtils.executeIsNull(this.generalSubscriptions, () -> {
+            this.oneTimeSubscriptions = new CopyOnWriteArraySet<>();
+            this.isOneTimeCalled = new AtomicBoolean();
+        });
+    }
 
     /**
      * This function will be used to create the holder of last call subscriptions.
      *
      * @apiNote Recommend be a concurrent Map for iterations and self detach from holder.
      */
-    protected abstract void initLastSubscriptionHolder();
-
+    protected void initLastSubscriptionHolder() {
+        NullableUtils.executeIsNull(this.lastSubscriptions,
+                () -> this.lastSubscriptions = new ConcurrentHashMap<>()
+        );
+    }
     // Interact with values
 
     /**

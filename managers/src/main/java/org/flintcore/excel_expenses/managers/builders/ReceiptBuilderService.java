@@ -2,7 +2,6 @@ package org.flintcore.excel_expenses.managers.builders;
 
 import data.utils.NullableUtils;
 import javafx.concurrent.Task;
-import org.flintcore.excel_expenses.managers.subscriptions.tasks.ObservableFXService;
 import org.flintcore.excel_expenses.managers.validators.receipts.ReceiptValidator;
 import org.flintcore.excel_expenses.models.expenses.LocalBusiness;
 import org.flintcore.excel_expenses.models.receipts.Receipt;
