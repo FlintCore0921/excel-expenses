@@ -2,12 +2,13 @@ package org.flintcore.excel_expenses.services.business;
 
 import javafx.beans.property.ReadOnlyBooleanProperty;
 import lombok.extern.log4j.Log4j2;
+import org.flintcore.excel_expenses.managers.services.ILoaderFxServiceStatus;
+import org.flintcore.excel_expenses.managers.services.ISaveFxServiceStatus;
+import org.flintcore.excel_expenses.managers.services.business.IBusinessFxLoaderService;
 import org.flintcore.excel_expenses.managers.services.business.IBusinessFxRepository;
 import org.flintcore.excel_expenses.managers.services.business.IBusinessFxStorageService;
 import org.flintcore.excel_expenses.managers.shutdowns.ShutdownFXApplication;
 import org.flintcore.excel_expenses.models.expenses.LocalBusiness;
-import org.flintcore.excel_expenses.managers.services.ILoaderFxServiceStatus;
-import org.flintcore.excel_expenses.managers.services.ISaveFxServiceStatus;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -23,7 +24,7 @@ public class LocalBusinessFileFXService implements IBusinessFxRepository<LocalBu
 
     private final ShutdownFXApplication shutdownHandler;
     private final IBusinessFxStorageService<LocalBusiness> localBusinessSaveService;
-    private final IBusinessFxStorageService localBusinessRequestTask;
+    private final IBusinessFxLoaderService<LocalBusiness> localBusinessRequestTask;
 
     public LocalBusinessFileFXService(
             ShutdownFXApplication shutdownHandler,
@@ -37,7 +38,7 @@ public class LocalBusinessFileFXService implements IBusinessFxRepository<LocalBu
 
     @Override
     public Future<List<LocalBusiness>> getBusinessDataList() {
-        return null;
+        return this.localBusinessRequestTask.getBusinessDataList();
     }
 
     @Override
@@ -47,17 +48,17 @@ public class LocalBusinessFileFXService implements IBusinessFxRepository<LocalBu
 
     @Override
     public Future<Void> saveData(List<LocalBusiness> business) {
-        return null;
+        return this.localBusinessSaveService.saveData(business);
     }
 
     @Override
     public ReadOnlyBooleanProperty isRequestingProperty() {
-        return this.localBusinessRequestTask.runningProperty();
+        return this.localBusinessRequestTask.isRequestingProperty();
     }
 
     @Override
     public ReadOnlyBooleanProperty isSavingProperty() {
-        return null;
+        return this.localBusinessSaveService.isSavingProperty();
     }
 
     protected void setupShutdownActions() {

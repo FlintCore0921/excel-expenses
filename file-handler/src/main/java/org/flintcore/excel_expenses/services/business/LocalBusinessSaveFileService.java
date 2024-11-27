@@ -6,6 +6,8 @@ import javafx.concurrent.Task;
 import lombok.NonNull;
 import lombok.extern.log4j.Log4j2;
 import org.flintcore.excel_expenses.files.business.LocalBusinessSerializeFileManager;
+import org.flintcore.excel_expenses.managers.services.ISaveFxServiceStatus;
+import org.flintcore.excel_expenses.managers.services.business.IBusinessFxStorageService;
 import org.flintcore.excel_expenses.managers.services.business.IBusinessStorageService;
 import org.flintcore.excel_expenses.managers.shutdowns.ShutdownFXApplication;
 import org.flintcore.excel_expenses.managers.subscriptions.SubscriptionHolder;
@@ -13,7 +15,6 @@ import org.flintcore.excel_expenses.managers.subscriptions.events.FXRunnableEven
 import org.flintcore.excel_expenses.models.events.TaskFxEvent;
 import org.flintcore.excel_expenses.models.expenses.LocalBusiness;
 import org.flintcore.excel_expenses.models.lists.SerialListHolder;
-import org.flintcore.excel_expenses.managers.services.business.ISaveFxServiceStatus;
 import org.flintcore.excel_expenses.services.ScheduledFxService;
 import org.springframework.stereotype.Component;
 
@@ -28,7 +29,7 @@ import java.util.concurrent.atomic.AtomicReference;
 @Component
 @Log4j2
 public class LocalBusinessSaveFileService extends ScheduledFxService<Void>
-        implements IBusinessStorageService<LocalBusiness>, ISaveFxServiceStatus {
+        implements IBusinessFxStorageService<LocalBusiness> {
 
     public static final long SECONDS_CLOSE_TIMEOUT = 20L;
     private final LocalBusinessSerializeFileManager localBusinessFileManager;
