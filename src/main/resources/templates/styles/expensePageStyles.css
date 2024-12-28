@@ -1,6 +1,0 @@
-@import "boxStyles.css";
-@import "textStyles.css";
-
-.action-button {
-    -fx-background-color: linear-gradient(to bottom, #8c52ff, #cb6ce6);
-}

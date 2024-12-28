@@ -4,4 +4,6 @@ import javafx.scene.layout.Pane;
 
 public interface IRegisterSectionController {
     Pane getNode();
+
+
 }

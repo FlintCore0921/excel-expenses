@@ -1,6 +1,0 @@
-@import "boxStyles.css";
-@import "textStyles.css";
-
-#optionsBox {
-    -fx-background-color: radial-gradient(center 50% 50% , radius 80% , #ffff, #ffff, #8c52ff);
-}

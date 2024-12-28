@@ -55,7 +55,7 @@ public final class RegisterSectionRouter implements IRouter<EExpenseFormRoute> {
         if (this.routeIndex.get() >= this.menuItemsMap.size()) return;
 
         var currentIndex = this.routeIndex.incrementAndGet();
-        this.navigateTo(getRoute(currentIndex));
+        this.navigateTo(this.getRoute(currentIndex));
     }
 
     @Override
@@ -133,7 +133,7 @@ public final class RegisterSectionRouter implements IRouter<EExpenseFormRoute> {
 
         if (Objects.isNull(this.menuItemsMap)) {
             this.routeIndex = new AtomicInteger();
-            this.menuItemsMap = new LinkedHashMap<>();
+            this.menuItemsMap = new EnumMap<>(EExpenseFormRoute.class);
             this.previousTransition = new AtomicReference<>();
         }
 

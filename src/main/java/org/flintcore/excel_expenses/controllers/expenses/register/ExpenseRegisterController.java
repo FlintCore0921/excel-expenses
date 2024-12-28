@@ -24,7 +24,6 @@ public class ExpenseRegisterController implements Initializable {
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
 
-
         // Set navigation
         registerSectionRouter.setParentPane(sectionHolder);
         registerSectionRouter.navigateToHome();

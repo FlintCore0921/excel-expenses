@@ -1,9 +1,0 @@
-.no-insets {
-    -fx-border-color: transparent;
-    -fx-background-insets: 0;
-}
-
-.transparent-bg {
-    -fx-border-color: transparent;
-    -fx-background-color: transparent;
-}
