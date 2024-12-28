@@ -2,7 +2,7 @@ package org.flintcore.excel_expenses.managers.tasks.business.locals;
 
 import lombok.extern.log4j.Log4j2;
 import org.flintcore.excel_expenses.managers.validators.LocalBusinessValidator;
-import org.flintcore.excel_expenses.models.expenses.LocalBusiness;
+import org.flintcore.excel_expenses.models.business.LocalBusiness;
 
 import java.util.function.Supplier;
 import java.util.stream.Stream;

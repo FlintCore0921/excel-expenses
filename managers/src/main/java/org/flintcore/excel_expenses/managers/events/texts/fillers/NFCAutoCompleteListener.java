@@ -9,14 +9,15 @@ import lombok.NonNull;
 import org.apache.commons.lang3.ObjectUtils;
 import org.flintcore.excel_expenses.managers.factories.receipts.LocalNFCFactory;
 import org.flintcore.excel_expenses.managers.rules.IReceiptRules;
-import org.flintcore.excel_expenses.managers.subscriptions.consumers.ISubscriptionConsumerHandler;
-import org.flintcore.excel_expenses.managers.subscriptions.consumers.MultiSubscriptionConsumerHandler;
+import org.flintcore.excel_expenses.managers.subscriptions.handlers.DynamicOnceSubscriptionHandler;
+import org.flintcore.excel_expenses.managers.subscriptions.handlers.DynamicSubscriptionHandler;
+import org.flintcore.excel_expenses.managers.subscriptions.handlers.GeneralDynamicRunnableSubscriptionHandler;
 import org.flintcore.excel_expenses.models.properties.formatters.NFCFormatter;
 
 public class NFCAutoCompleteListener {
     protected final TextField nfcFilter;
     protected LocalNFCFactory localNfcFactory;
-    protected ISubscriptionConsumerHandler<KeyCode, Runnable> keyHandler;
+    protected GeneralDynamicRunnableSubscriptionHandler<KeyCode> keyHandler;
 
     public final StringProperty NFCProperty;
 
@@ -40,12 +41,15 @@ public class NFCAutoCompleteListener {
 
         this.nfcFilter.focusedProperty().subscribe((old, curr) -> callFieldValidation());
 
-        this.keyHandler.addLastSubscription(KeyCode.ENTER, this::callFieldValidation);
+        this.keyHandler.handle(KeyCode.ENTER, this::callFieldValidation);
     }
 
     protected void initHandlerListener() {
         NullableUtils.executeIsNull(this.keyHandler,
-                () -> this.keyHandler = new MultiSubscriptionConsumerHandler<>()
+                () -> this.keyHandler = new GeneralDynamicRunnableSubscriptionHandler<>(
+                        new DynamicSubscriptionHandler<>(),
+                        new DynamicOnceSubscriptionHandler<>()
+                )
         );
     }
 

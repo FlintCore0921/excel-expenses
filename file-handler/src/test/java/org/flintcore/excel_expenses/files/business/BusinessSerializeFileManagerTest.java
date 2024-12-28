@@ -4,7 +4,7 @@ import org.flintcore.excel_expenses.serializable.SerializableFileCreator;
 import org.flintcore.excel_expenses.serializable.SerializableFileFinder;
 import org.flintcore.excel_expenses.serializable.SerializeReader;
 import org.flintcore.excel_expenses.serializable.SerializeWriter;
-import org.flintcore.excel_expenses.models.expenses.LocalBusiness;
+import org.flintcore.excel_expenses.models.business.LocalBusiness;
 import org.flintcore.excel_expenses.models.lists.SerialListHolder;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

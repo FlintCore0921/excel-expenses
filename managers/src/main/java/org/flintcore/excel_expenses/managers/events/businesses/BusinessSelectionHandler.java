@@ -3,7 +3,7 @@ package org.flintcore.excel_expenses.managers.events.businesses;
 import data.utils.NullableUtils;
 import javafx.util.Subscription;
 import lombok.extern.log4j.Log4j2;
-import org.flintcore.excel_expenses.models.expenses.IBusiness;
+import org.flintcore.excel_expenses.models.business.IBusiness;
 
 import java.util.ArrayList;
 import java.util.List;

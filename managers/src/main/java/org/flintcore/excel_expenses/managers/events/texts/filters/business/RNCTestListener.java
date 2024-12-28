@@ -7,7 +7,7 @@ import javafx.scene.input.KeyEvent;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.extern.log4j.Log4j2;
-import org.flintcore.excel_expenses.models.expenses.IBusiness;
+import org.flintcore.excel_expenses.models.business.IBusiness;
 import org.flintcore.utilities.lists.ObservableListUtils;
 
 /**Just for testing purpose.*/

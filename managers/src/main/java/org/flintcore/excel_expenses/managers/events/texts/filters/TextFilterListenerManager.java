@@ -7,7 +7,6 @@ import javafx.scene.control.TextField;
 import lombok.NonNull;
 import lombok.Setter;
 import org.apache.commons.lang3.ObjectUtils;
-import org.flintcore.excel_expenses.managers.subscriptions.SubscriptionHolder;
 import org.flintcore.utilities.properties.PropertyListenerUtils;
 
 import java.io.Closeable;
@@ -21,7 +20,6 @@ public abstract class TextFilterListenerManager<T> implements Closeable {
     protected final ObjectProperty<ObservableList<? extends T>> mainListProperty;
     protected final IntegerProperty mainListSizeProperty;
 
-    protected SubscriptionHolder subsManager;
 
     // Update filter comparator
     @Setter
@@ -48,7 +46,6 @@ public abstract class TextFilterListenerManager<T> implements Closeable {
         this.mainListSizeProperty = new SimpleIntegerProperty();
 
         this.filterComparator = ObjectUtils.defaultIfNull(filterComparator, Object::toString);
-        this.subsManager = new SubscriptionHolder();
 
         applySizeProperty();
     }

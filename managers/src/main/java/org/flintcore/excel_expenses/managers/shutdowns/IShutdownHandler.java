@@ -1,14 +1,11 @@
 package org.flintcore.excel_expenses.managers.shutdowns;
 
-import org.flintcore.excel_expenses.managers.subscriptions.ISubscriptionHolder;
+
+import org.flintcore.excel_expenses.managers.subscriptions.handlers.IKeyLessSubscriptionHandler;
 
 import java.io.Closeable;
 
-public interface IShutdownHandler<R> extends ISubscriptionHolder<Object, R>, Closeable {
-    default void shutdown(){
-        close();
-    }
+public interface IShutdownHandler
+        extends IKeyLessSubscriptionHandler<Runnable>, Closeable {
 
-    @Override
-    void close();
 }

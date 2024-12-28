@@ -1,0 +1,14 @@
+external:
+  services:
+    dgii:
+      port: 4030
+      main-uri: http://localhost:${external.services.dgii.port:4030}
+      time-gap-request: 30m
+      paths:
+        file-path: ../externals/DGII_API.exe
+      endpoints:
+        server-status: /server/health
+        business-main: /business
+        business-get: ${external.services.dgii.endpoints.business-main}/get
+        # Add serverStatus in uri
+        business-by-status: ${external.services.dgii.endpoints.business-get}

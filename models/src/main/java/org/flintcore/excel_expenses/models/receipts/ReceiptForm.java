@@ -1,7 +1,7 @@
 package org.flintcore.excel_expenses.models.receipts;
 
 import lombok.Getter;
-import org.flintcore.excel_expenses.models.expenses.LocalBusiness;
+import org.flintcore.excel_expenses.models.business.LocalBusiness;
 
 @Getter
 public class ReceiptForm {

@@ -1,7 +1,7 @@
 package org.flintcore.excel_expenses.managers.validators;
 
 import org.flintcore.excel_expenses.managers.rules.ILocalBusinessRules;
-import org.flintcore.excel_expenses.models.expenses.LocalBusiness;
+import org.flintcore.excel_expenses.models.business.LocalBusiness;
 import org.springframework.stereotype.Component;
 
 import java.util.Objects;

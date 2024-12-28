@@ -5,10 +5,10 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.input.MouseEvent;
 import javafx.stage.Stage;
-import javafx.stage.StageStyle;
 import lombok.RequiredArgsConstructor;
 import org.flintcore.excel_expenses.ExcelExpensesApplication;
 import org.flintcore.excel_expenses.listeners.WindowRelocationHandler;
+import org.flintcore.excel_expenses.managers.properties.CompoundResourceBundle;
 import org.flintcore.excel_expenses.managers.shutdowns.ShutdownFXApplication;
 import org.flintcore.excel_expenses.models.locations.RelocationParam;
 import org.springframework.boot.builder.SpringApplicationBuilder;
@@ -18,6 +18,8 @@ import org.springframework.stereotype.Component;
 import java.awt.*;
 import java.net.URL;
 import java.util.Objects;
+
+import static org.flintcore.excel_expenses.managers.properties.CompoundResourceBundle.*;
 
 @Component
 @RequiredArgsConstructor
@@ -34,18 +36,24 @@ public class ExpensesApplication extends Application {
     @Override
     public void start(Stage stage) throws Exception {
         URL resource = Objects.requireNonNull(
-                getClass().getResource("/templates/MainView.fxml")
+                getClass().getResource("/templates/main-view.fxml")
         );
-        FXMLLoader loader = new FXMLLoader(resource);
+
+        CompoundResourceBundle resources = this.springApplicationContext
+                .getBean(CompoundResourceBundle.class);
+
+        resources.registerBundle(Bundles.GENERAL);
+
+        FXMLLoader loader = new FXMLLoader(resource, resources);
         loader.setControllerFactory(springApplicationContext::getBean);
 
         Scene rootScene = new Scene(loader.load());
 
-        stage.initStyle(StageStyle.UNDECORATED);
+//        stage.initStyle(StageStyle.UNDECORATED);
         stage.setMinWidth(700);
         stage.setMinHeight(500);
         stage.setScene(rootScene);
-        stage.setTitle("Expenses");
+        stage.setTitle(resources.getString("app.title"));
 
         setListeners(stage);
 

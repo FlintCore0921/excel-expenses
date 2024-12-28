@@ -1,4 +1,4 @@
-import org.springframework.boot.gradle.tasks.bundling.BootJar
+import java.util.Arrays
 
 plugins {
     id("org.openjfx.javafxplugin") version "0.0.13"
@@ -13,11 +13,24 @@ javafx {
 }
 
 dependencies {
-    compileOnly(project(":models"))
-    compileOnly(project(":managers"))
+    // Own modules
+    arrayOf(
+        project(":models"),
+        project(":managers"),
+    ).forEach {
+        compileOnly(it)
+        testCompileOnly(it)
+    }
     compileOnly(libs.javafx.controls)
 
-    testCompileOnly(project(":models"))
-    testCompileOnly(project(":managers"))
+    // BOM - Platforms
+    arrayOf(
+        platform(libs.excelib.bom)
+    ).forEach {
+        compileOnly(it)
+        testCompileOnly(it)
+    }
+    configureCompileOnlyExcelib(*ExcelibModules.values())
+
     testCompileOnly(libs.javafx.controls)
 }

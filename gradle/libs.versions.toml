@@ -6,6 +6,8 @@ junit = "5.10.0"
 excelib = "1.1.1"
 testfx = "4.0.18"
 testfx-monocle = "17.0.10"
+hamcrest = "3.0"
+jackson = "2.18.2"
 
 [libraries]
 data_utils = { group = "com.flintCore", name = "data-utils", version.ref = "flint-data-utils" }
@@ -13,6 +15,8 @@ excelib_bom = { group = "org.flintcore.excelib", name = "excelib-bom", version.r
 excelib_commons = { group = "org.flintcore.excelib", name = "commons" }
 
 lombok = { group = "org.projectlombok", name = "lombok" }
+
+jackson_annotations = { group = "com.fasterxml.jackson.core", name = "jackson-annotations", version.ref="jackson" }
 
 apache_commons_text = { group = "org.apache.commons", name = "commons-text", version.ref = "apache-commons-text" }
 
@@ -22,6 +26,7 @@ javafx_graphics = { group = "org.openjfx", name = "javafx-graphics", version.ref
 javafx_base = { group = "org.openjfx", name = "javafx-base", version.ref = "javafx" }
 
 spring_boot_starter = { group = "org.springframework.boot", name = "spring-boot-starter" }
+spring_boot_web = { group = "org.springframework.boot", name = "spring-boot-starter-web" }
 spring_boot_devtools = { group = "org.springframework.boot", name = "spring-boot-devtools" }
 spring_boot_starter_test = { group = "org.springframework.boot", name = "spring-boot-starter-test" }
 
@@ -34,3 +39,6 @@ junit_platform_launcher = { group = "org.junit.platform", name = "junit-platform
 testfx-core = { group = "org.testfx", name = "testfx-core", version.ref = "testfx" }
 testfx-junit5 = { group = "org.testfx", name = "testfx-junit5", version.ref = "testfx" }
 testfx-monocle = { group = "org.testfx", name = "openjfx-monocle", version.ref = "testfx-monocle" }
+
+# Hamcrest
+hamcrest = { group = "org.hamcrest", name = "hamcrest", version.ref = "hamcrest" }

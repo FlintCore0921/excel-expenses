@@ -1,8 +1,8 @@
 package org.flintcore.excel_expenses.managers.filters;
 
 import javafx.util.StringConverter;
-import org.flintcore.excel_expenses.models.expenses.IBusiness;
-import org.flintcore.excel_expenses.models.expenses.LocalBusiness;
+import org.flintcore.excel_expenses.models.business.IBusiness;
+import org.flintcore.excel_expenses.models.business.LocalBusiness;
 
 import java.util.List;
 import java.util.Objects;

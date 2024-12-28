@@ -150,7 +150,6 @@ public final class ObservableListUtils {
                 if (change.wasAdded()) {
                     receptorObservable.addAll(change.getAddedSubList());
                 }
-
                 if (change.wasRemoved()) {
                     change.getRemoved().forEach(receptorObservable::remove);
                 }

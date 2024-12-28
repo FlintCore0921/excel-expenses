@@ -1,6 +1,5 @@
 package org.flintcore.excel_expenses.managers.shutdowns;
 
-import data.utils.NullableUtils;
 import jakarta.annotation.PostConstruct;
 import javafx.animation.PauseTransition;
 import javafx.application.Platform;
@@ -9,14 +8,18 @@ import javafx.stage.Stage;
 import javafx.util.Duration;
 import javafx.util.Subscription;
 import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.extern.log4j.Log4j2;
 import org.flintcore.excel_expenses.managers.properties.CompoundResourceBundle;
+import org.flintcore.excel_expenses.managers.subscriptions.handlers.IOnceKeyLessSubscriptionHandler;
+import org.flintcore.excel_expenses.managers.subscriptions.handlers.OnceKeyLessRunnableSubscriptionHandler;
 import org.springframework.stereotype.Component;
 
-import java.util.*;
-import java.util.concurrent.*;
+import java.util.List;
+import java.util.Objects;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -24,13 +27,25 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 @Component
 @Log4j2
-@RequiredArgsConstructor
-public final class ShutdownFXApplication implements IShutdownHandler<Runnable> {
+public final class ShutdownFXApplication implements IShutdownHandler {
+    // SECONDS
+    private final long AWAIT_TIME_S = 15L;
+
     private final CompoundResourceBundle bundles;
+    // Make Holder
+    private final IOnceKeyLessSubscriptionHandler<Runnable> shutdownHolder;
+
     @Setter
     private Stage stage;
-    private Map<Object, Set<Runnable>> subscriptions;
+
     private AtomicBoolean closeTrigger;
+
+    public ShutdownFXApplication(
+            CompoundResourceBundle bundles,
+            OnceKeyLessRunnableSubscriptionHandler shutdownHolder) {
+        this.bundles = bundles;
+        this.shutdownHolder = shutdownHolder;
+    }
 
     @PostConstruct
     private void setAtomics() {
@@ -38,49 +53,18 @@ public final class ShutdownFXApplication implements IShutdownHandler<Runnable> {
     }
 
     @Override
-    public Subscription addSubscription(Object type, Runnable action) {
-        initSubscriptions();
-
-        this.subscriptions.computeIfAbsent(type, this::buildSubscriptionHolder)
-                .add(action);
-
-        return () -> this.subscriptions.get(type).remove(action);
+    public Subscription handle(@NonNull Runnable value) {
+        return this.shutdownHolder.handleOnce(value);
     }
 
     @Override
-    public void addOneTimeSubscription(Object type, Runnable action) {
-        Runnable onCall = () -> {
-            action.run();
-            this.subscriptions.get(type).remove(action);
-        };
-
-        this.addSubscription(type, onCall);
+    public Subscription handle(@NonNull List<Runnable> values) {
+        return this.shutdownHolder.handleOnce(values);
     }
 
     @Override
-    public void addOneTimeSubscription(@NonNull List<Object> types, Runnable action) {
-        if (types.isEmpty()) return;
+    public void run() {
 
-        Runnable onCall = () -> {
-            action.run();
-            types.forEach(type -> this.subscriptions.get(type).remove(action));
-        };
-
-        IShutdownHandler.super.addOneTimeSubscription(types, onCall);
-    }
-
-    private void initSubscriptions() {
-        if (Objects.isNull(subscriptions)) {
-            synchronized (ShutdownFXApplication.class) {
-                NullableUtils.executeIsNull(this.subscriptions,
-                        () -> this.subscriptions = new ConcurrentHashMap<>()
-                );
-            }
-        }
-    }
-
-    private Set<Runnable> buildSubscriptionHolder(Object __) {
-        return new CopyOnWriteArraySet<>();
     }
 
     @Override
@@ -101,43 +85,23 @@ public final class ShutdownFXApplication implements IShutdownHandler<Runnable> {
             Platform.exit();
         });
 
-        if (Objects.isNull(subscriptions) || this.subscriptions.isEmpty()) {
-            waitAfterClose.play();
-            return;
-        }
 
-        int totalTasks = this.subscriptions.values().stream()
-                .mapToInt(Collection::size)
-                .sum();
-
-        CountDownLatch counterWait = new CountDownLatch(totalTasks);
         ExecutorService tasksExecutor = Executors.newSingleThreadExecutor();
 
-        for (Map.Entry<Object, Set<Runnable>> entry : this.subscriptions.entrySet()) {
-            tasksExecutor.execute(() -> {
-                for (Runnable runnable : entry.getValue()) {
-                    try {
-                        runnable.run();
-                    } catch (Exception e) {
-                        log.error("Error with subscription in {}",
-                                entry.getKey().getClass().getSimpleName());
-                        log.error(e.getMessage(), e);
-                    } finally {
-                        counterWait.countDown();
-                    }
-                }
-            });
+        tasksExecutor.execute(this.shutdownHolder);
+
+        tasksExecutor.shutdown();
+
+        try {
+            // If it does not end in this time waits.
+            if (!tasksExecutor.awaitTermination(AWAIT_TIME_S, TimeUnit.SECONDS)) {
+                tasksExecutor.shutdownNow();
+            }
+        } catch (InterruptedException e) {
+            tasksExecutor.shutdownNow();
         }
 
-        tasksExecutor.execute(() -> {
-            try {
-                counterWait.await();
-            } catch (InterruptedException ignored) {
-            } finally {
-                tasksExecutor.shutdown();
-                waitAfterClose.play();
-            }
-        });
+        waitAfterClose.play();
     }
 
     private Alert setupShutdownAlert() {

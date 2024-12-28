@@ -1,7 +1,11 @@
 package org.flintcore.excel_expenses.managers.routers;
 
-public interface IRouter<I extends IRoute> {
-    String TEMPLATE_LOCATION = "/templates";
+import lombok.NonNull;
 
+public interface IRouter<R> {
     void navigateBack();
+
+    void navigateToHome();
+
+    void navigateTo(@NonNull R route);
 }

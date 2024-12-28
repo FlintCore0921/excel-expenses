@@ -1,9 +1,12 @@
 package org.flintcore.excel_expenses.managers.routers.factories;
 
 import javafx.fxml.FXMLLoader;
+import javafx.scene.Node;
 import lombok.RequiredArgsConstructor;
+import org.flintcore.excel_expenses.models.NodeWrapper;
 import org.springframework.context.ApplicationContext;
 
+import java.io.IOException;
 import java.net.URL;
 import java.util.Objects;
 
@@ -21,4 +24,7 @@ public abstract class FXMLFactoryImpl<L, R> implements IFXMLFactory<L, R> {
         return loader;
     }
 
+    protected NodeWrapper<Node, Object> buildWrapperResult(FXMLLoader loader) throws IOException {
+        return new NodeWrapper<>(loader.load(), loader.getController());
+    }
 }

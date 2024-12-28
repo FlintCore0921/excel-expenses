@@ -1,0 +1,39 @@
+/*Body*/
+.small-text {
+    -fx-font-size: 22;
+}
+
+.medium-text {
+    -fx-font-size: 26;
+}
+
+.high-text {
+    -fx-font-size: 32;
+}
+
+.huge-text {
+    -fx-font-size: 50;
+}
+
+/*Title*/
+.small-title-text {
+    -fx-font-size: 25;
+}
+
+.medium-title-text {
+    -fx-font-size: 30;
+}
+
+.high-title-text {
+    -fx-font-size: 36;
+}
+
+/* Colors */
+.white-text, .white-text * {
+    -fx-fill: #fff;
+}
+
+
+.black-text, .black-text * {
+    -fx-fill: #000;
+}

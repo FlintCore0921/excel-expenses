@@ -1,5 +1,3 @@
-import org.springframework.boot.gradle.tasks.bundling.BootJar
-
 plugins {
     id("org.openjfx.javafxplugin") version "0.0.13"
 }
@@ -18,7 +16,8 @@ dependencies {
     compileOnly(libs.javafx.controls)
     compileOnly(libs.javafx.fxml)
 
-    testCompileOnly(project(":models"))
-    testCompileOnly(libs.javafx.controls)
-    testCompileOnly(libs.javafx.fxml)
+    testImplementation(project(":models"))
+    testImplementation(project(":excels-handler"))
+    testImplementation(libs.javafx.controls)
+    testImplementation(libs.javafx.fxml)
 }

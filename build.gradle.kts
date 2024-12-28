@@ -8,7 +8,7 @@ plugins {
 }
 
 group = "org.flintcore"
-version = "0.0.2"
+version = "0.0.4"
 
 java {
     toolchain {
@@ -73,7 +73,8 @@ subprojects {
         // Text for javafx
         testImplementation(projectLibs.testfx.core)
         testImplementation(projectLibs.testfx.junit5)
-        testRuntimeOnly(projectLibs.testfx.monocle)
+        testImplementation(projectLibs.testfx.monocle)
+        testImplementation(projectLibs.hamcrest)
     }
 
     tasks.test {
@@ -91,11 +92,15 @@ subprojects {
 
 dependencies {
 //    my modules
-    implementation(project(":models"))
-    implementation(project(":file-handler"))
-    implementation(project(":excels-handler"))
-    implementation(project(":managers"))
-    implementation(project(":service-managers"))
+    listOf(
+        project(":utilities"),
+        project(":models"),
+        project(":file-handler"),
+        project(":excels-handler"),
+        project(":managers"),
+        project(":service-managers"),
+        project(":source-configuration")
+    ).forEach(::implementation)
 
     implementation(libs.javafx.controls)
     implementation(libs.javafx.fxml)

@@ -11,21 +11,27 @@ javafx {
 }
 
 dependencies {
-    compileOnly(project(":models"))
-    compileOnly(project(":managers"))
-    compileOnly(project(":file-handler"))
-    compileOnly(project(":excels-handler"))
+    arrayOf(
+        project(":models"),
+        project(":managers"),
+        project(":file-handler"),
+        project(":excels-handler"),
+        project(":source-configuration")
+    ).forEach {
+        compileOnly(it)
+        testImplementation(it)
+    }
+
     compileOnly(libs.javafx.controls)
     compileOnly(libs.javafx.fxml)
 
+    // For web requests
+    implementation(libs.spring.boot.web)
+
     compileOnly(platform(libs.excelib.bom))
-    testCompileOnly(platform(libs.excelib.bom))
+    testImplementation(platform(libs.excelib.bom))
     configureCompileOnlyExcelib(*ExcelibModules.values())
 
-    testCompileOnly(project(":models"))
-    testCompileOnly(project(":managers"))
-    testCompileOnly(project(":file-handler"))
-    testCompileOnly(project(":excels-handler"))
     testCompileOnly(libs.javafx.controls)
     testCompileOnly(libs.javafx.fxml)
 }

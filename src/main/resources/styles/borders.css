@@ -1,0 +1,45 @@
+
+.empty-scroll-pane {
+    -fx-background-color: transparent; /* Removes the background color */
+    -fx-border-width: 0;
+}
+
+.empty-scroll-pane .viewport {
+    -fx-background-color: transparent;
+}
+
+/*
+    Primary date picker
+*/
+
+.primary-date-picker, .primary-date-picker:focused {
+    -fx-border-color: -fx-primary-color;
+    -fx-border-width: 3;
+    -fx-background-radius: 20;
+    /*-fx-border-radius: 20;*/
+}
+
+.primary-date-picker .text-field {
+    -fx-background-color: tranparent;
+    -fx-border-radius: 20;
+}
+
+.primary-date-picker .cell {
+    -fx-font-size: 18;
+}
+
+.primary-date-picker .arrow-button, .primary-date-picker .cell:hover {
+    -fx-background-color: derive(-fx-primary-color, 14%);
+    /*-fx-background-radius: 0 12 12 0;*/
+}
+
+.primary-date-picker .arrow-button:hover, .primary-date-picker .selected,
+.primary-date-picker .month-year-pane {
+    -fx-background-color: derive(-fx-primary-color, 28%);
+}
+
+.primary-date-picker .today {
+    -fx-background-color: derive(-fx-primary-color, 50%);
+
+}
+

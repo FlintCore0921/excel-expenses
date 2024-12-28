@@ -1,0 +1,40 @@
+.root {
+    -fx-primary-color:  #7cc644;
+
+    -fx-background-color: #fff;
+    -fx-font-family: "Segoe UI";
+    -fx-font-weight: bold;
+}
+
+.left-pad-pane {
+    -fx-background-radius: 0 15 15 0;
+    -fx-border-radius: 30;
+
+    -fx-max-height: -1;
+}
+
+.primary-bg {
+    -fx-background-color: -fx-primary-color;
+}
+
+.btn {
+    -fx-border-color: transparent;
+    -fx-background-radius: 20;
+}
+
+.border-light {
+    -fx-background-radius: 20;
+    -fx-border-radius: 20;
+}
+
+.primary-border-light {
+    -fx-border-color: -fx-primary-color;
+    -fx-border-width: 3;
+    -fx-background-radius: 20;
+    -fx-border-radius: 20;
+}
+
+.primary-border-light:focused {
+    -fx-focus-color: -fx-primary-color, red, green;
+    /*-fx-border-width: 4;*/
+}

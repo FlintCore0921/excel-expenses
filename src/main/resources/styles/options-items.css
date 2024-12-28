@@ -1,0 +1,9 @@
+.flex-top-left-fast-options{
+    -fx-padding: 14 14 14 35;
+    -fx-border-color: #000;
+
+    -fx-background-radius: 0 30 30 0;
+    -fx-border-radius: 30;
+    -fx-translate-x: -30;
+    -fx-border-width: 2;
+}

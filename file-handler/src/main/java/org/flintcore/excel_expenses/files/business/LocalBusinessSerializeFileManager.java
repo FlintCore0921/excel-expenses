@@ -5,7 +5,7 @@ import org.flintcore.excel_expenses.files.paths.FilePathHolder;
 import org.flintcore.excel_expenses.serializable.SerializeFileManager;
 import org.flintcore.excel_expenses.serializable.SerializeReader;
 import org.flintcore.excel_expenses.serializable.SerializeWriter;
-import org.flintcore.excel_expenses.models.expenses.LocalBusiness;
+import org.flintcore.excel_expenses.models.business.LocalBusiness;
 import org.springframework.stereotype.Component;
 
 @Component

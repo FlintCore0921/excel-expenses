@@ -1,8 +1,6 @@
 package org.flintcore.excel_expenses.managers.events.texts.filters.business;
 
-import data.utils.NullableUtils;
 import javafx.animation.PauseTransition;
-import javafx.application.Platform;
 import javafx.beans.binding.BooleanBinding;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyObjectProperty;
@@ -13,14 +11,13 @@ import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
 import javafx.util.Duration;
 import javafx.util.Subscription;
-import lombok.Getter;
 import lombok.NonNull;
 import lombok.extern.log4j.Log4j2;
 import org.flintcore.excel_expenses.managers.events.combo_box.keyboards.RemoteKeyListener;
 import org.flintcore.excel_expenses.managers.events.texts.filters.TextFilterListenerManager;
 import org.flintcore.excel_expenses.managers.filters.BasicBusinessStringConverter;
 import org.flintcore.excel_expenses.managers.rules.ILocalBusinessRules;
-import org.flintcore.excel_expenses.models.expenses.IBusiness;
+import org.flintcore.excel_expenses.models.business.IBusiness;
 import org.flintcore.excel_expenses.models.properties.formatters.RNCFormatter;
 import org.flintcore.utilities.bindings.NoChangeObjectObservable;
 import org.flintcore.utilities.lists.ObservableListUtils;
@@ -35,8 +32,7 @@ public class RNCFilterManager extends TextFilterListenerManager<IBusiness> {
     private final ReadOnlyObjectWrapper<IBusiness> selectedBusinessProperty;
     private final NoChangeObjectObservable<IBusiness> hasNotUpdateSelectBinding;
     // Listeners
-    @Getter
-    protected RemoteKeyListener remoteKeyListener;
+    private final RemoteKeyListener remoteKeyListener;
 
     // Combo Filter
     protected final ComboBox<IBusiness> optionsBox;
@@ -44,8 +40,13 @@ public class RNCFilterManager extends TextFilterListenerManager<IBusiness> {
     // Global bindings
     protected BooleanBinding canFilterTextBinding, canSelectItemBinding;
 
-    public RNCFilterManager(TextField textFilter, @NonNull ComboBox<IBusiness> optionsBox) {
+    public RNCFilterManager(
+            TextField textFilter,
+            RemoteKeyListener remoteKeyListener,
+            @NonNull ComboBox<IBusiness> optionsBox
+    ) {
         super(textFilter, null, IBusiness::getRNC);
+        this.remoteKeyListener = remoteKeyListener;
         this.optionsBox = optionsBox;
         this.selectedBusinessProperty = new ReadOnlyObjectWrapper<>();
         this.hasNotUpdateSelectBinding = NoChangeObjectObservable.bind(this.selectedBusinessProperty);
@@ -53,7 +54,6 @@ public class RNCFilterManager extends TextFilterListenerManager<IBusiness> {
 
     @Override
     public void setup() {
-        this.subsManager.close();
         addKeyListeners();
 
         setupItemsFilterValues();
@@ -130,7 +130,6 @@ public class RNCFilterManager extends TextFilterListenerManager<IBusiness> {
                     filterDebounce.playFromStart();
                 });
 
-        this.subsManager.appendSubscriptionOn(this, onFilterSubscription);
 
         // When there is a selection and text field lost focus and updated to a different value
         // Revert value
@@ -157,36 +156,28 @@ public class RNCFilterManager extends TextFilterListenerManager<IBusiness> {
     private void addKeyListeners() {
         initKeyFilterListener();
 
-        this.remoteKeyListener.appendGeneralListener(this.optionsBox::show);
+        this.remoteKeyListener.appendListener(this.optionsBox::show);
 
-        this.subsManager.appendSubscriptionOn(this,
-                this.remoteKeyListener.appendHandlerListener(KeyCode.ESCAPE,
-                        () -> this.optionsBox.setValue(null)
-                )
+        this.remoteKeyListener.appendListener(KeyCode.ESCAPE,
+                () -> this.optionsBox.setValue(null)
         );
 
-        this.subsManager.appendSubscriptionOn(this,
-                this.remoteKeyListener.appendHandlerListener(KeyCode.UP,
-                        () -> this.optionsBox.getSelectionModel().selectPrevious()
-                )
+        this.remoteKeyListener.appendListener(KeyCode.UP,
+                () -> this.optionsBox.getSelectionModel().selectPrevious()
         );
 
-        this.subsManager.appendSubscriptionOn(this,
-                this.remoteKeyListener.appendHandlerListener(KeyCode.DOWN,
-                        () -> this.optionsBox.getSelectionModel().selectNext()
-                )
+        this.remoteKeyListener.appendListener(KeyCode.DOWN,
+                () -> this.optionsBox.getSelectionModel().selectNext()
         );
 
         // select the current index selected.
-        this.subsManager.appendSubscriptionOn(this,
-                this.remoteKeyListener.appendLastListener(KeyCode.ENTER, () -> {
-                    // can select item in list ?
-                    if (!this.canSelectItemBinding.get()) return;
-                    IBusiness currentSelection = this.optionsBox.getValue();
-                    this.selectedBusinessProperty.setValue(currentSelection);
-                    this.optionsBox.hide();
-                })
-        );
+        this.remoteKeyListener.appendListener(KeyCode.ENTER, () -> {
+            // can select item in list ?
+            if (!this.canSelectItemBinding.get()) return;
+            IBusiness currentSelection = this.optionsBox.getValue();
+            this.selectedBusinessProperty.setValue(currentSelection);
+            this.optionsBox.hide();
+        });
     }
 
     protected Predicate<IBusiness> buildFilter(String toFilter) {
@@ -195,15 +186,12 @@ public class RNCFilterManager extends TextFilterListenerManager<IBusiness> {
     }
 
     private void initKeyFilterListener() {
-        NullableUtils.executeIsNull(this.remoteKeyListener, () -> {
-            this.remoteKeyListener = new RemoteKeyListener();
-            this.textFilter.setOnKeyPressed(this.remoteKeyListener);
-        });
+        this.textFilter.setOnKeyPressed(this.remoteKeyListener);
     }
 
     @Override
     public void close() {
-        Platform.runLater(this.subsManager::close);
+        // Do nothing
     }
 
     @SuppressWarnings("unchecked")

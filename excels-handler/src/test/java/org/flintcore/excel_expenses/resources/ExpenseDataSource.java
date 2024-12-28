@@ -1,6 +1,6 @@
 package org.flintcore.excel_expenses.resources;
 
-import org.flintcore.excel_expenses.models.expenses.LocalBusiness;
+import org.flintcore.excel_expenses.models.business.LocalBusiness;
 import org.flintcore.excel_expenses.models.receipts.Receipt;
 import org.junit.jupiter.params.provider.Arguments;
 

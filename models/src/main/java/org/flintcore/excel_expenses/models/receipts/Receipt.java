@@ -2,7 +2,7 @@ package org.flintcore.excel_expenses.models.receipts;
 
 import lombok.Builder;
 import lombok.NonNull;
-import org.flintcore.excel_expenses.models.expenses.IBusiness;
+import org.flintcore.excel_expenses.models.business.IBusiness;
 
 import java.io.Serial;
 import java.io.Serializable;

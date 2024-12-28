@@ -7,9 +7,14 @@ import lombok.Getter;
 import lombok.NonNull;
 import org.springframework.stereotype.Component;
 
+import java.nio.file.Path;
 import java.util.*;
 import java.util.stream.StreamSupport;
 
+/**
+ * Class to hold all bundles based on Bundles Enum key.
+ * The class will be notified if user change or request a Locale change and override all data.
+ */
 @Component
 public class CompoundResourceBundle extends ResourceBundle {
     @Deprecated
@@ -24,8 +29,11 @@ public class CompoundResourceBundle extends ResourceBundle {
 
     public void registerBundle(@NonNull Bundles bundle) {
         onInitDictionary();
-        final String bundleNamePathCompleted = bundle.location;
-        this.bundleDictionary.putIfAbsent(bundle, loadBundle(bundleNamePathCompleted));
+        if (bundleDictionary.containsKey(bundle)) return;
+
+        final String bundlePath = bundle.location;
+
+        this.bundleDictionary.putIfAbsent(bundle, loadBundle(bundlePath));
     }
 
     private ResourceBundle loadBundle(String bundleNamePathCompleted) {
@@ -33,22 +41,28 @@ public class CompoundResourceBundle extends ResourceBundle {
     }
 
     private void onInitDictionary() {
-        NullableUtils.executeIsNull(this.bundleDictionary,
-                () -> {
-                    this.bundleDictionary = new EnumMap<>(Bundles.class);
-                    registerBundles(Bundles.getDefaultBundles());
-                }
-        );
+        NullableUtils.executeIsNull(this.bundleDictionary, () -> {
+            this.bundleDictionary = new EnumMap<>(Bundles.class);
+            registerBundles(Bundles.defaultBundles());
+        });
     }
 
     @Override
     @Nullable
     protected Object handleGetObject(@NonNull String key) {
+        if(Objects.isNull(this.bundleDictionary)) return null;
+
         return this.bundleDictionary.values().stream()
                 .filter(bd -> bd.containsKey(key))
                 .findFirst()
                 .map(res -> res.getObject(key))
                 .orElse(null);
+    }
+
+    @Override
+    public boolean containsKey(@NonNull String key) {
+        return Objects.nonNull(this.bundleDictionary) && this.bundleDictionary.values().stream()
+                .anyMatch(bd -> bd.containsKey(key));
     }
 
     @Override
@@ -64,18 +78,20 @@ public class CompoundResourceBundle extends ResourceBundle {
         return Collections.enumeration(results);
     }
 
+    public static String getBundlePathStr(@NonNull String... paths) {
+        return Path.of("bundles", paths).toString();
+    }
+
     @AllArgsConstructor
     @Getter
     public enum Bundles {
-        GENERAL("fxBundles/messages/general_messages"),
-        LOCAL_MESSAGES("fxBundles/messages/local_messages"),
-        EXPENSE_CREATE_FORM("fxBundles/messages/expenses_create_form"),
-        LOCAL_RECEIPT("fxBundles/messages/local_receipt_messages");
+        GENERAL(getBundlePathStr("general_messages")),
+        ACTIONS(getBundlePathStr("actions_messages"));
 
         private final String location;
 
-        public static Bundles[] getDefaultBundles() {
-            return new Bundles[]{GENERAL};
+        public static Bundles[] defaultBundles() {
+            return new Bundles[]{GENERAL, ACTIONS};
         }
     }
 }
